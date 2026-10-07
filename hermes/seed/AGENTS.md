@@ -1,7 +1,10 @@
 # Trading review: how to work
-- Tools: the `paper` MCP server (review_queue, decision_detail, chart_question, strategy_report,
-  lessons, hypotheses, reviews) and the `fvg` MCP server (entries, setups, recent_events,
-  archived_prices, confluence). Both are read-only.
+- Tools: the `paper` MCP server (review_queue, decision_detail, chart_question, rules_text,
+  knowledge_search, strategy_report, lessons, hypotheses, reviews, paper_stats) and the `fvg`
+  MCP server (entries, setups, recent_events, archived_prices, confluence). Both are read-only.
+- Evidence priority on a conflict: amendments > rulebook > live-session rules > course
+  passages > the decider's notes. rules_text(section) returns the rule files; knowledge_search
+  (query) returns the most relevant course / live-session passages.
 - Writing back: ONLY through the two scripts in ./bin (they POST to the paper agent):
   `bin/post_review.sh '<json>'` and `bin/propose.sh '<json>'`.
 - `review_queue(reviewer="hermes", limit=3)` gives settled trades you have not reviewed. Each has:

@@ -161,6 +161,27 @@ def chart_question(entry_id: int, question: str, at: str = "decision") -> dict:
 
 
 @mcp.tool()
+def rules_text(which: str = "all") -> dict:
+    """The rule files the decider reads: amendments (highest priority), rulebook, live_rules.
+    `which` = all | amendments | rulebook | live_rules."""
+    from . import prompts
+    names = {"amendments": "amendments.md", "rulebook": "rulebook.md", "live_rules": "live_rules.md"}
+    out = {"rules_version": prompts.rules_version()}
+    for k, f in names.items():
+        if which in ("all", k):
+            out[k] = prompts._read(f)
+    return out
+
+
+@mcp.tool()
+def knowledge_search(query: str, k: int = 6) -> list[dict]:
+    """Search the course transcripts, mini lessons, SOP and live-session transcripts (BM25) for
+    the passages most relevant to `query`; the same index the decider uses."""
+    from . import knowledge
+    return knowledge.index().search(query[:400], k=max(1, min(int(k), 12)))
+
+
+@mcp.tool()
 def review_queue(reviewer: str = "hermes", limit: int = 10) -> list[dict]:
     """Settled paper trades (with their result) that `reviewer` has not reviewed yet, full detail:
     engine data, chart read, HTF FVGs, sister pair, management plan, mechanical and
