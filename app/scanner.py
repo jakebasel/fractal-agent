@@ -43,11 +43,15 @@ def due(now: datetime, files) -> bool:
     return now.timestamp() - _last["at"] >= config.SCAN_MINUTES * 60
 
 
-def scan(fvg: FVG, chart_read, files, now: datetime | None = None):
-    now = now or datetime.now(timezone.utc)
-    if not chart_read or not due(now, files) or store.over_budget():
-        return None
+def mark(now: datetime, files):
     _last.update(at=now.timestamp(), files=files)
+
+
+def scan(fvg: FVG, chart_read, files, now: datetime | None = None, force: bool = False):
+    now = now or datetime.now(timezone.utc)
+    if not chart_read or store.over_budget() or (not force and not due(now, files)):
+        return None
+    mark(now, files)
     armed = {}
     for sym in config.SYMBOLS:
         try:

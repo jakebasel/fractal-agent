@@ -62,16 +62,21 @@ tell application "Google Chrome"
   set tvBounds to ""
   set hiddenTabs to 0
   repeat with w in windows
-    set u to URL of active tab of w
+    set u to ""
+    try
+      set u to URL of active tab of w
+    end try
     if u contains "tradingview.com" then
       if tvBounds is "" then
         set b to bounds of w
         set tvBounds to ((item 1 of b) as text) & "," & ((item 2 of b) as text) & "," & ((item 3 of b) as text) & "," & ((item 4 of b) as text)
       end if
     else
-      repeat with t in tabs of w
-        if URL of t contains "tradingview.com" then set hiddenTabs to hiddenTabs + 1
-      end repeat
+      try
+        repeat with t in tabs of w
+          if URL of t contains "tradingview.com" then set hiddenTabs to hiddenTabs + 1
+        end repeat
+      end try
     end if
   end repeat
   return tvBounds & ";" & hiddenTabs
@@ -100,8 +105,7 @@ N=0
 for ID in $IDS; do
   # -l captures that window's own pixels, even when other windows cover it; -o drops the shadow
   if /usr/sbin/screencapture -x -o -t jpg -l "$ID" "$TMPD/$N.jpg" 2>/dev/null && [ -s "$TMPD/$N.jpg" ]; then
-    send "$TMPD/$N.jpg" "?batch=$BATCH&part=$N&kind=window"
-    N=$((N + 1))
+    if send "$TMPD/$N.jpg" "?batch=$BATCH&part=$N&kind=window"; then N=$((N + 1)); else note "upload failed"; status upload_failed; fi
   fi
   [ "$N" -ge 4 ] && break
 done

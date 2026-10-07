@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 
 from . import config
 
-_lock = threading.Lock()
+_lock = threading.RLock()   # re-entrant: a write may trigger first-time connection setup
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS decisions (
@@ -126,7 +126,7 @@ MIGRATIONS = {
     "decisions": {"play": "TEXT", "rules_version": "TEXT", "jev": "TEXT", "jev_p_take": "REAL",
                   "path": "TEXT", "news": "TEXT", "vision_score": "REAL", "vision_note": "TEXT",
                   "kill_events": "TEXT", "managed_r": "REAL", "managed_outcome": "TEXT",
-                  "managed_paper_r": "REAL", "managed_tries": "INTEGER"},
+                  "managed_paper_r": "REAL", "managed_tries": "INTEGER", "shadow_tries": "INTEGER"},
     "screenshots": {"batch": "TEXT", "part": "INTEGER", "kind": "TEXT"},
     "scans": {"r": "REAL", "outcome": "TEXT", "scored_at": "TEXT", "score_tries": "INTEGER"},
 }
@@ -155,26 +155,31 @@ def connect() -> sqlite3.Connection:
     return c
 
 
-_conn = None
+_local = threading.local()
 
 
 def db() -> sqlite3.Connection:
-    global _conn
-    if _conn is None:
-        _conn = connect()
-        _conn.executescript(SCHEMA)
-        for table, cols in MIGRATIONS.items():
-            have = {r["name"] for r in _conn.execute(f"PRAGMA table_info({table})")}
-            for col, typ in cols.items():
-                if col not in have:
-                    _conn.execute(f"ALTER TABLE {table} ADD COLUMN {col} {typ}")
-        _conn.commit()
-    return _conn
+    """One connection per thread (agent loop, HTTP). WAL lets readers and the writer run side
+    by side; a shared connection would let a commit on one thread truncate a read on another."""
+    conn = getattr(_local, "conn", None)
+    if conn is None:
+        conn = connect()
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA busy_timeout=5000")
+        with _lock:
+            conn.executescript(SCHEMA)
+            for table, cols in MIGRATIONS.items():
+                have = {r["name"] for r in conn.execute(f"PRAGMA table_info({table})")}
+                for col, typ in cols.items():
+                    if col not in have:
+                        conn.execute(f"ALTER TABLE {table} ADD COLUMN {col} {typ}")
+            conn.commit()
+        _local.conn = conn
+    return conn
 
 
 def reset_for_tests():
-    global _conn
-    _conn = None
+    _local.conn = None
 
 
 def kv_get(k, default=None):
@@ -190,6 +195,15 @@ def kv_set(k, v):
 
 def seen(entry_id: int) -> bool:
     return db().execute("SELECT 1 FROM decisions WHERE entry_id=?", (entry_id,)).fetchone() is not None
+
+
+def retryable_error(entry_id: int, max_age_s: int) -> bool:
+    """An ERROR row for an entry that is still fresh gets another go (transient model failure)."""
+    row = db().execute("SELECT decision, entry_at FROM decisions WHERE entry_id=?", (entry_id,)).fetchone()
+    if not row or row["decision"] != "ERROR" or not row["entry_at"]:
+        return False
+    age = (datetime.now(timezone.utc) - datetime.fromisoformat(row["entry_at"].replace("Z", "+00:00"))).total_seconds()
+    return age <= max_age_s
 
 
 def insert_decision(row: dict):
@@ -228,8 +242,9 @@ def managed_try(entry_id):
 
 def open_decisions():
     """Reviewed rows still waiting for fvg-mcp to score them."""
+    # ERROR / MISSED rows are settled too (paper_r = 0) so the core book stays complete
     return db().execute(
-        "SELECT * FROM decisions WHERE r IS NULL AND decision IN ('TAKE','SKIP') "
+        "SELECT * FROM decisions WHERE r IS NULL AND decision IN ('TAKE','SKIP','ERROR','MISSED') "
         "ORDER BY entry_id").fetchall()
 
 
@@ -295,11 +310,19 @@ def latest_screenshot():
     return db().execute("SELECT * FROM screenshots ORDER BY id DESC LIMIT 1").fetchone()
 
 
-def latest_screenshot_set():
-    """The newest screenshot plus the other windows captured in the same batch, left first."""
+def latest_screenshot_set(settle_s: float = 6.0):
+    """The newest screenshot plus the other windows captured in the same batch, left first.
+    A batch's parts arrive a second or two apart; a batch younger than `settle_s` may still be
+    incomplete, so the previous one is used instead."""
     last = latest_screenshot()
     if not last or not last["batch"]:
         return [last] if last else []
+    age = (datetime.now(timezone.utc) - datetime.fromisoformat(last["received_at"])).total_seconds()
+    if age < settle_s:
+        prev = db().execute("SELECT * FROM screenshots WHERE batch IS NOT NULL AND batch!=? ORDER BY id DESC LIMIT 1",
+                            (last["batch"],)).fetchone()
+        if prev:
+            last = prev
     return db().execute("SELECT * FROM screenshots WHERE batch=? ORDER BY part",
                         (last["batch"],)).fetchall()
 
@@ -417,14 +440,22 @@ def add_shadow(entry_id, hyp_id, decision, size, changed, why):
         db().commit()
 
 
-def shadow_todo(hyp_ids, since_iso, limit):
-    """Reviewed rows (newest first) that still need a shadow decision for some testing hypothesis."""
+def shadow_try(entry_id):
+    with _lock:
+        db().execute("UPDATE decisions SET shadow_tries=COALESCE(shadow_tries,0)+1 WHERE entry_id=?", (entry_id,))
+        db().commit()
+
+
+def shadow_todo(hyp_ids, since_iso, limit, max_tries=3):
+    """Reviewed rows (newest first) that still need a shadow decision for some testing hypothesis.
+    Rows whose shadow call failed `max_tries` times are left alone (one poison row must not
+    stall the queue or burn a call every tick)."""
     if not hyp_ids:
         return []
     out = []
     rows = db().execute(
         "SELECT * FROM decisions WHERE decision IN ('TAKE','SKIP') AND entry_at>=? "
-        "ORDER BY entry_id DESC", (since_iso,)).fetchall()
+        "AND COALESCE(shadow_tries,0)<? ORDER BY entry_id DESC", (since_iso, max_tries)).fetchall()
     for r in rows:
         have = {x["hyp_id"] for x in db().execute(
             "SELECT hyp_id FROM shadow WHERE entry_id=?", (r["entry_id"],))}

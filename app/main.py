@@ -147,7 +147,7 @@ def _cookie_ok(request: Request) -> bool:
     exp, _, sig = raw.partition(".")
     if not exp.isdigit() or int(exp) < time.time():
         return False
-    return hmac.compare_digest(sig, _sign(int(exp)))
+    return hmac.compare_digest(sig.encode(), _sign(int(exp)).encode())
 
 
 def _authed(request: Request) -> bool:
@@ -156,7 +156,7 @@ def _authed(request: Request) -> bool:
     if not config.AGENT_TOKEN:
         return False   # closed until a token is configured
     tok = request.query_params.get("token") or request.headers.get("x-agent-token", "")
-    return hmac.compare_digest(tok, config.AGENT_TOKEN)
+    return hmac.compare_digest(tok.encode(), config.AGENT_TOKEN.encode())
 
 
 async def health(request: Request):
@@ -251,7 +251,7 @@ async def dashboard(request: Request):
 async def login(request: Request):
     form = await request.form()
     pw = str(form.get("password", ""))
-    if not config.DASHBOARD_PASSWORD or not hmac.compare_digest(pw, config.DASHBOARD_PASSWORD):
+    if not config.DASHBOARD_PASSWORD or not hmac.compare_digest(pw.encode(), config.DASHBOARD_PASSWORD.encode()):
         await asyncio.sleep(1)   # slow down guessing
         return HTMLResponse(LOGIN_HTML % "<p>Wrong password</p>", status_code=401)
     exp = int(time.time()) + SESSION_DAYS * 86400
@@ -363,7 +363,7 @@ async def shot_file(request: Request):
     if not _authed(request):
         return PlainTextResponse("unauthorized", status_code=401)
     name = request.path_params["name"]
-    if not re.fullmatch(r"[0-9A-Za-z_.-]+", name):
+    if not re.fullmatch(r"[0-9A-Za-z_.-]+", name) or ".." in name:
         return PlainTextResponse("bad name", status_code=400)
     for folder in ("decision_shots", "shots"):
         p = config.DATA_DIR / folder / name

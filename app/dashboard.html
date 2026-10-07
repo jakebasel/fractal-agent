@@ -389,8 +389,8 @@ $("#hyps").addEventListener("click", async e => {
 // ---- render ----
 function render() {
   const d = DATA, st = d.status, rep = d.report;
-  const lastLoopAgo = st.last_loop_et ? ago(st.last_loop_et) : null;
-  const shotAgo = st.last_screenshot_et ? ago(st.last_screenshot_et) : null;
+  const lastLoopAgo = st.last_loop_ts ? Date.now() / 1000 - st.last_loop_ts : (st.last_loop_et ? ago(st.last_loop_et) : null);
+  const shotAgo = st.last_screenshot_ts ? Date.now() / 1000 - st.last_screenshot_ts : (st.last_screenshot_et ? ago(st.last_screenshot_et) : null);
   const ok = !st.last_error && lastLoopAgo != null && lastLoopAgo < 120;
   $("#pills").innerHTML = [
     `<span class="pill"><span class="dot" style="background:${ok ? "var(--good)" : "var(--bad)"}"></span>${ok ? "Running" : "Check agent"}${lastLoopAgo != null ? ` · <b>${fmtAgo(lastLoopAgo)}</b>` : ""}</span>`,
@@ -426,8 +426,11 @@ function render() {
     `<div class="card"><h2>fvg-mcp ledger backtest <small>${esc(bt.window)} · generated ${esc(bt.generated_et)}</small></h2>
      <div class="t2" style="margin-bottom:8px">${esc(bt.note)}</div>
      <div class="scroll"><table>${statHead("Book")}${Object.entries(bt.books).map(([k, v]) => `<tr><td>${esc(k.replace(/_/g, " "))}</td>${statCells(v)}</tr>`).join("")}</table></div></div>`,
-    groupTable("Hard rules: what they removed", bt.hard_rules.map(r => ({group: r.rule, ...r})), "Rule", "positive total R = the rule is throwing away winners"),
-    groupTable("Hypotheses on top of the code rules", bt.hypotheses_on_top_of_code_rules.map(h => ({group: `${h.hypothesis} (${h.trades_removed_or_resized} changed, ${fmtR(h.delta_total_r_vs_code_rules)} vs rules)`, ...h})), "Hypothesis", "sorted by improvement"),
+    groupTable("Hard rules: what they removed", (bt.hard_rules || []).map(r => ({group: r.rule, ...r})), "Rule", "positive total R = the rule is throwing away winners"),
+    `<div class="card"><h2>Tweaks under the protocol <small>train / holdout split at ${esc(bt.cut_date)} · ${bt.tweaks_tried_total || 0} tried so far</small></h2><div class="scroll"><table>
+      <tr><th>Tweak</th><th>Verdict</th><th>Affected (train)</th><th>Δ train R</th><th>Δ holdout R</th><th>Misses</th></tr>
+      ${(bt.tweaks || []).map(e => `<tr><td>${esc(e.name)}</td><td>${esc(e.verdict)}</td><td>${e.affected_train}</td><td class="${clsR(e.train.delta_total_r)}">${fmtR(e.train.delta_total_r)}</td><td class="${clsR(e.holdout.delta_total_r)}">${fmtR(e.holdout.delta_total_r)}</td><td style="white-space:normal" class="muted">${esc((e.misses || []).join(", "))}</td></tr>`).join("")}
+    </table></div></div>`,
     ...["by_session", "by_signal", "by_signal_tf", "by_retrace", "by_day_of_week", "by_hour_et", "by_symbol", "by_week"].map(k => groupTable(k.replace(/_/g, " "), bt[k], k.replace("by_", ""), "after code rules")),
   ].join("");
   const vz = d.vision || {n: 0};
@@ -487,7 +490,7 @@ function etOffset(et) { // ET offset for that date: -04:00 in DST, -05:00 otherw
   const d = new Date(et.slice(0, 10) + "T12:00:00Z");
   const s = d.toLocaleString("en-US", {timeZone: "America/New_York", timeZoneName: "short"});
   return /EDT/.test(s) ? "-04:00" : "-05:00"; }
-function fmtAgo(s) { return s < 90 ? Math.round(s) + "s" : s < 5400 ? Math.round(s / 60) + "m" : Math.round(s / 3600) + "h"; }
+function fmtAgo(s) { s = Math.max(0, s); return s < 90 ? Math.round(s) + "s" : s < 5400 ? Math.round(s / 60) + "m" : Math.round(s / 3600) + "h"; }
 
 async function load() {
   const r = await fetch(`/api/dashboard?days=${$("#days").value}`, {cache: "no-store"});

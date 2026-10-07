@@ -82,7 +82,13 @@ def chart_read_for_now():
     paths = [p for p in paths if p.exists()]
     if not paths:
         return None, files, age
-    read = llm.read_chart([p.read_bytes() for p in paths], prompts.vision_prompt())
+    try:
+        read = llm.read_chart([p.read_bytes() for p in paths], prompts.vision_prompt())
+    except Exception as e:
+        # cache the failure too: a new screenshot set arrives every 30 s, retrying the same
+        # one every 15 s would only burn credits
+        log.warning("vision failed for %s: %s", files, e)
+        read = None
     if (read or {}).get("readability") == "not_chart":
         read = None   # TradingView wasn't on screen: don't feed a video to the decision
     _vision_cache.clear()
@@ -212,8 +218,8 @@ def review(fvg: FVG, entry: dict):
     chart_read, shot_file, shot_age = None, None, None
     try:
         chart_read, shot_file, shot_age = chart_read_for_now()
-    except Exception as e:  # vision failure must not block the decision
-        log.warning("vision failed: %s", e)
+    except Exception as e:  # must not block the decision
+        log.warning("screenshot lookup failed: %s", e)
         row["error"] = f"vision: {e}"[:500]
 
     try:
@@ -241,6 +247,7 @@ def review(fvg: FVG, entry: dict):
         row["jev_p_take"] = jv.get("p_take")
         if config.JEV_MODE == "gate" and jv.get("gate_rule"):
             row.update(decision="SKIP", grade="C", size="none", hard_rule=jv["gate_rule"],
+                       confidence=jv.get("p_take"),
                        reasons=[f"Jev: {jv['gate_rule']}"],
                        play=prompts.play_name(entry.get("mt_tf"), signal, jv.get("play")), path="jev",
                        chart_read=chart_read, screenshot=shot_file, screenshot_age_s=shot_age,
@@ -278,7 +285,7 @@ def _kill_events(fvg: FVG, row) -> list:
     """Times (ms) after entry when a 5m Double Break printed AGAINST the trade: the instructor
     closes or rolls on that. Used to score the trade with his management rules."""
     try:
-        evs = fvg.mt_events(row["symbol"], limit=60)
+        evs = fvg.mt_events(row["symbol"], limit=400)   # ~2h of 1m+5m events can exceed 60
     except Exception:
         return []
     out = []
@@ -340,6 +347,8 @@ def settle(fvg: FVG, entry_row, scored: dict):
     store.update_decision(entry_row["entry_id"], r=float(r), outcome=scored.get("f_outcome"),
                           paper_r=round(float(r) * mult, 3),
                           closed_at=_ms_to_iso(scored.get("f_close_bar")))
+    if entry_row["decision"] not in ("TAKE", "SKIP"):
+        return True   # ERROR / MISSED rows are settled for the core book; nothing to learn from
     outcome = {"r_if_taken_full": r, "outcome": scored.get("f_outcome"),
                "exit": scored.get("f_exit")}
     try:
@@ -363,10 +372,38 @@ def _wanted(entry: dict) -> bool:
     return True
 
 
+def _safe_review(fvg: FVG, entry: dict):
+    """review() must never take the loop down: anything unexpected becomes an ERROR row,
+    which is retried while the entry is still fresh (see tick)."""
+    try:
+        return review(fvg, entry)
+    except Exception as e:
+        log.exception("review %s failed", entry.get("id"))
+        detail = _detail(entry)
+        try:
+            row = _base_row(entry, detail)
+        except Exception:
+            row = {"entry_id": entry.get("id"), "symbol": entry.get("symbol"), "entry_at": entry.get("at"),
+                   "reviewed_at": store.now_utc()}
+        row.update(decision="ERROR", size="none", error=f"review: {type(e).__name__}: {e}"[:500])
+        store.insert_decision(row)
+        return row
+
+
+def _prefetch_htf(fvg: FVG):
+    """Warm the HTF FVG cache outside review() so tape downloads never sit on a live decision."""
+    for sym in config.SYMBOLS:
+        try:
+            htf.htf_fvgs(fvg, sym)
+        except Exception as e:
+            log.warning("htf prefetch %s: %s", sym, e)
+
+
 def tick(fvg: FVG):
     learning.seed()
     changed = False
     by_id: dict[int, dict] = {}
+    _prefetch_htf(fvg)
     for sym in config.SYMBOLS:
         rows = fvg.entries(sym, limit=40)
         for e in rows:
@@ -376,9 +413,11 @@ def tick(fvg: FVG):
             store.kv_set(f"baseline:{sym}", max([e["id"] for e in rows], default=0))
             continue
         for e in sorted(rows, key=lambda x: x["id"]):
-            if e["id"] <= baseline or store.seen(e["id"]) or not _wanted(e):
+            if e["id"] <= baseline or not _wanted(e):
                 continue
-            review(fvg, e)
+            if store.seen(e["id"]) and not store.retryable_error(e["id"], config.MAX_ENTRY_AGE_S):
+                continue
+            _safe_review(fvg, e)
             changed = True
     for row in store.open_decisions():
         scored = by_id.get(row["entry_id"])
@@ -389,12 +428,14 @@ def tick(fvg: FVG):
     except Exception as e:
         log.warning("managed scoring failed: %s", e)
     try:   # the chart scanner: only inside its windows, only on a new screenshot set
-        if config.SCAN_MINUTES > 0:
+        if config.SCAN_MINUTES > 0 and not store.over_budget():
             shots = store.latest_screenshot_set()
             files = ",".join(s["file"] for s in shots) if shots else None
-            if scanner.due(datetime.now(timezone.utc), files):
+            now = datetime.now(timezone.utc)
+            if scanner.due(now, files):
+                scanner.mark(now, files)   # before the read: a failed read must not retry every tick
                 read, files, _ = chart_read_for_now()
-                scanner.scan(fvg, read, files)
+                scanner.scan(fvg, read, files, now, force=True)
     except Exception as e:
         log.warning("scanner failed: %s", e)
     try:
@@ -435,6 +476,8 @@ def status() -> dict:
             "jev_model": config.JEV_MODEL, "jev_mode": config.JEV_MODE,
             "key_set": bool(config.OPENROUTER_API_KEY),
             "last_loop_et": store.to_et(_state["last_loop"]), "loops": _state["loops"],
+            "last_loop_ts": _iso_to_dt(_state["last_loop"]).timestamp() if _state["last_loop"] else None,
+            "last_screenshot_ts": _iso_to_dt(shot["received_at"]).timestamp() if shot else None,
             "last_error": _state["last_error"],
             "spend_today_usd": round(store.spend_today(), 4), "daily_budget_usd": config.DAILY_BUDGET_USD,
             "over_budget": store.over_budget(),

@@ -69,33 +69,36 @@ def rows_of(d):
             continue   # ND (trend-fallback) was retired by fvg-mcp on 2026-08-11; not part of the strategy
         et = datetime.fromtimestamp(x["entry_bar"] / 1000, tz=timezone.utc).astimezone(config.ET)
         x.update(et=et, date=et.strftime("%Y-%m-%d"), dow=et.strftime("%a"), hour=et.hour + et.minute / 60)
-        x["rule"] = code_hard_rule(x)
+        x["rules"] = code_hard_rules(x)
+        x["rule"] = x["rules"][0] if x["rules"] else None
         out.append(x)
     out.sort(key=lambda x: x["entry_bar"])
     return out
 
 
-def code_hard_rule(x):
-    """Mirror of app/rules_code.hard_rules on ledger columns, same priority (news needs a calendar)."""
+def code_hard_rules(x) -> list:
+    """Mirror of app/rules_code.hard_rules on ledger columns, same priority (news needs a
+    calendar). All rules that fire, most important first."""
     hm = (x["et"].hour, x["et"].minute)
     s = (x["session"] or "").lower()
+    f = []
     if x["sig"] == "2DB":
-        return "§2.4 2DB"
+        f.append("§2.4 2DB")
     if x["nd"]:
-        return "§2.1 ND"
+        f.append("§2.1 ND")
     if x["sig"] == "DB" and (x["retrace"] or "") in ("none", "shallow"):
-        return f"§2.6 DB retrace {x['retrace']}"
-    if x["et"].weekday() >= 5:
-        return "§2.3 weekend"
+        f.append(f"§2.6 DB retrace {x['retrace']}")
+    if x["et"].weekday() == 5 or (x["et"].weekday() == 6 and hm < (18, 0)):
+        f.append("§2.3 weekend")
     if s == "newyork" and hm >= (11, 0):
-        return "§2.3 NY after 11:00"
+        f.append("§2.3 NY after 11:00")
     if s == "london" and (4, 0) <= hm < (20, 0):
-        return "§2.3 London after first 2h"
-    if s == "asia" and hm >= (22, 0):
-        return "§2.3 Asia after 10 PM"
+        f.append("§2.3 London after first 2h")
+    if s == "asia" and (hm >= (22, 0) or hm < (2, 0)):
+        f.append("§2.3 Asia after 10 PM")
     if x["in_window"] is False:
-        return "§2.3 outside window (engine)"
-    return None
+        f.append("§2.3 outside window (engine)")
+    return f
 
 
 # ---- DSL ---------------------------------------------------------------------------------------
@@ -133,7 +136,7 @@ def apply(rows, tweak):
         kept = x["rule"] is None
         hit = matches(x, tweak)
         if tweak["then"] == "allow":
-            if not kept and hit:
+            if not kept and hit and len(x["rules"]) == 1:   # only trades no OTHER rule removes
                 vals.append(x["r"]); affected += 1
             elif kept:
                 vals.append(x["r"])
@@ -176,7 +179,9 @@ def _affected_values(rows, tweak):
             else:
                 cum += x["r"]
         return cut
-    return [x["r"] for x in rows if (x["rule"] is None) == (tweak["then"] != "allow") and matches(x, tweak)]
+    if tweak["then"] == "allow":
+        return [x["r"] for x in rows if x["rule"] is not None and len(x["rules"]) == 1 and matches(x, tweak)]
+    return [x["r"] for x in rows if x["rule"] is None and matches(x, tweak)]
 
 
 def removed_or_added(rows, tweak):
@@ -192,8 +197,7 @@ def removed_or_added(rows, tweak):
             else:
                 cum += x["r"]
         return store.summarize(cut)
-    kept = [x for x in rows if (x["rule"] is None) == (tweak["then"] != "allow") and matches(x, tweak)]
-    return store.summarize([x["r"] for x in kept])
+    return store.summarize(_affected_values(rows, tweak))
 
 
 def evaluate(tweak, train, hold):

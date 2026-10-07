@@ -227,7 +227,7 @@ sh = store.shadows_for([h for h in hyps if h["source"] == "lesson"][0]["id"])
 ok(sh and sh[0]["decision"] == "SKIP" and sh[0]["changed"] == 1, "shadow decision recorded for a settled trade")
 rep = learning.report(30)
 hres = [h for h in rep["hypotheses"] if h["source"] == "lesson"][0]
-ok(hres["books_same_trades"]["agent"]["total_r"] == 1.25 and hres["books_same_trades"]["with_change"]["total_r"] == 0.0
+ok(hres["books_same_trades"]["agent"]["total_r"] == 1.25 and hres["books_same_trades"]["with_change"].get("n") == 0
    and hres["delta_total_r_vs_agent"] == -1.25, "hypothesis compared on the same trades")
 ok(rep["books"]["core_strategy_all_engine_entries"]["n"] == 1 and rep["core_by_play"][0]["group"] == "5m DB continuation"
    and rep["core_by_timeframe_signal"][0]["group"] == "5m DB", "report breakdowns by play and timeframe x signal")

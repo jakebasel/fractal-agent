@@ -15,7 +15,7 @@ from . import config
 log = logging.getLogger("htf")
 _cache: dict = {}   # symbol -> {"at": ts, "fvgs": [...], "through": "YYYY-MM-DD"}
 TTL_S = 3600
-DAYS = 4
+DAYS = 3
 
 
 def candles(ticks, minutes: int) -> list:

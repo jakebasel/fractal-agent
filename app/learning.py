@@ -99,7 +99,8 @@ def run_shadow(limit: int | None = None) -> int:
                              purpose="shadow")
         except Exception as e:
             log.warning("shadow %s failed: %s", row["entry_id"], e)
-            break   # try again next tick
+            store.shadow_try(row["entry_id"])
+            continue   # next row; this one is retried up to 3 times
         for h in hyps:
             a = res.get(str(h["id"])) or res.get(h["id"]) or {}
             d = (a.get("decision") or row["decision"]).upper()
@@ -116,8 +117,10 @@ def run_shadow(limit: int | None = None) -> int:
 # ---- results -------------------------------------------------------------------------------
 
 def _paper(decision, size, r):
+    """Paper R of a decision; None (not 0) for non-takes so books count trades taken, while
+    totals and drawdown stay comparable on the same set of entries."""
     if r is None or decision != "TAKE":
-        return 0.0 if r is not None else None
+        return None
     return r * store.SIZE_MULT.get(size or "none", 0.0)
 
 
