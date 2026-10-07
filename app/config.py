@@ -28,16 +28,18 @@ INCLUDE_GOLD = _env("INCLUDE_GOLD", "0") == "1"
 # --- AI (OpenRouter) ----------------------------------------------------------------------
 OPENROUTER_API_KEY = _env("OPENROUTER_API_KEY")
 OPENROUTER_URL = _env("OPENROUTER_URL", "https://openrouter.ai/api/v1/chat/completions")
-# DeepSeek V4 Pro (Jake 2026-10-07: newer and ~4x cheaper than deepseek-chat); take/skip + lessons
-DECISION_MODEL = _env("DECISION_MODEL", "deepseek/deepseek-v4-pro")
+# DeepSeek V3.2 (Jake 2026-10-07: newer and cheaper than deepseek-chat). V4 Pro is a thinking
+# model that spent its whole budget reasoning and answered nothing; it stays as a fallback
+# with reasoning disabled. take/skip + lessons + shadow + scans.
+DECISION_MODEL = _env("DECISION_MODEL", "deepseek/deepseek-v3.2")
 DECISION_MAX_TOKENS = int(_env("DECISION_MAX_TOKENS", "4000"))
 # reasoning control for thinking models (OpenRouter 'reasoning' object), e.g. {"effort":"low"}
 # or {"enabled": false}; empty = send nothing
 import json as _json
-DECISION_REASONING = _json.loads(_env("DECISION_REASONING", '{"effort": "low"}') or "null")
+DECISION_REASONING = _json.loads(_env("DECISION_REASONING", '{"enabled": false}') or "null")
 # OpenRouter falls back to these, in order, when the decision model is rate-limited or down
 DECISION_FALLBACK_MODELS = [m.strip() for m in _env("DECISION_FALLBACK_MODELS",
-                                                    "deepseek/deepseek-v3.2,deepseek/deepseek-chat").split(",") if m.strip()]
+                                                    "deepseek/deepseek-v4-pro,deepseek/deepseek-chat").split(",") if m.strip()]
 VISION_MODEL = _env("VISION_MODEL", "google/gemini-2.5-flash")      # reads the screenshot
 LLM_TIMEOUT_S = int(_env("LLM_TIMEOUT_S", "60"))
 # Jev (TypeSafe "System One" model) via OpenRouter's /systemone endpoint: fast rule-by-rule
