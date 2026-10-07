@@ -24,7 +24,8 @@ except Exception: print(0)' 2>/dev/null || echo 0)
     # --yolo: no approval prompts (headless; the container holds only the agent token). The
     # MCP toolsets come from config.yaml (the -t names were not recognised). Full transcript
     # of every run goes to runs.log on the volume; stdout gets the tool calls and the summary.
-    timeout 1500 hermes chat --query-file "$DATA/trading-review/PROMPT.md" --oneshot --yolo \
+    # -Q = programmatic mode (no TUI: without it the headless run never returns)
+    timeout 1500 hermes chat --query-file "$DATA/trading-review/PROMPT.md" --oneshot -Q --yolo \
       -s trading-review --max-turns 40 --source trading-review 2>&1 \
       | tee -a "$DATA/trading-review/runs.log" \
       | grep -i -E "tool|mcp|post_review|propose|http|error|denied|summary|verdict|reviewed" | cut -c1-240 | tail -60
