@@ -25,6 +25,11 @@ SEEDS = [
     ("News: release day only", "IF the only news concern is a CPI/PPI/FOMC WEEK (no high-impact USD "
      "release today) THEN ignore the news rule and decide normally.", "rules-test",
      "Tests whether the 'demo-only week' part of §2.2 costs more than it saves."),
+    ("News: window only", "IF the only news concern is a high-impact USD release more than 60 minutes "
+     "away (before or after) THEN ignore the news rule and decide normally; within 60 minutes of the "
+     "release, SKIP.", "rules-test",
+     "2026-10-07: FOMC Minutes at 14:00 ET skipped the whole day (7 setups). Tests whether a release "
+     "window beats the day-long skip."),
     ("NY after 10:30 reduced", "IF a New York session entry is after 10:30 ET THEN reduce size "
      "(TAKE becomes reduced; never upgrade a SKIP).", "rules-test",
      "Live sessions: the sweet spot is in by ~10:30-10:40 ET; later setups get reassessed."),
@@ -37,10 +42,11 @@ def _since(days) -> str:
 
 
 def seed():
-    if store.kv_get("seeded_hypotheses"):
-        return
+    """Add any seed hypothesis that is not there yet (by title); runs cheaply every tick."""
+    have = {h["title"] for h in store.hypotheses()}
     for title, rule, source, note in SEEDS:
-        store.add_hypothesis(title, rule, None, source, "testing", note=note)
+        if title not in have:
+            store.add_hypothesis(title, rule, None, source, "testing", note=note)
     store.kv_set("seeded_hypotheses", True)
 
 
