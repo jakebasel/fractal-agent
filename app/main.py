@@ -412,6 +412,7 @@ async def api_dashboard(request: Request):
         "scans": [{**{k: r[k] for k in r.keys()}, "at_et": store.to_et(r["at"]),
                    "reasons": json.loads(r["reasons"] or "[]")} for r in store.scans(40)],
         "backtest": _backtest(),
+        "pending": store.kv_get("setups_snapshot") or {},
         "jev_playbook": jev.playbook()["readable"],
         "vision": _vision_stats(since),
         "rule_versions": [{"version": v["version"], "first_seen_et": store.to_et(v["first_seen"]),

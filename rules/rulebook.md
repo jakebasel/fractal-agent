@@ -88,10 +88,9 @@ The models, step by step (the golden rule: if ANY step doesn't happen, there is 
 2. Inside the bracket around a red-folder (high-impact) USD release (60 min before to 60 min
    after, amendments 2026-10-07), or a live speech in progress: SKIP. The rest of the day
    trades normally; London is not affected by US releases.
-3. Outside the session window (the engine's configured Asia / London / NY / NY-PM windows) or
-   the weekend. Time WITHIN a session is never a skip (amendments 2026-10-07): late in the
+3. The weekend. Time within a session is never a skip (amendments 2026-10-07): late in the
    session (NY after ~10:30-11:00, London after the first couple of hours, Asia after ~10 PM)
-   is a downgrade, see §3.
+   and the engine's `in_window: false` flag are downgrades, see §3.
 4. 2DB on that index/timeframe this session (never traded), or the index has a false day.
 5. DB setup with a 5m BODY close beyond that DB's white reversal line (the DB is failing).
 6. No retracement (runaway), or the retracement is too shallow (above the first FVG of the

@@ -205,11 +205,20 @@ def review(fvg: FVG, entry: dict):
     detail = _detail(entry)
     row = _base_row(entry, detail)
     now = datetime.now(timezone.utc)
-    age = (now - _iso_to_dt(entry["at"])).total_seconds()
+    age = (now - _iso_to_dt(entry["at"])).total_seconds()          # since fvg-mcp logged it
+    bar_age = age
+    if entry.get("entry_bar"):
+        try:
+            bar_age = now.timestamp() - int(entry["entry_bar"]) / 1000   # since the entry bar itself
+        except (TypeError, ValueError):
+            pass
     if age > config.MAX_ENTRY_AGE_S:
         row.update(decision="MISSED", size="none", reasons=[f"entry was {int(age)}s old when seen"])
         store.insert_decision(row)
         return row
+    late_log = bar_age > config.MAX_ENTRY_AGE_S   # logged late: the live chart is from the wrong time
+    if late_log:
+        row["path"] = "late"
 
     row["rules_version"] = prompts.rules_version()
     signal = prompts.signal_of(entry, detail)
@@ -230,18 +239,24 @@ def review(fvg: FVG, entry: dict):
         return row
 
     chart_read, shot_file, shot_age = None, None, None
-    try:
-        chart_read, shot_file, shot_age = chart_read_for_now()
-    except Exception as e:  # must not block the decision
-        log.warning("screenshot lookup failed: %s", e)
-        row["error"] = f"vision: {e}"[:500]
+    if late_log:
+        row["vision_note"] = f"entry logged {int(bar_age / 60)} min after its bar: no chart read (screen is from the wrong time)"
+    else:
+        try:
+            chart_read, shot_file, shot_age = chart_read_for_now()
+        except Exception as e:  # must not block the decision
+            log.warning("screenshot lookup failed: %s", e)
+            row["error"] = f"vision: {e}"[:500]
 
     try:
         _keep_shots(entry["id"], shot_file if shot_age is not None and shot_age <= config.SCREENSHOT_MAX_AGE_S else None)
     except OSError as e:
         log.warning("keep shots: %s", e)
-    row["vision_score"], row["vision_note"] = scanner.sanity_check(chart_read, entry)
+    if not late_log:
+        row["vision_score"], row["vision_note"] = scanner.sanity_check(chart_read, entry)
     context = build_context(fvg, entry, detail, chart_read, shot_age)
+    if late_log:
+        context["note"] = row["vision_note"]
     if news:
         context["news"] = news
     # rule 2.8 from the archive (not the vision model): long inside an overhead 4H FVG / short below
@@ -283,7 +298,8 @@ def review(fvg: FVG, entry: dict):
     context["_plan"] = dec["plan"]   # the management plan travels with the context snapshot
     context["_read"] = {k: dec["extra"].get(k) for k in ("spotlight", "sister_pair", "targets")}
     row.update(decision=dec["decision"], grade=dec["grade"], size=dec["size"],
-               play=prompts.play_name(entry.get("mt_tf"), signal, dec["play"]), path="model",
+               play=prompts.play_name(entry.get("mt_tf"), signal, dec["play"]),
+               path="late" if late_log else "model",
                confidence=dec["confidence"], hard_rule=dec["hard_rule"], reasons=dec["reasons"],
                boosters=dec["boosters"], chart_read=chart_read, screenshot=shot_file,
                screenshot_age_s=shot_age, context=context, model_decision=config.DECISION_MODEL,
@@ -472,6 +488,37 @@ def reevaluate_skips(fvg: FVG, limit: int = 3) -> int:
     return done
 
 
+def snapshot_setups(fvg: FVG):
+    """What the engine is working on right now (armed / forming / ready), per symbol, with the
+    code hard rule that would fire if it completed, plus the engine's feed health. Stored for
+    the dashboard's pending-setups panel."""
+    now = datetime.now(timezone.utc)
+    out = {"at": now.isoformat(), "symbols": {}}
+    for sym in config.SYMBOLS:
+        try:
+            s = fvg.setups(sym) or {}
+        except Exception as e:
+            out["symbols"][sym] = {"error": str(e)[:200]}
+            continue
+        rows = []
+        for x in (s.get("setups") or [])[:12]:
+            fake_entry = {"at": now.isoformat(), "symbol": sym, "mt_text": x.get("mt"), "cascade": x.get("cascade")}
+            fake_detail = {"mt_cfg": x.get("mt_cfg"), "retrace": x.get("retrace"), "session": x.get("session"),
+                           "in_window": x.get("in_window"), "trend_fallback": x.get("trend_fallback")}
+            try:
+                fired, _ = rules_code.hard_rules(fake_entry, fake_detail, now)
+            except Exception:
+                fired = []
+            rows.append({k: x.get(k) for k in ("cascade", "direction", "mt", "mt_tf", "mt_cfg", "status", "stage",
+                                               "armed", "ready", "retrace", "no_retrace", "two_m", "tf5_db",
+                                               "conflict", "session", "in_window", "high_prob", "entry", "stop",
+                                               "target", "sig_at", "forming", "chain")}
+                        | {"would_skip": fired[0] if fired else None})
+        out["symbols"][sym] = {"setups": rows, "health": s.get("health"), "conflict": s.get("conflict")}
+    store.kv_set("setups_snapshot", out)
+    return out
+
+
 def _prefetch_htf(fvg: FVG):
     """Warm the HTF FVG cache outside review() so tape downloads never sit on a live decision."""
     for sym in config.SYMBOLS:
@@ -486,6 +533,10 @@ def tick(fvg: FVG):
     changed = False
     by_id: dict[int, dict] = {}
     _prefetch_htf(fvg)
+    try:
+        snapshot_setups(fvg)
+    except Exception as e:
+        log.warning("setups snapshot: %s", e)
     for sym in config.SYMBOLS:
         rows = fvg.entries(sym, limit=40)
         for e in rows:
@@ -557,7 +608,10 @@ def status() -> dict:
     cap = store.kv_get("capture_status") or {}
     # a status ping newer than the last screenshot explains why the screen is stale
     capture = cap.get("state") if cap and (not shot or cap.get("at", "") > shot["received_at"]) else None
-    return {"paper_only": True, "capture_status": capture, "symbols": config.SYMBOLS,
+    snap = store.kv_get("setups_snapshot") or {}
+    stale = [f"{sym}: {v['health'].get('why')}" for sym, v in (snap.get("symbols") or {}).items()
+             if isinstance(v.get("health"), dict) and v["health"].get("stale")]
+    return {"paper_only": True, "capture_status": capture, "engine_feed_stale": stale or None, "symbols": config.SYMBOLS,
             "decision_model": config.DECISION_MODEL, "vision_model": config.VISION_MODEL,
             "jev_model": config.JEV_MODEL, "jev_mode": config.JEV_MODE,
             "rules_version": prompts.rules_version(),

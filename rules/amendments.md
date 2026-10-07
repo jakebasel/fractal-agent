@@ -9,8 +9,9 @@ The agent proposes changes in its lessons; nothing lands here without Jake's OK.
 The whole session is tradeable. "First two hours of London", "Asia done by 10 PM", "NY after
 11:00" were the instructor's time preference (he values his time; odds fall later), not
 rules. They are DOWNGRADES (reduce size, "late in the session"), never skips. The engine's
-own session-window flag (fvg-mcp `in_window`, the configured Asia/London/NY/NY-PM windows)
-and the weekend remain hard. The "two losses this session" rule remains hard.
+own session-window flag (fvg-mcp `in_window`; its NY window ends at 12:00 ET so every NY PM
+entry carries it) is a downgrade as well, not a skip. The weekend and the "two losses this
+session" rule remain hard.
 
 ## 2026-10-07 — News: red-folder bracket, not the whole day (Jake)
 Rule §2.2 applies only to red-folder (high-impact) USD releases and only inside a bracket

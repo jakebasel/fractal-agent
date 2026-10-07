@@ -164,6 +164,7 @@ pre { white-space: pre-wrap; word-break: break-word; background: var(--surface-2
   </section>
 
   <section data-panel="setups" class="hidden">
+    <div class="card" style="margin-bottom:12px"><h2>Pending in the engine <small id="pending-sub">armed / forming / ready setups right now, with the code rule that would skip them</small></h2><div class="scroll" id="pending"></div></div>
     <div class="card" style="margin-bottom:12px"><h2>Spotted by the chart scanner <small>plays the engine does not arm; logged, never traded</small></h2><div id="scans"></div></div>
     <div class="filters" id="feed-filters">
       <button data-f="all" class="on">All</button><button data-f="TAKE">Taken</button>
@@ -411,6 +412,7 @@ function render() {
     `<span class="pill"><span class="dot" style="background:${shotAgo != null && shotAgo < 180 ? "var(--good)" : "var(--warn)"}"></span>Screen ${shotAgo != null ? `<b>${fmtAgo(shotAgo)}</b>` : "<b>none</b>"}</span>`,
     `<span class="pill">Jev <b>${esc(st.jev_mode)}</b></span>`,
     `<span class="pill">Spend today <b>${usd(st.spend_today_usd || 0)}</b> / ${usd(st.daily_budget_usd || 0)}${st.over_budget ? ' <span style="color:var(--warn)">· optional calls paused</span>' : ""}</span>`,
+    st.engine_feed_stale ? `<span class="pill" style="color:var(--bad)">Engine feed stale: ${esc(st.engine_feed_stale.join("; "))}</span>` : "",
     st.capture_status ? `<span class="pill" style="color:var(--warn)">${esc({background_tab: "TradingView tab is in the background: drag it into its own Chrome window", not_open: "TradingView is not open on the Mac", capture_failed: "Capture failed: check Screen Recording permission"}[st.capture_status] || st.capture_status)}</span>` :
     st.last_screenshot_kind === "fallback" ? `<span class="pill" style="color:var(--warn)">No TradingView window found: sending the whole screen</span>` : "",
     st.last_error ? `<span class="pill" style="color:var(--bad)">${esc(st.last_error)}</span>` : "",
@@ -431,6 +433,13 @@ function render() {
   section("live screen", () => {
   $("#live-shots").innerHTML = d.latest_shots.map(f => `<img src="/shot/${encodeURIComponent(f)}" alt="latest screen">`).join("") || `<div class="empty">No screenshots yet.</div>`;
   $("#shot-age").textContent = (shotAgo != null ? fmtAgo(shotAgo) + " ago" : "") + (st.last_screenshot_kind === "window" ? " · TradingView window" : st.last_screenshot_kind === "fallback" ? " · whole screen (no TradingView window)" : "");
+  const pend = d.pending || {};
+  const prows = Object.entries(pend.symbols || {}).flatMap(([sym, v]) => (v.setups || []).map(x => ({sym, ...x})));
+  $("#pending-sub").textContent = (pend.at ? "as of " + fmtAgo(Date.now() / 1000 - Date.parse(pend.at) / 1000) + " ago · " : "") + "armed / forming / ready setups right now, with the code rule that would skip them";
+  $("#pending").innerHTML = prows.length ? `<table><tr><th>Symbol</th><th>Setup</th><th>Signal</th><th>Status</th><th>Retrace</th><th>Session</th><th>Levels</th><th>Would skip?</th></tr>` +
+    prows.map(x => `<tr><td>${esc(x.sym)}</td><td>${esc(x.cascade)} ${x.direction === "bull" ? "▲" : x.direction === "bear" ? "▼" : ""}</td><td>${esc(x.mt || "")} ${esc(x.mt_tf || "")}${x.mt_cfg ? " (" + esc(x.mt_cfg) + ")" : ""}</td><td>${esc(x.status || "")}${x.stage != null ? " · stage " + esc(x.stage) : ""}${x.ready ? " · ready" : ""}</td><td>${esc(x.retrace || "–")}</td><td>${esc(x.session || "–")}${x.in_window === false ? " (engine: outside window)" : ""}</td><td>${x.entry ? `${x.entry} / ${x.stop} / ${x.target}` : "–"}</td><td style="white-space:normal">${x.would_skip ? `<span style="color:var(--warn)">${esc(x.would_skip)}</span>` : '<span class="pos">no</span>'}</td></tr>`).join("") + `</table>` +
+    Object.entries(pend.symbols || {}).filter(([s, v]) => v.health && v.health.stale).map(([s, v]) => `<div class="t2" style="color:var(--bad);margin-top:6px">${esc(s)}: engine feed stale (${esc(v.health.why || "")}): no cascade can complete until the TradingView FVG alert for this chart sends again.</div>`).join("")
+    : `<div class="empty">Nothing armed in the engine right now.</div>`;
   $("#scans").innerHTML = (d.scans || []).map(x => `<div class="lesson"><span class="badge ${x.stage === "ready" ? "star" : ""}">${esc(x.stage)}</span>
     <b>${esc(x.symbol)} ${x.direction === "bull" ? "▲" : "▼"} ${esc(x.play)}</b> <span class="muted">${esc(x.at_et)} · conf ${x.confidence != null ? Math.round(x.confidence * 100) + "%" : "–"}${x.jev_p_take != null ? ` · Jev P(take) <b>${Math.round(x.jev_p_take * 100)}%</b>` : ""}${x.engine_has_it ? " · engine has it" : ""}</span>
     ${x.r != null ? `<span class="r ${clsR(x.r)}" style="float:right">${fmtR(x.r)} <span class="muted">${esc(x.outcome)}</span></span>` : ""}

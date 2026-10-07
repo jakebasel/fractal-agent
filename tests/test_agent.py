@@ -218,7 +218,7 @@ NEWS["events"] = []
 e = mk_entry(9); d = json.loads(e["detail"]); d["in_window"] = False; d["mt_cfg"] = "2DB"; e["detail"] = json.dumps(d)
 e["mt_text"] = "Lower Double Break (2DB)"
 fired, _ = rules_code.hard_rules(e, d, _dt.now(timezone.utc))
-ok(fired[0].startswith("§2.4 2DB") and any("window" in f for f in fired), f"2DB reported before the window ({fired})")
+ok(fired[0].startswith("§2.4 2DB") and not any("window" in f for f in fired), f"2DB reported; engine window flag is no longer a skip ({fired})")
 
 row2 = [r for r in store.decisions() if r["entry_id"] == 2][0]
 ok(row2["jev_p_take"] == 0.7 and json.loads(row2["jev"])["play"] == "continuation", "Jev shadow score stored on the row")

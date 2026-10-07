@@ -123,9 +123,8 @@ def hard_rules(entry: dict, detail: dict, now: datetime) -> tuple[list[str], dic
     session = (detail.get("session") or "").lower()
     if et.weekday() == 5 or (et.weekday() == 6 and hm < (18, 0)):
         fired.append("§2.3 weekend (futures reopen Sunday 6 PM ET)")
-    # time within a session is a downgrade, not a skip (amendments 2026-10-07)
-    if detail.get("in_window") is False:
-        fired.append("§2.3 outside the session window (engine flag)")
+    # time within a session is a downgrade, not a skip (amendments 2026-10-07). fvg-mcp's own
+    # window flag (its NY window ends 12:00, so every NY PM entry is "outside") is a downgrade too.
     return fired, info
 
 

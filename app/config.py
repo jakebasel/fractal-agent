@@ -73,7 +73,7 @@ NEWS_AFTER_MIN = int(_env("NEWS_AFTER_MIN", "60"))
 DAILY_BUDGET_USD = float(_env("DAILY_BUDGET_USD", "1.50"))
 # the scanner: read the chart for setups the engine does not flag (reversal set ups, 1m plays)
 SCAN_MINUTES = int(_env("SCAN_MINUTES", "5"))          # 0 = off
-SCAN_WINDOWS = _env("SCAN_WINDOWS", "02:00-04:00,09:25-11:00,20:00-22:00")   # ET, per day
+SCAN_WINDOWS = _env("SCAN_WINDOWS", "02:00-04:00,09:25-11:00,13:00-15:00,20:00-22:00")   # ET, per day
 SCAN_SHOTS_KEEP_DAYS = int(_env("SCAN_SHOTS_KEEP_DAYS", "14"))   # archived scan screenshots
 
 # --- learning loop ------------------------------------------------------------------------------
