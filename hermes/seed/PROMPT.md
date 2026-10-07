@@ -1,6 +1,6 @@
 Review the settled paper trades waiting for you (there is no human in the loop; never ask).
 
-1. review_queue(reviewer="hermes", limit=3) on the paper MCP server.
+1. review_queue(reviewer="hermes", limit=2) on the paper MCP server.
 2. The question for EVERY trade is the same: what, in the data that existed AT DECISION TIME
    (engine data, chart read, the screenshots, the sister index, 4H gaps, session/news), separates
    the setups worth taking from the ones worth skipping? Classify each trade first:
@@ -31,4 +31,4 @@ Review the settled paper trades waiting for you (there is no human in the loop; 
 5. Memory: keep a running list (a few lines) of the patterns deciding wins vs losses on the
    two decision points; patch the trading-review skill when you find a reusable check.
 6. Finish with a 5-line summary: trades reviewed, verdicts, proposals filed, pattern watched.
-Keep it under 40 tool calls. If the queue is empty, say so and stop.
+Keep it under 30 tool calls. If the queue is empty, say so and stop.

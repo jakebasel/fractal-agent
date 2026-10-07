@@ -16,19 +16,18 @@ echo "[hermes-loop] seeded; reviewing every ${REVIEW_EVERY_MIN:-20} min"
 echo "[hermes-loop] doctor:"; timeout 120 hermes doctor 2>&1 | tail -15
 echo "[hermes-loop] tools:"; timeout 120 hermes tools --summary 2>&1 | tail -25
 while true; do
-  n=$(curl -sS -m 30 -H "X-Agent-Token: ${AGENT_TOKEN:-}" "${AGENT_URL:-https://agent.motivationpro.tech}/api/review_queue?reviewer=hermes&limit=3" | python3 -c 'import sys,json
+  n=$(curl -sS -m 30 -H "X-Agent-Token: ${AGENT_TOKEN:-}" "${AGENT_URL:-https://agent.motivationpro.tech}/api/review_queue?reviewer=hermes&limit=2" | python3 -c 'import sys,json
 try: print(len(json.load(sys.stdin)))
 except Exception: print(0)' 2>/dev/null || echo 0)
   if [ "${n:-0}" -gt 0 ]; then
     echo "[hermes-loop] $(date -u +%FT%TZ) $n trade(s) to review"
     # --yolo: no approval prompts (headless; the container holds only the agent token). The
-    # MCP toolsets come from config.yaml (the -t names were not recognised). Full transcript
-    # of every run goes to runs.log on the volume; stdout gets the tool calls and the summary.
-    # -Q = programmatic mode (no TUI: without it the headless run never returns)
-    timeout 1500 hermes chat --query-file "$DATA/trading-review/PROMPT.md" --oneshot -Q --yolo \
-      -s trading-review --max-turns 40 --source trading-review 2>&1 \
-      | tee -a "$DATA/trading-review/runs.log" \
-      | grep -i -E "tool|mcp|post_review|propose|http|error|denied|summary|verdict|reviewed" | cut -c1-240 | tail -60
+    # MCP toolsets come from config.yaml. -Q = programmatic mode (without it the run hangs).
+    # Output streams line by line to the container log and to runs.log on the volume.
+    timeout 900 hermes chat --query-file "$DATA/trading-review/PROMPT.md" --oneshot -Q --yolo \
+      -s trading-review --max-turns 30 --source trading-review 2>&1 \
+      | tee -a "$DATA/trading-review/runs.log" | cut -c1-300
+    echo "[hermes-loop] $(date -u +%FT%TZ) run finished (exit ${PIPESTATUS[0]})"
   fi
   sleep $(( ${REVIEW_EVERY_MIN:-20} * 60 ))
 done
