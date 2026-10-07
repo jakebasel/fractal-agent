@@ -313,9 +313,17 @@ ok(scanner.replay(tape[:4], "bull", 100.0, 99.0, 103.0, t0)[1] == "auto-closed 2
 ok(scanner.replay([(t0, 100.5), (t0 + 1, 100.2)], "bull", 100.0, 99.0, 103.0, t0) == (0.0, "never filled"), "replay: never filled")
 ok(scanner.replay([(t0, 100.0), (t0 + 1, 98.9)], "bull", 100.0, 99.0, 103.0, t0) == (-1.0, "stopped (-1R)"), "replay: stopped")
 store.add_scan((_dt2.now(timezone.utc) - timedelta(hours=5)).isoformat(), "y.jpg", "MNQ1!", "5m DB continuation", "bull", "ready", 100.0, 99.0, 103.0, 0.8, ["x"], False)
-class FakeTape:
+class FakeTape(FVG):
+    def __init__(self):
+        pass
     def call(self, name, **kw):
-        return [[int((_dt2.now(timezone.utc).timestamp() - 5 * 3600) * 1000) + i * 1000, p] for i, p in enumerate([100, 99.8, 101, 102, 103.1])]
+        base = int((_dt2.now(timezone.utc).timestamp() - 5 * 3600) * 1000)
+        bars = [[base + i * 1000, p] for i, p in enumerate([100, 99.8, 101, 102, 103.1])]
+        bars.insert(2, [None, 50.0])          # the real tool has null timestamps
+        bars.append([base + 500, 100.1])      # and out-of-order rows
+        return {"symbol": kw.get("symbol"), "day": kw.get("day"), "n": len(bars), "bars": bars}
+ok(FakeTape().archived_prices("MNQ1!", "2026-10-06")[0][1] == 100 and len(FakeTape().archived_prices("MNQ1!", "2026-10-06")) == 6
+   and FakeTape().archived_prices("MNQ1!", "2026-10-06")[1][1] == 100.1, "archived_prices normalised: nulls dropped, sorted")
 ok(scanner.score_pending(FakeTape()) == 1 and store.scored_scans()[0]["r"] == 2.5, "spotted setup scored from the archive")
 
 # 12. management rules: a 5m DB against the play closes it on the tape
@@ -324,7 +332,9 @@ r_m, o_m = scanner.replay(tape2, "bull", 100.0, 99.0, 103.0, t0, kills=[t0 + 300
 ok(r_m == 0.9 and "5m DB against" in o_m, f"replay closes at the opposing 5m DB ({r_m}, {o_m})")
 row_old = {"entry_id": 2, "symbol": "MNQ1!", "direction": "bull",
            "entry_at": (_dt2.now(timezone.utc) - timedelta(hours=6)).isoformat()}
-class FakeEvents:
+class FakeEvents(FVG):
+    def __init__(self):
+        pass
     def mt_events(self, symbol, limit=12):
         return [{"received_at": (_dt2.now(timezone.utc) - timedelta(hours=5)).isoformat(), "tf": "5m", "text": "Lower Double Break"},
                 {"received_at": (_dt2.now(timezone.utc) - timedelta(hours=7)).isoformat(), "tf": "5m", "text": "Lower Double Break"},
@@ -342,15 +352,15 @@ ok(mrow["managed_r"] is not None and "5m DB against" in (mrow["managed_outcome"]
 rep2 = learning.report(30)
 ok("agent_with_management_rules" in rep2["books"] and "agent_with_daily_stop_minus2R" in rep2["books"], "report carries management and walk-away books")
 
-# 13. two losses in the session -> code skip (§2.13)
-now_utc = _dt2.now(timezone.utc)
+# 13. two losses in the session -> code skip (§2.13); fixed ET times so the test never straddles a session block
+at_fixed = _dt2(2026, 10, 6, 10, 0, tzinfo=ET).astimezone(timezone.utc)
 for i, eid in enumerate((901, 902)):
-    store.insert_decision({"entry_id": eid, "symbol": "MES1!", "entry_at": (now_utc - timedelta(minutes=30 + i)).isoformat(),
+    store.insert_decision({"entry_id": eid, "symbol": "MES1!", "entry_at": (at_fixed - timedelta(minutes=10 + i)).isoformat(),
                            "decision": "TAKE", "size": "full", "r": -1.0, "paper_r": -1.0})
-e = mk_entry(903); d = json.loads(e["detail"])
-fired, _ = rules_code.hard_rules(e, d, now_utc)
+e = mk_entry(903); e["at"] = at_fixed.isoformat(); d = json.loads(e["detail"])
+fired, _ = rules_code.hard_rules(e, d, at_fixed)
 ok(any("§2.13" in f and "2 losses" in f for f in fired), f"two session losses stop trading ({fired})")
-ok(rules_code.session_losses(now_utc - timedelta(hours=9)) == 0, "losses are counted per session block only")
+ok(rules_code.session_losses(at_fixed - timedelta(hours=9)) == 0, "losses are counted per session block only")
 
 # 14. higher-timeframe FVGs from the tape + rule 2.8
 from app import htf  # noqa: E402

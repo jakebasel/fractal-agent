@@ -89,6 +89,23 @@ class FVG:
         return _unwrap(msg.get("result") or {})
 
     # convenience wrappers -------------------------------------------------------------------
+    def archived_prices(self, symbol, day) -> list:
+        """[(ms, price), ...] for one archived UTC day, sorted, null timestamps dropped. The tool
+        returns {"bars": [[ms, px], ...]} (older builds returned the list itself)."""
+        res = self.call("archived_prices", symbol=symbol, day=day)
+        bars = res.get("bars") if isinstance(res, dict) else res
+        out = []
+        for b in bars or []:
+            try:
+                ms, px = b[0], b[1]
+            except (TypeError, IndexError):
+                continue
+            if ms is None or px is None:
+                continue
+            out.append((int(ms), float(px)))
+        out.sort(key=lambda t: t[0])
+        return out
+
     def entries(self, symbol, limit=20):
         return self.call("entries", symbol=symbol, limit=limit) or []
 

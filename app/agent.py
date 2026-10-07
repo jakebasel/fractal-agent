@@ -305,10 +305,10 @@ def manage_pending(fvg: FVG, limit: int = 3) -> int:
         at = _iso_to_dt(row["entry_at"])
         kills = json.loads(row["kill_events"] or "[]")
         try:
-            ticks = fvg.call("archived_prices", symbol=row["symbol"], day=at.strftime("%Y-%m-%d")) or []
+            ticks = fvg.archived_prices(row["symbol"], at.strftime("%Y-%m-%d"))
             if at.hour >= 21:
                 nxt = datetime.fromtimestamp(at.timestamp() + 86400, tz=timezone.utc).strftime("%Y-%m-%d")
-                ticks = list(ticks) + list(fvg.call("archived_prices", symbol=row["symbol"], day=nxt) or [])
+                ticks = ticks + fvg.archived_prices(row["symbol"], nxt)
         except Exception as e:
             log.warning("archived_prices for %s: %s", row["entry_id"], e)
             store.managed_try(row["entry_id"])

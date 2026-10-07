@@ -59,7 +59,7 @@ def _fetch(fvg, symbol: str):
     for d in range(DAYS, -1, -1):
         day = (today - timedelta(days=d)).strftime("%Y-%m-%d")
         try:
-            t = fvg.call("archived_prices", symbol=symbol, day=day) or []
+            t = fvg.archived_prices(symbol, day)
         except Exception as e:
             log.warning("archived_prices %s %s: %s", symbol, day, e)
             t = []

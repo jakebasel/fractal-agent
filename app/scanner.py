@@ -130,10 +130,10 @@ def score_pending(fvg: FVG, now: datetime | None = None) -> int:
     for s in store.scans_to_score(cutoff):
         at = datetime.fromisoformat(s["at"])
         try:
-            ticks = fvg.call("archived_prices", symbol=s["symbol"], day=at.strftime("%Y-%m-%d")) or []
+            ticks = fvg.archived_prices(s["symbol"], at.strftime("%Y-%m-%d"))
             if at.hour >= 21:   # the 2h window may run into the next UTC day
-                ticks = list(ticks) + list(fvg.call("archived_prices", symbol=s["symbol"],
-                                                    day=(datetime.fromtimestamp(at.timestamp() + 86400, tz=timezone.utc)).strftime("%Y-%m-%d")) or [])
+                ticks = ticks + fvg.archived_prices(
+                    s["symbol"], datetime.fromtimestamp(at.timestamp() + 86400, tz=timezone.utc).strftime("%Y-%m-%d"))
         except Exception as e:
             log.warning("archived_prices for scan %s: %s", s["id"], e)
             store.scan_try(s["id"])

@@ -108,9 +108,11 @@ Labelled by two helpers (no API spend): `knowledge/labels/*.json`, 97 events, 93
 ## 4. Suggested changes (ready for your yes/no)
 1. **Approve "walk away at −2R/day"** after a week of live confirmation (it is the only tweak
    that passed the protocol, and it is his rule, not a data-mined one).
-2. **Compute higher-timeframe FVGs from archived prices** (fvg-mcp has 83 days of tape) so
-   rule 2.8 (inside a 4H FVG) and the Reversal Set Up criterion 1 stop depending on the vision
-   model.
+2. ~~Compute higher-timeframe FVGs from archived prices~~ Done tonight (`app/htf.py`): 4H and
+   daily gaps from fvg-mcp's tape go into every decision with the entry's position relative to
+   each; long inside a bearish 4H FVG / short inside a bullish one is now a code skip (rule
+   2.8). Caveat: the archive only has whole days, so today's 4H candles are missing until the
+   day is archived; the context says how old the data is.
 3. ~~Ask fvg-mcp what changed~~ Answered: ND was retired on 2026-08-11; excluded.
 4. **Transcribe live sessions where he trades.** The seven we have are watch-only.
 5. **Keep Jev in shadow for a week**, then gate. Keep the scanner at 5 min; raise the budget
