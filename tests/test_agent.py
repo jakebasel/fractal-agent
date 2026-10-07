@@ -103,7 +103,8 @@ JEV_CALLS = []
 
 def fake_system_one(state, questions, purpose="jev"):
     JEV_CALLS.append(sorted(questions))
-    ans = {k: {"type": "noul", "noul": 0.1} for k in questions if questions[k]["type"] == "noul"}
+    ans = {k: {"type": "noul", "noul": 0.9 if k.startswith(("must_", "boost_", "amend")) else 0.1}
+           for k in questions if questions[k]["type"] == "noul"}
     ans["take"] = {"type": "choice", "choice": "TAKE", "probabilities": {"TAKE": 0.7, "SKIP": 0.3}}
     ans["grade"] = {"type": "choice", "choice": "A", "probabilities": {"A": 1.0}}
     ans["play"] = {"type": "choice", "choice": "continuation", "probabilities": {}}
@@ -206,10 +207,13 @@ from datetime import datetime as _dt  # noqa: E402
 e = mk_entry(6)
 d = json.loads(e["detail"]); d["retrace"] = "none"; e["detail"] = json.dumps(d)
 ok(rules_code.hard_rule(e, d, _dt.now(timezone.utc))[0].startswith("§2.6"), "code rule: DB with no retrace skipped")
-NEWS["events"] = [{"title": "CPI m/m", "at": _dt.now(timezone.utc)}]
+NEWS["events"] = [{"title": "CPI m/m", "at": _dt.now(timezone.utc) + timedelta(minutes=20)}]
 e = mk_entry(7)
 fired, info = rules_code.hard_rule(e, json.loads(e["detail"]), _dt.now(timezone.utc))
-ok(fired and "news today" in fired and info["today"], f"code rule: news day skipped ({fired})")
+ok(fired and "news bracket" in fired and "20 min before" in fired, f"code rule: inside the news bracket ({fired})")
+NEWS["events"] = [{"title": "CPI m/m", "at": _dt.now(timezone.utc) + timedelta(hours=3)}]
+fired, info = rules_code.hard_rule(e, json.loads(e["detail"]), _dt.now(timezone.utc))
+ok(fired is None and info["today"], "code rule: same day but outside the bracket trades normally")
 NEWS["events"] = []
 e = mk_entry(9); d = json.loads(e["detail"]); d["in_window"] = False; d["mt_cfg"] = "2DB"; e["detail"] = json.dumps(d)
 e["mt_text"] = "Lower Double Break (2DB)"
@@ -219,7 +223,10 @@ ok(fired[0].startswith("§2.4 2DB") and any("window" in f for f in fired), f"2DB
 row2 = [r for r in store.decisions() if r["entry_id"] == 2][0]
 ok(row2["jev_p_take"] == 0.7 and json.loads(row2["jev"])["play"] == "continuation", "Jev shadow score stored on the row")
 ok(row2["rules_version"] and row2["path"] == "model" and row2["play"] == "5m DB continuation", f"row carries rules_version, path, play ({row2['play']})")
-ok(JEV_CALLS and "take" in JEV_CALLS[0] and "r2_5" in JEV_CALLS[0], "Jev asked the hard-rule questions")
+ok(JEV_CALLS and "take" in JEV_CALLS[0] and "hard_5" in JEV_CALLS[0] and any(k.startswith("must_") for k in JEV_CALLS[0])
+   and any(k.startswith("boost_") for k in JEV_CALLS[0]), "Jev playbook asks hard rules, must-haves and boosters")
+jv2 = json.loads(row2["jev"])
+ok(jv2["boosters_present"] >= 1 and jv2["must_haves_missing"] == [] and jv2["amendments_ok"] == 0.9, "Jev playbook answers summarised")
 
 hyps = store.hypotheses()
 ok(any(h["source"] == "lesson" and h["status"] == "testing" for h in hyps), "lesson proposal became a testing hypothesis")
@@ -237,7 +244,7 @@ ok(store.spend()["calls"] >= 1 and store.spend()["total_usd"] > 0, "API spend lo
 # Jev gate mode: a sure hard rule skips without DeepSeek
 config.JEV_MODE = "gate"
 def sure_jev(state, questions, purpose="jev"):
-    ans = {k: {"type": "noul", "noul": 0.97 if k == "r2_7" else 0.05} for k in questions if questions[k]["type"] == "noul"}
+    ans = {k: {"type": "noul", "noul": 0.97 if k == "hard_7" else 0.05} for k in questions if questions[k]["type"] == "noul"}
     ans["take"] = {"type": "choice", "choice": "SKIP", "probabilities": {"TAKE": 0.1, "SKIP": 0.9}}
     ans["grade"] = {"type": "choice", "choice": "C", "probabilities": {}}
     ans["play"] = {"type": "choice", "choice": "other", "probabilities": {}}
@@ -376,6 +383,27 @@ ok(len(gaps) == 2 and gaps[0]["dir"] == "bull" and gaps[0]["bottom"] == 101 and 
 ok(htf.rule_2_8("bear", 102.0, [{**gaps[0], "at_et": "x"}]) and htf.rule_2_8("bull", 102.0, [{**gaps[0], "at_et": "x"}]) is None,
    "rule 2.8: short inside a bullish 4H FVG is flagged, long is not")
 ok(htf.relation(102.0, gaps)[0]["price_is"] == "inside" and "above" in htf.relation(110.0, gaps)[0]["price_is"], "price vs gap relation")
+
+# 15. re-evaluation of code skips after a rule change + Jev on scanner setups
+sc_row = [x for x in store.scans(10) if x["play"] == "5m DB reversal set up"][0]
+ok(sc_row["jev_p_take"] == 0.7, f"Jev scored the scanner's forming setup ({sc_row['jev_p_take']})")
+e10 = mk_entry(10); d10 = json.loads(e10["detail"]); d10["mt_cfg"] = "2DB"; e10["mt_text"] = "Lower Double Break (2DB)"; e10["detail"] = json.dumps(d10)
+FAKE["entries"]["MNQ1!"].append(e10)
+agent.tick(fvg)
+r10 = [r for r in store.decisions() if r["entry_id"] == 10][0]
+ok(r10["path"] == "code" and "2DB" in r10["hard_rule"], "2DB entry code-skipped")
+store.update_decision(10, reeval=None)
+ok(agent.reevaluate_skips(fvg) >= 1, "re-evaluation ran")
+rv = json.loads([r for r in store.decisions() if r["entry_id"] == 10][0]["reeval"])
+ok(rv.get("still_skipped", "").startswith("§2.4"), f"2DB skip still stands under current rules ({rv})")
+# pretend the 2DB rule was relaxed: the entry is a plain DB now -> the model decides
+d10["mt_cfg"] = "DB"; e10["mt_text"] = "Lower Double Break"; e10["detail"] = json.dumps(d10)
+store.update_decision(10, reeval=None)
+agent.reevaluate_skips(fvg)
+rv = json.loads([r for r in store.decisions() if r["entry_id"] == 10][0]["reeval"])
+ok(rv.get("decision") == "TAKE" and rv.get("jev_p_take") == 0.7 and "rules_version" in rv, f"skip re-decided by Jev + model ({rv.get('decision')})")
+rep3 = learning.report(30)
+ok("reevaluated_skips" in rep3 and rep3["reevaluated_skips"]["re_evaluated"] >= 1, "report carries re-evaluated skips")
 
 print("all tests passed")
 server.should_exit = True

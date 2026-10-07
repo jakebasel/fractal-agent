@@ -331,6 +331,7 @@ function setupCard(d, compact = false) {
         d.decision === "TAKE" ? fmtR(d.paper_r) : `<span class="muted">would be</span> ${fmtR(d.r)}`}</span>
     </div>
     ${d.hard_rule ? `<div class="t2" style="margin-top:6px">Hard rule: ${esc(d.hard_rule)}</div>` : ""}
+    ${d.reeval ? `<div class="t2">Re-evaluated under current rules${d.reeval.rules_version ? " (" + esc(d.reeval.rules_version) + ")" : ""}: ${d.reeval.still_skipped ? "still skipped · " + esc(d.reeval.still_skipped) : d.reeval.decision ? `<span class="badge ${d.reeval.decision === "TAKE" ? "take" : "skip"}">${esc(d.reeval.decision)}</span> ${esc(d.reeval.grade || "")} ${esc(d.reeval.size || "")}${d.reeval.jev_p_take != null ? " · Jev P(take) " + Math.round(d.reeval.jev_p_take * 100) + "%" : ""}${d.r != null && d.reeval.decision === "TAKE" ? ` · would be <b class="${clsR(d.r)}">${fmtR(d.r)}</b>` : ""}` : esc(d.reeval.note || d.reeval.error || "")}</div>` : ""}
     ${reasons ? `<ul>${reasons}</ul>` : ""}
     ${lesson ? `<div style="margin-top:8px"><span class="badge">${esc(lesson.verdict || "lesson")}</span> <span class="t2">${esc(lesson.lesson)}</span></div>` : ""}
     ${compact ? "" : `${shots ? `<div class="thumbs">${shots}</div>` : ""}
@@ -430,7 +431,7 @@ function render() {
   $("#live-shots").innerHTML = d.latest_shots.map(f => `<img src="/shot/${encodeURIComponent(f)}" alt="latest screen">`).join("") || `<div class="empty">No screenshots yet.</div>`;
   $("#shot-age").textContent = (shotAgo != null ? fmtAgo(shotAgo) + " ago" : "") + (st.last_screenshot_kind === "window" ? " · TradingView window" : st.last_screenshot_kind === "fallback" ? " · whole screen (no TradingView window)" : "");
   $("#scans").innerHTML = (d.scans || []).map(x => `<div class="lesson"><span class="badge ${x.stage === "ready" ? "star" : ""}">${esc(x.stage)}</span>
-    <b>${esc(x.symbol)} ${x.direction === "bull" ? "▲" : "▼"} ${esc(x.play)}</b> <span class="muted">${esc(x.at_et)} · conf ${x.confidence != null ? Math.round(x.confidence * 100) + "%" : "–"}${x.engine_has_it ? " · engine has it" : ""}</span>
+    <b>${esc(x.symbol)} ${x.direction === "bull" ? "▲" : "▼"} ${esc(x.play)}</b> <span class="muted">${esc(x.at_et)} · conf ${x.confidence != null ? Math.round(x.confidence * 100) + "%" : "–"}${x.jev_p_take != null ? ` · Jev P(take) <b>${Math.round(x.jev_p_take * 100)}%</b>` : ""}${x.engine_has_it ? " · engine has it" : ""}</span>
     ${x.r != null ? `<span class="r ${clsR(x.r)}" style="float:right">${fmtR(x.r)} <span class="muted">${esc(x.outcome)}</span></span>` : ""}
     <div class="t2">${(x.reasons || []).map(esc).join(" · ")}${x.entry ? ` · entry ${x.entry} stop ${x.stop} target ${x.target}` : ""}</div></div>`).join("") ||
     `<div class="empty">Nothing spotted yet. The scanner runs every ${st.scanner ? st.scanner.minutes : 5} min in ${esc(st.scanner ? st.scanner.windows_et : "")} ET when the screen changes.</div>`;
@@ -496,8 +497,13 @@ function render() {
     `<div class="card"><h2>Vision read accuracy <small>price read vs engine entry, within 0.5%</small></h2>
      <div class="t2">${vz.n ? `${vz.n} reads · ${vz.trusted_pct}% trusted · avg score ${vz.avg_score}` : "No reads yet."}</div>
      ${vz.n ? `<ul style="margin:6px 0 0;padding-left:18px" class="muted">${vz.notes.map(n => `<li>${esc(n)}</li>`).join("")}</ul>` : ""}</div>`,
-    `<div class="card"><h2>Jev <small>mode: ${esc(j.mode)}</small></h2><div class="t2">Scored ${j.scored} settled setups · agrees with the agent ${j.agreement_with_agent_pct ?? "–"}% of the time.</div>
-     <div class="scroll"><table>${statHead("Book")}<tr><td>Jev P(take) ≥ 50%, full size</td>${statCells(j.jev_take_book_full_size)}</tr></table></div></div>`,
+    `<div class="card"><h2>Jev <small>mode: ${esc(j.mode)} · playbook generated from the rulebook</small></h2><div class="t2">Scored ${j.scored} settled engine setups · agrees with the agent ${j.agreement_with_agent_pct ?? "–"}% of the time · scored ${rep.spotted_jev ? rep.spotted_jev.scored : 0} forming setups from the scanner.</div>
+     <div class="scroll"><table>${statHead("Book")}<tr><td>Engine setups with Jev P(take) ≥ 50%, full size</td>${statCells(j.jev_take_book_full_size)}</tr>
+     <tr><td>Scanner setups with Jev P(take) ≥ 50%</td>${statCells(rep.spotted_jev ? rep.spotted_jev.book_p_take_ge_50 : null)}</tr></table></div>
+     <details><summary>Jev's playbook (${(d.jev_playbook || []).length} questions, from rules/)</summary><table style="margin-top:6px">${(d.jev_playbook || []).map(([k, id, t]) => `<tr><td class="muted">${esc(k)}</td><td>${esc(id)}</td><td style="white-space:normal;text-align:left">${esc(t)}</td></tr>`).join("")}</table></details></div>`,
+    `<div class="card"><h2>Skips re-evaluated under the current rules <small>after a rule change, code skips from the last 3 days are re-decided</small></h2>
+     ${rep.reevaluated_skips ? `<div class="t2">${rep.reevaluated_skips.re_evaluated} re-evaluated · ${rep.reevaluated_skips.still_skipped} still skipped · ${rep.reevaluated_skips.would_take} would now be taken</div>
+     <div class="scroll"><table>${statHead("Book")}<tr><td>Would-take book (counterfactual)</td>${statCells(rep.reevaluated_skips.would_take_book)}</tr></table></div>` : ""}</div>`,
   ].join("");
   });
   section("spend", () => {

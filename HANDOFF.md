@@ -47,13 +47,17 @@ Mac screenshot ──► fractal-agent ──► OpenRouter: cheap vision model 
    rejects on the dashboard; approved ones are then committed to `rules/amendments.md`. Every
    decision records `rules_version` (hash of rules/) so results can be split per rulebook.
 8. **Jev** (TypeSafe System One, via OpenRouter `/systemone`, `app/jev.py`): one ~100 ms call
-   per setup returns a probability for each judgment hard rule (§2.4-2.12), P(TAKE), grade and
-   play. `JEV_MODE=shadow` (default) only records it; `gate` lets a rule Jev is >=90% sure of
-   skip the setup without DeepSeek. Switch to gate once the Breakdown tab shows Jev agreeing
-   with the agent and its TAKE book holding up.
-9. Code hard rules now also cover §2.2 news (ForexFactory weekly calendar, high-impact USD:
-   release day = skip, CPI/PPI/FOMC week = demo-only skip), London/Asia windows, and DB
-   setups with retrace `none`/`shallow` (§2.6). `app/rules_code.py`.
+   per setup scores a **playbook generated from rules/** (judgment hard rules, every must-have,
+   booster and downgrade, amendment compliance, play kind, grade, P(TAKE)); approving an
+   amendment changes Jev's questions on the next call. Runs on engine setups (shadow next to
+   DeepSeek, or `gate`), on the scanner's forming setups, and on skips re-evaluated after a
+   rule change (`agent.reevaluate_skips`: code skips from the last 3 days are re-decided under
+   the current rules; the original decision is kept, the re-evaluation sits next to it).
+   Switch to gate once the Breakdown tab shows Jev agreeing with the agent.
+9. Code hard rules: 2DB, ND, §2.2 news (ForexFactory calendar, red-folder USD releases only,
+   60 min before to 60 min after the release; `NEWS_BEFORE_MIN`/`NEWS_AFTER_MIN`), DB with
+   retrace `none`/`shallow`, two losses this session, weekend, NY/London/Asia windows, long
+   inside a bearish 4H FVG (from the price archive). `app/rules_code.py`, `app/htf.py`.
 10. Dashboard at `/` (password: `DASHBOARD_PASSWORD`, 30-day cookie): status, cumulative R
     agent vs core, live screen, setups feed with the screenshots each decision used, learning
     tab with approve/reject, breakdowns by play/session/config/grade/booster/hard rule, spend

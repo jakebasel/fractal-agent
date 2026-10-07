@@ -30,7 +30,7 @@ from starlette.routing import Route
 
 from pathlib import Path
 
-from . import agent, config, learning, store
+from . import agent, config, jev, learning, store
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 log = logging.getLogger("main")
@@ -47,7 +47,7 @@ mcp = FastMCP(
 
 def _row(r, full=False) -> dict:
     d = {k: r[k] for k in r.keys()}
-    for k in ("reasons", "boosters", "chart_read", "context", "lesson", "jev", "news"):
+    for k in ("reasons", "boosters", "chart_read", "context", "lesson", "jev", "news", "reeval"):
         if d.get(k):
             try:
                 d[k] = json.loads(d[k])
@@ -294,6 +294,7 @@ async def api_dashboard(request: Request):
         d["chart_read"] = json.loads(r["chart_read"]) if r["chart_read"] else None
         d["jev"] = json.loads(r["jev"]) if r["jev"] else None
         d["news"] = json.loads(r["news"]) if r["news"] else None
+        d["reeval"] = json.loads(r["reeval"]) if r["reeval"] else None
         try:
             ctx = (json.loads(r["context"]) or {}) if r["context"] else {}
             d["plan"] = ctx.get("_plan")
@@ -324,6 +325,7 @@ async def api_dashboard(request: Request):
         "scans": [{**{k: r[k] for k in r.keys()}, "at_et": store.to_et(r["at"]),
                    "reasons": json.loads(r["reasons"] or "[]")} for r in store.scans(40)],
         "backtest": _backtest(),
+        "jev_playbook": jev.playbook()["readable"],
         "vision": _vision_stats(since),
         "rule_versions": [{"version": v["version"], "first_seen_et": store.to_et(v["first_seen"]),
                            "amendments": v["amendments"]} for v in store.rule_versions()],

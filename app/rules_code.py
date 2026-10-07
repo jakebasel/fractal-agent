@@ -41,7 +41,9 @@ def news_events() -> list | None:
 
 
 def news_rule(when: datetime) -> tuple[str | None, dict]:
-    """(rule that fired or None, what was checked) for rule §2.2."""
+    """(rule that fired or None, what was checked) for rule §2.2 as amended: only red-folder
+    (high-impact) USD releases, only inside the bracket NEWS_BEFORE_MIN..NEWS_AFTER_MIN around
+    the release time. The rest of the day, and other sessions, trade normally."""
     if not config.NEWS_FILTER:
         return None, {"checked": False}
     evs = news_events()
@@ -49,15 +51,15 @@ def news_rule(when: datetime) -> tuple[str | None, dict]:
         return None, {"checked": False, "error": _news["error"]}
     et = when.astimezone(config.ET)
     today = [e for e in evs if e["at"].astimezone(config.ET).date() == et.date()]
-    week = [e for e in evs if e["at"].astimezone(config.ET).isocalendar()[:2] == et.isocalendar()[:2]
-            and any(w in (e["title"] or "").lower() for w in config.NEWS_WEEK_WORDS)]
     info = {"checked": True,
             "today": [f'{e["at"].astimezone(config.ET):%H:%M} {e["title"]}' for e in today],
-            "week_flags": sorted({e["title"] for e in week})}
-    if today:
-        return f"§2.2 high-impact USD news today ({today[0]['title']})", info
-    if week:
-        return f"§2.2 {', '.join(info['week_flags'][:2])} week: demo only", info
+            "bracket_min": [config.NEWS_BEFORE_MIN, config.NEWS_AFTER_MIN]}
+    for e in today:
+        delta_min = (when - e["at"]).total_seconds() / 60
+        if -config.NEWS_BEFORE_MIN <= delta_min <= config.NEWS_AFTER_MIN:
+            side = f"{abs(int(delta_min))} min {'before' if delta_min < 0 else 'after'}"
+            return (f"§2.2 inside the news bracket: {e['title']} at "
+                    f"{e['at'].astimezone(config.ET):%H:%M} ET ({side})"), info
     return None, info
 
 

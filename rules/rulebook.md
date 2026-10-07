@@ -83,7 +83,9 @@ The models, step by step (the golden rule: if ANY step doesn't happen, there is 
 ## 2. Hard rules (any one = SKIP)
 
 1. No Market Translator signal armed it (trend-fallback / "ND"). Never trade ND.
-2. High-impact news day, CPI/PPI/FOMC week, or a live speech in progress: demo only = SKIP.
+2. Inside the bracket around a red-folder (high-impact) USD release (60 min before to 60 min
+   after, amendments 2026-10-07), or a live speech in progress: SKIP. The rest of the day
+   trades normally; London is not affected by US releases.
 3. Outside the window. NY: no new entries after 11:00 ET (be in by ~10:30-10:40).
    Asia: done by ~10 PM ET. London: first ~1-2 hours after 2 AM ET only.
    Hard cutoff 11:30 ET for the NY session.

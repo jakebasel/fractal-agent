@@ -9,7 +9,7 @@ import json
 import logging
 from datetime import datetime, timezone
 
-from . import config, llm, prompts, store
+from . import config, jev, llm, prompts, store
 from .mcp_client import FVG
 
 log = logging.getLogger("scanner")
@@ -69,6 +69,16 @@ def scan(fvg: FVG, chart_read, files, now: datetime | None = None, force: bool =
         store.add_scan(now.isoformat(), files, f.get("symbol"), f.get("play"), f.get("direction"),
                        f.get("stage"), f.get("entry"), f.get("stop"), f.get("target"),
                        f.get("confidence"), f.get("reasons"), f.get("engine_has_it"))
+        scan_id = store.scans(1)[0]["id"]
+        # Jev's playbook on the forming setup too (~100 ms, fractions of a cent)
+        try:
+            jv = jev.score({"now": now.astimezone(config.ET).strftime("%a %Y-%m-%d %H:%M ET"),
+                            "chart_read": chart_read, "this_symbol_setups": armed.get(f.get("symbol")),
+                            "spotted": f})
+            if jv:
+                store.set_scan_jev(scan_id, jv)
+        except Exception as e:
+            log.warning("jev on scan: %s", e)
     log.info("scan: %d setup(s) spotted", len(found))
     return found
 

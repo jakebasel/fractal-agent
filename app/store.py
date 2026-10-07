@@ -126,9 +126,11 @@ MIGRATIONS = {
     "decisions": {"play": "TEXT", "rules_version": "TEXT", "jev": "TEXT", "jev_p_take": "REAL",
                   "path": "TEXT", "news": "TEXT", "vision_score": "REAL", "vision_note": "TEXT",
                   "kill_events": "TEXT", "managed_r": "REAL", "managed_outcome": "TEXT",
-                  "managed_paper_r": "REAL", "managed_tries": "INTEGER", "shadow_tries": "INTEGER"},
+                  "managed_paper_r": "REAL", "managed_tries": "INTEGER", "shadow_tries": "INTEGER",
+                  "reeval": "TEXT"},
     "screenshots": {"batch": "TEXT", "part": "INTEGER", "kind": "TEXT"},
-    "scans": {"r": "REAL", "outcome": "TEXT", "scored_at": "TEXT", "score_tries": "INTEGER"},
+    "scans": {"r": "REAL", "outcome": "TEXT", "scored_at": "TEXT", "score_tries": "INTEGER",
+              "jev": "TEXT", "jev_p_take": "REAL"},
 }
 
 SIZE_MULT = {"full": 1.0, "reduced": 0.5, "none": 0.0}
@@ -276,6 +278,20 @@ def add_scan(at, files, symbol, play, direction, stage, entry, stop, target, con
                      (at, files, symbol, play, direction, stage, entry, stop, target, confidence,
                       json.dumps(reasons or []), 1 if engine_has_it else 0))
         db().commit()
+
+
+def set_scan_jev(scan_id, jv):
+    with _lock:
+        db().execute("UPDATE scans SET jev=?, jev_p_take=? WHERE id=?",
+                     (json.dumps(jv), (jv or {}).get("p_take"), scan_id))
+        db().commit()
+
+
+def reeval_todo(since_iso, limit=3):
+    """Code-skipped rows not yet re-evaluated under the current rules."""
+    return db().execute(
+        "SELECT * FROM decisions WHERE path='code' AND decision='SKIP' AND reeval IS NULL "
+        "AND entry_at>=? ORDER BY entry_id DESC LIMIT ?", (since_iso, limit)).fetchall()
 
 
 def scans(limit=50):

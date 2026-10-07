@@ -176,6 +176,23 @@ def daily_stop_book(rows, r_key, stop_r=-2.0):
     return store.summarize(vals)
 
 
+def _reeval_book(rows) -> dict:
+    """Skipped-by-code trades re-decided under the current rules: what the re-decision would
+    have earned at its size (counterfactual, full-size r from the engine)."""
+    taken, still, n = [], 0, 0
+    for r in rows:
+        if not r["reeval"]:
+            continue
+        rv = _jl(r["reeval"]) if r["reeval"].startswith("[") else json.loads(r["reeval"])
+        n += 1
+        if rv.get("still_skipped"):
+            still += 1
+        elif rv.get("decision") == "TAKE" and r["r"] is not None:
+            taken.append(r["r"] * store.SIZE_MULT.get(rv.get("size") or "full", 1.0))
+    return {"re_evaluated": n, "still_skipped": still, "would_take": len(taken),
+            "would_take_book": store.summarize(taken)}
+
+
 def _group(rows, key, value="r"):
     groups = {}
     for r in rows:
@@ -239,7 +256,11 @@ def report(days: float = 30) -> dict:
             {"rules_version": v, **store.summarize([x["paper_r"] for x in rs if x["decision"] == "TAKE"])}
             for v, rs in by_version.items()],
         "lesson_verdicts": verdicts,
+        "reevaluated_skips": _reeval_book(store.decisions(limit=100000, since_iso=since)),
         "spotted_by_scanner_book": store.summarize([s["r"] for s in store.scored_scans() if s["at"] >= since]),
+        "spotted_jev": {"scored": sum(1 for s in store.scans(500) if s["jev_p_take"] is not None),
+                        "book_p_take_ge_50": store.summarize([s["r"] for s in store.scored_scans()
+                                                              if s["at"] >= since and (s["jev_p_take"] or 0) >= 0.5])},
         "spotted_by_play": _group([s for s in store.scored_scans() if s["at"] >= since], lambda s: s["play"]),
         "jev": {"mode": config.JEV_MODE, "scored": len(jev_rows),
                 "agreement_with_agent_pct": round(100 * agree / len(jev_rows), 1) if jev_rows else None,

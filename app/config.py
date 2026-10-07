@@ -52,8 +52,10 @@ SCREEN_LAYOUT = _env(
 # --- news filter (rule 2.2): high-impact USD events from the public weekly calendar ---------
 NEWS_FILTER = _env("NEWS_FILTER", "1") == "1"
 NEWS_URL = _env("NEWS_URL", "https://nfs.faireconomy.media/ff_calendar_thisweek.json")
-# events that make the whole week demo-only (rule 2.2: CPI/PPI/FOMC week)
-NEWS_WEEK_WORDS = [w.strip().lower() for w in _env("NEWS_WEEK_WORDS", "CPI,PPI,FOMC").split(",") if w.strip()]
+# red-folder (high-impact) USD releases only; skip inside a bracket around the release time
+# (Jake 2026-10-07: "around when the news comes out, like a 2-hour bracket, not the full day")
+NEWS_BEFORE_MIN = int(_env("NEWS_BEFORE_MIN", "60"))
+NEWS_AFTER_MIN = int(_env("NEWS_AFTER_MIN", "60"))
 
 # --- spend guard: optional work (shadow tests, scanner, Jev backfill) pauses when today's
 # OpenRouter spend passes this; live decisions always run ---------------------------------------

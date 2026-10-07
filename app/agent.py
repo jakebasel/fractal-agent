@@ -393,6 +393,60 @@ def _safe_review(fvg: FVG, entry: dict):
         return row
 
 
+def reevaluate_skips(fvg: FVG, limit: int = 3) -> int:
+    """Rules changed? Code-skipped setups from the last 3 days are re-decided under the CURRENT
+    rules (hard rules again; if none fires, Jev + the decision model, without a chart read since
+    the screen is gone). The original decision is kept; the re-evaluation sits next to it."""
+    if store.over_budget():
+        return 0
+    since = datetime.fromtimestamp(datetime.now(timezone.utc).timestamp() - 3 * 86400,
+                                   tz=timezone.utc).isoformat()
+    todo = store.reeval_todo(since, limit)
+    if not todo:
+        return 0
+    cache: dict[str, dict] = {}
+    done = 0
+    for row in todo:
+        sym = row["symbol"]
+        if sym not in cache:
+            try:
+                cache[sym] = {e["id"]: e for e in fvg.entries(sym, limit=150)}
+            except Exception as e:
+                log.warning("reeval entries %s: %s", sym, e)
+                cache[sym] = {}
+        entry = cache[sym].get(row["entry_id"])
+        if not entry:
+            store.update_decision(row["entry_id"], reeval={"note": "engine entry no longer available"})
+            done += 1
+            continue
+        detail = _detail(entry)
+        fired, news = rules_code.hard_rules(entry, detail, datetime.now(timezone.utc))
+        at = store.now_utc()
+        if fired:
+            store.update_decision(row["entry_id"], reeval={"at": at, "still_skipped": fired[0],
+                                                           "rules_version": prompts.rules_version()})
+            done += 1
+            continue
+        context = build_context(fvg, entry, detail, None, None)
+        context["note"] = "re-evaluation after a rule change: no chart read available for the time of the setup"
+        try:
+            context["course_passages"] = knowledge.passages_for(context)
+        except Exception:
+            pass
+        jv = jev.score(context)
+        rv = {"at": at, "rules_version": prompts.rules_version(), "jev_p_take": (jv or {}).get("p_take"),
+              "jev_grade": (jv or {}).get("grade")}
+        try:
+            dec = normalise(llm.decide(prompts.decision_system(), prompts.decision_user(context), purpose="reeval"))
+            rv.update(decision=dec["decision"], grade=dec["grade"], size=dec["size"], reasons=dec["reasons"][:6],
+                      play=prompts.play_name(entry.get("mt_tf"), prompts.signal_of(entry, detail), dec["play"]))
+        except Exception as e:
+            rv["error"] = str(e)[:300]
+        store.update_decision(row["entry_id"], reeval=rv)
+        done += 1
+    return done
+
+
 def _prefetch_htf(fvg: FVG):
     """Warm the HTF FVG cache outside review() so tape downloads never sit on a live decision."""
     for sym in config.SYMBOLS:
@@ -445,6 +499,10 @@ def tick(fvg: FVG):
         scanner.score_pending(fvg)
     except Exception as e:
         log.warning("scan scoring failed: %s", e)
+    try:
+        reevaluate_skips(fvg)
+    except Exception as e:
+        log.warning("re-evaluation failed: %s", e)
     learning.promote_queued()
     try:
         learning.run_shadow()
