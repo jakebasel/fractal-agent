@@ -7,6 +7,10 @@
   (query) returns the most relevant course / live-session passages.
 - Writing back: ONLY through the two scripts in ./bin (they POST to the paper agent):
   `bin/post_review.sh '<json>'` and `bin/propose.sh '<json>'`.
+- Seeing the chart: `bin/get_shot.sh <screenshot name>` downloads it to ./shots/<name> (names come
+  from decision_detail / review_queue `screenshots.at_decision` and `.at_exit`; the left window
+  is the 5-minute charts, the right the 1-minute; MNQ and MES both visible); then use the vision
+  tool on the file. Or chart_question(entry_id, question, at) for a targeted read.
 - `review_queue(reviewer="hermes", limit=3)` gives settled trades you have not reviewed. Each has:
   engine data (entry/stop/target, signal, retracement), `chart_read` (what the vision model saw:
   white lines, reversal zones, blue/purple zones, Spotlight, EMAs, trend table), `htf_fvgs` (4H and

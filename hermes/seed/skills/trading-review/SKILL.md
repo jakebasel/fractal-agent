@@ -8,6 +8,8 @@ Every run: the paper agent's review_queue has settled trades without a hermes re
 
 ## Procedure
 1. review_queue(reviewer="hermes", limit=3).
+   Classify: taken+lost (why not skipped?), skipped+won (why skipped?), taken+won and
+   skipped+lost (what made it right). The goal is the optimal take/skip line and the exit.
 2. Per trade, check in this order: (a) hard rules and must-haves vs what the engine and the
    chart read show; (b) the sister index (MES for MNQ, MNQ for MES): stronger/weaker, a DB the
    other way, same idea on both; (c) 4H/daily FVGs and liquidity in the trade's path (htf_fvgs,

@@ -12,10 +12,10 @@ agent:
   max_turns: 40
   run_budget_seconds: 1200
   reasoning_effort: low
-  disabled_toolsets: [web, search, browser, vision, image_gen, video_gen, tts, delegation,
+  disabled_toolsets: [web, search, browser, image_gen, video_gen, tts, delegation,
                       code_execution, computer_use, cronjob, clarify, messaging, todo, kanban]
 auxiliary:
-  vision: {provider: openrouter, model: deepseek/deepseek-v3.2}
+  vision: {provider: openrouter, model: google/gemini-2.5-flash}   # the vision tool reads the saved screenshots
   compression: {provider: auto, model: ''}
   background_review: {enabled: false}
 memory:
