@@ -447,5 +447,18 @@ cq = main.chart_question(2, "Is there a blue zone below price on the 5m?")
 ok("answer" in cq or "readability" in cq or "charts" in cq, f"chart_question answers from the saved screenshot ({list(cq)[:3]})")
 ok(main.chart_question(999999, "x").get("error"), "chart_question says when no screenshot exists")
 
+# 19. migrations cover every column the code writes (production had a reviews table without scan_id)
+import sqlite3 as _sq  # noqa: E402
+_old = _sq.connect(str(Path(TMP) / "old.db"))
+_old.executescript("CREATE TABLE reviews(id INTEGER PRIMARY KEY AUTOINCREMENT, entry_id INTEGER, reviewer TEXT, at TEXT, verdict TEXT, summary TEXT, exit_notes TEXT, proposal TEXT, raw TEXT);")
+_old.commit(); _old.close()
+_prev = config.DATA_DIR
+config.DATA_DIR = Path(TMP) / "olddir"; config.DATA_DIR.mkdir(exist_ok=True)
+(Path(TMP) / "old.db").rename(config.DATA_DIR / "agent.db")
+store.reset_for_tests()
+store.add_review(1, "probe", "right_skip", "s", "e", None, {}, scan_id=None)
+ok(store.reviews(1)[0]["reviewer"] == "probe", "old reviews table migrated (scan_id added) before insert")
+config.DATA_DIR = _prev; store.reset_for_tests()
+
 print("all tests passed")
 server.should_exit = True

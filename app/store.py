@@ -143,6 +143,7 @@ MIGRATIONS = {
     "screenshots": {"batch": "TEXT", "part": "INTEGER", "kind": "TEXT"},
     "scans": {"r": "REAL", "outcome": "TEXT", "scored_at": "TEXT", "score_tries": "INTEGER",
               "jev": "TEXT", "jev_p_take": "REAL"},
+    "reviews": {"scan_id": "INTEGER"},
 }
 
 SIZE_MULT = {"full": 1.0, "reduced": 0.5, "none": 0.0}
