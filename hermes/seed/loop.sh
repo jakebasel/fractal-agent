@@ -4,7 +4,7 @@
 # No queue = no LLM call = no cost.
 set -u
 SEED=/opt/seed; DATA=/opt/data
-mkdir -p "$DATA/trading-review/bin" "$DATA/skills/trading-review" "$DATA/skills-agent" "$DATA/memories"
+mkdir -p "$DATA/trading-review/bin" "$DATA/trading-review/reviews" "$DATA/trading-review/shots" "$DATA/skills/trading-review" "$DATA/skills-agent" "$DATA/memories"
 cp "$SEED/config.yaml" "$DATA/config.yaml"   # config is ours and versioned; memory/skills/sessions persist on the volume
 cp "$SEED/SOUL.md" "$DATA/SOUL.md"
 cp "$SEED/AGENTS.md" "$DATA/trading-review/AGENTS.md"
