@@ -544,6 +544,7 @@ def status() -> dict:
     return {"paper_only": True, "capture_status": capture, "symbols": config.SYMBOLS,
             "decision_model": config.DECISION_MODEL, "vision_model": config.VISION_MODEL,
             "jev_model": config.JEV_MODEL, "jev_mode": config.JEV_MODE,
+            "rules_version": prompts.rules_version(),
             "key_set": bool(config.OPENROUTER_API_KEY),
             "last_loop_et": store.to_et(_state["last_loop"]), "loops": _state["loops"],
             "last_loop_ts": _iso_to_dt(_state["last_loop"]).timestamp() if _state["last_loop"] else None,

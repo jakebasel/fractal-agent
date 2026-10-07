@@ -54,8 +54,9 @@ def _open_slots() -> int:
     return config.MAX_TESTING_HYPOTHESES - len(store.hypotheses("testing"))
 
 
-def register_proposal(lesson: dict, entry_id: int):
-    """A lesson's proposal becomes a hypothesis, or adds support to one that says the same."""
+def register_proposal(lesson: dict, entry_id: int, source: str = "lesson", note: str | None = None):
+    """A proposal (from a lesson, or an outside reviewer) becomes a hypothesis, or adds support
+    to one that says the same."""
     rule = (lesson or {}).get("proposal")
     if not rule or str(rule).strip().lower() in ("null", "none", ""):
         return None
@@ -76,8 +77,8 @@ def register_proposal(lesson: dict, entry_id: int):
         # a queued idea that keeps coming back gets a testing slot when one frees up
         return same
     status = "testing" if _open_slots() > 0 else "queued"
-    return store.add_hypothesis(title or rule[:40], rule, lesson.get("rule_ref"), "lesson",
-                                status, entry_ids=[entry_id])
+    return store.add_hypothesis(title or rule[:40], rule, lesson.get("rule_ref"), source,
+                                status, entry_ids=[entry_id] if entry_id else [], note=note)
 
 
 def promote_queued():

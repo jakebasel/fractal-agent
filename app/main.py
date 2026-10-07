@@ -364,6 +364,26 @@ async def api_hypothesis(request: Request):
     return JSONResponse({"ok": True, "id": hid, "status": status})
 
 
+async def propose_hypothesis(request: Request):
+    """POST /api/hypotheses/propose {title, rule, rule_ref?, note?} with the agent token: an
+    outside reviewer (e.g. a Hermes Agent review job) files a proposal. It enters the same
+    shadow-test pipeline as a lesson proposal; nothing changes the rules without Jake."""
+    if not _authed(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    try:
+        body = await request.json()
+    except ValueError:
+        return JSONResponse({"error": "bad json"}, status_code=400)
+    rule, title = str(body.get("rule") or "").strip(), str(body.get("title") or "").strip()
+    if not rule or not title or len(rule) > 1500:
+        return JSONResponse({"error": "title and rule (IF ... THEN ...) required"}, status_code=400)
+    source = re.sub(r"[^a-z0-9_-]", "", str(body.get("source") or "hermes").lower())[:20] or "external"
+    hid = learning.register_proposal({"proposal": rule, "proposal_title": title[:80],
+                                      "rule_ref": body.get("rule_ref")}, entry_id=0, source=source,
+                                     note=(body.get("note") or None))
+    return JSONResponse({"ok": True, "hypothesis_id": hid})
+
+
 async def shot_file(request: Request):
     if not _authed(request):
         return PlainTextResponse("unauthorized", status_code=401)
@@ -392,6 +412,7 @@ app.router.routes.extend([
     Route("/logout", logout),
     Route("/api/dashboard", api_dashboard),
     Route("/api/hypotheses/{hid:int}", api_hypothesis, methods=["POST"]),
+    Route("/api/hypotheses/propose", propose_hypothesis, methods=["POST"]),
     Route("/shot/{name}", shot_file),
 ])
 

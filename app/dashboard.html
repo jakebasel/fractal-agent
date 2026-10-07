@@ -330,10 +330,10 @@ function setupCard(d, compact = false) {
       <span class="r ${clsR(d.decision === "TAKE" ? d.paper_r : d.r)}">${d.r == null ? '<span class="muted">open</span>' :
         d.decision === "TAKE" ? fmtR(d.paper_r) : `<span class="muted">would be</span> ${fmtR(d.r)}`}</span>
     </div>
-    ${d.hard_rule ? `<div class="t2" style="margin-top:6px">Hard rule: ${esc(d.hard_rule)}</div>` : ""}
+    ${d.hard_rule ? `<div class="t2" style="margin-top:6px">${d.rules_version && DATA.status.rules_version && d.rules_version !== DATA.status.rules_version ? `<span class="badge">rules at the time · ${esc(d.rules_version)}</span> ` : ""}Hard rule: ${esc(d.hard_rule)}</div>` : ""}
     ${d.reeval ? `<div class="t2">Re-evaluated under current rules${d.reeval.rules_version ? " (" + esc(d.reeval.rules_version) + ")" : ""}: ${d.reeval.still_skipped ? "still skipped · " + esc(d.reeval.still_skipped) : d.reeval.decision ? `<span class="badge ${d.reeval.decision === "TAKE" ? "take" : "skip"}">${esc(d.reeval.decision)}</span> ${esc(d.reeval.grade || "")} ${esc(d.reeval.size || "")}${d.reeval.jev_p_take != null ? " · Jev P(take) " + Math.round(d.reeval.jev_p_take * 100) + "%" : ""}${d.r != null && d.reeval.decision === "TAKE" ? ` · would be <b class="${clsR(d.r)}">${fmtR(d.r)}</b>` : ""}` : esc(d.reeval.note || d.reeval.error || "")}</div>` : ""}
     ${reasons ? `<ul>${reasons}</ul>` : ""}
-    ${lesson ? `<div style="margin-top:8px"><span class="badge">${esc(lesson.verdict || "lesson")}</span> <span class="t2">${esc(lesson.lesson)}</span></div>` : ""}
+    ${lesson ? `<div style="margin-top:8px"><span class="badge">${esc(lesson.verdict || "lesson")}</span> <span class="t2">${esc(lesson.lesson)}</span>${d.rules_version && DATA.status.rules_version && d.rules_version !== DATA.status.rules_version ? ` <span class="muted">(written under the rules at the time)</span>` : ""}</div>` : ""}
     ${compact ? "" : `${shots ? `<div class="thumbs">${shots}</div>` : ""}
     <details><summary>Details${jev ? " · " + jev : ""}</summary>
       <div class="t2" style="margin:8px 0">Entry ${d.entry ?? "–"} · stop ${d.stop ?? "–"} · target ${d.target ?? "–"} · signal ${esc(d.mt_text)} (${esc(d.mt_tf)}) · retrace ${esc(d.retrace)} · rules ${esc(d.rules_version || "v1")} · path ${esc(d.path || "model")}</div>

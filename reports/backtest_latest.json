@@ -1,5 +1,5 @@
 {
- "generated_et": "2026-10-07 09:50 ET",
+ "generated_et": "2026-10-07 13:14 ET",
  "window": "2026-08-17 to 2026-10-05 ET; train < 2026-09-11 (793), holdout >= 2026-09-11 (355)",
  "symbols": [
   "MNQ1!",
@@ -574,7 +574,7 @@
     "holdout_keeps_half_the_edge": true
    },
    "misses": [
-    "holdout t 0.97 < bar 2.95 after 13 tweaks tried"
+    "holdout t 0.97 < bar 3.11 after 21 tweaks tried"
    ],
    "verdict": "PASS (below multiple-testing bar)",
    "holdout_t": 0.97
@@ -658,7 +658,7 @@
     "holdout_keeps_half_the_edge": true
    },
    "misses": [
-    "holdout t 1.18 < bar 2.95 after 13 tweaks tried"
+    "holdout t 1.18 < bar 3.11 after 21 tweaks tried"
    ],
    "verdict": "PASS (below multiple-testing bar)",
    "holdout_t": 1.18
@@ -891,7 +891,7 @@
     "total_r_up_on_train": true,
     "total_r_up_on_holdout": true,
     "drawdown_not_deeper": false,
-    "added_trades_positive_both_halves": true,
+    "changed_trades_improve_both_halves": true,
     "holdout_keeps_half_the_edge": true
    },
    "misses": [
@@ -900,25 +900,20 @@
    "verdict": "inconclusive"
   },
   {
-   "name": "NY AM before 11:00 only (the old rule)",
+   "name": "immediate rebalance only (<= 4 x 30s candles to close)",
    "tweak": {
-    "name": "NY AM before 11:00 only (the old rule)",
+    "name": "immediate rebalance only (<= 4 x 30s candles to close)",
     "if": [
      {
-      "col": "session",
-      "op": "==",
-      "val": "newyork"
-     },
-     {
-      "col": "hour",
-      "op": ">=",
-      "val": 11
+      "col": "v_candles",
+      "op": ">",
+      "val": 4
      }
     ],
     "then": "skip"
    },
-   "affected_train": 22,
-   "affected_holdout": 13,
+   "affected_train": 124,
+   "affected_holdout": 67,
    "train": {
     "base": {
      "n": 347,
@@ -928,13 +923,13 @@
      "max_dd_r": -39.32
     },
     "with_tweak": {
-     "n": 325,
-     "win_pct": 33.2,
-     "avg_r": -0.068,
-     "total_r": -22.05,
-     "max_dd_r": -35.77
+     "n": 223,
+     "win_pct": 35.9,
+     "avg_r": 0.002,
+     "total_r": 0.45,
+     "max_dd_r": -18.97
     },
-    "delta_total_r": 9.77
+    "delta_total_r": 32.27
    },
    "holdout": {
     "base": {
@@ -945,42 +940,44 @@
      "max_dd_r": -29.5
     },
     "with_tweak": {
-     "n": 139,
-     "win_pct": 39.6,
-     "avg_r": -0.01,
-     "total_r": -1.41,
-     "max_dd_r": -28.5
+     "n": 85,
+     "win_pct": 29.4,
+     "avg_r": -0.252,
+     "total_r": -21.44,
+     "max_dd_r": -28.54
     },
-    "delta_total_r": 4.0
+    "delta_total_r": -16.03
    },
    "affected_trades": {
     "train": {
-     "n": 22,
-     "win_pct": 27.3,
-     "avg_r": -0.444,
-     "total_r": -9.77,
-     "max_dd_r": -12.0
+     "n": 124,
+     "win_pct": 27.4,
+     "avg_r": -0.26,
+     "total_r": -32.27,
+     "max_dd_r": -37.27
     },
     "holdout": {
-     "n": 13,
-     "win_pct": 23.1,
-     "avg_r": -0.308,
-     "total_r": -4.0,
-     "max_dd_r": -5.0
+     "n": 67,
+     "win_pct": 49.3,
+     "avg_r": 0.239,
+     "total_r": 16.03,
+     "max_dd_r": -9.5
     }
    },
    "checks": {
-    "enough_affected_on_train": false,
+    "enough_affected_on_train": true,
     "total_r_up_on_train": true,
-    "total_r_up_on_holdout": true,
+    "total_r_up_on_holdout": false,
     "drawdown_not_deeper": true,
-    "removed_trades_negative_both_halves": true,
-    "holdout_keeps_half_the_edge": true
+    "removed_trades_negative_both_halves": false,
+    "holdout_keeps_half_the_edge": false
    },
    "misses": [
-    "enough_affected_on_train"
+    "total_r_up_on_holdout",
+    "removed_trades_negative_both_halves",
+    "holdout_keeps_half_the_edge"
    ],
-   "verdict": "inconclusive"
+   "verdict": "fail"
   },
   {
    "name": "DB only (no lone M)",
@@ -1062,6 +1059,91 @@
     "holdout_keeps_half_the_edge"
    ],
    "verdict": "inconclusive"
+  },
+  {
+   "name": "news day: half size outside the bracket",
+   "tweak": {
+    "name": "news day: half size outside the bracket",
+    "if": [
+     {
+      "col": "news_day",
+      "op": "==",
+      "val": 1
+     },
+     {
+      "col": "news_min",
+      "op": "abs>",
+      "val": 60
+     }
+    ],
+    "then": "half"
+   },
+   "affected_train": 156,
+   "affected_holdout": 81,
+   "train": {
+    "base": {
+     "n": 347,
+     "win_pct": 32.9,
+     "avg_r": -0.092,
+     "total_r": -31.82,
+     "max_dd_r": -39.32
+    },
+    "with_tweak": {
+     "n": 347,
+     "win_pct": 32.9,
+     "avg_r": -0.056,
+     "total_r": -19.29,
+     "max_dd_r": -30.08
+    },
+    "delta_total_r": 12.53
+   },
+   "holdout": {
+    "base": {
+     "n": 152,
+     "win_pct": 38.2,
+     "avg_r": -0.036,
+     "total_r": -5.41,
+     "max_dd_r": -29.5
+    },
+    "with_tweak": {
+     "n": 152,
+     "win_pct": 38.2,
+     "avg_r": -0.07,
+     "total_r": -10.64,
+     "max_dd_r": -22.5
+    },
+    "delta_total_r": -5.23
+   },
+   "affected_trades": {
+    "train": {
+     "n": 156,
+     "win_pct": 32.1,
+     "avg_r": -0.161,
+     "total_r": -25.05,
+     "max_dd_r": -28.55
+    },
+    "holdout": {
+     "n": 81,
+     "win_pct": 46.9,
+     "avg_r": 0.129,
+     "total_r": 10.47,
+     "max_dd_r": -15.0
+    }
+   },
+   "checks": {
+    "enough_affected_on_train": true,
+    "total_r_up_on_train": true,
+    "total_r_up_on_holdout": false,
+    "drawdown_not_deeper": true,
+    "removed_trades_negative_both_halves": false,
+    "holdout_keeps_half_the_edge": false
+   },
+   "misses": [
+    "total_r_up_on_holdout",
+    "removed_trades_negative_both_halves",
+    "holdout_keeps_half_the_edge"
+   ],
+   "verdict": "fail"
   },
   {
    "name": "no gaps invalidated on the way",
@@ -1224,25 +1306,20 @@
    "verdict": "fail"
   },
   {
-   "name": "London first 2h only (the old rule)",
+   "name": "news: skip inside the +-60 min bracket",
    "tweak": {
-    "name": "London first 2h only (the old rule)",
+    "name": "news: skip inside the +-60 min bracket",
     "if": [
      {
-      "col": "session",
-      "op": "==",
-      "val": "london"
-     },
-     {
-      "col": "hour",
-      "op": ">=",
-      "val": 4
+      "col": "news_min",
+      "op": "abs<=",
+      "val": 60
      }
     ],
     "then": "skip"
    },
-   "affected_train": 36,
-   "affected_holdout": 32,
+   "affected_train": 18,
+   "affected_holdout": 5,
    "train": {
     "base": {
      "n": 347,
@@ -1252,13 +1329,13 @@
      "max_dd_r": -39.32
     },
     "with_tweak": {
-     "n": 311,
-     "win_pct": 32.2,
-     "avg_r": -0.116,
-     "total_r": -35.94,
-     "max_dd_r": -43.44
+     "n": 329,
+     "win_pct": 32.8,
+     "avg_r": -0.101,
+     "total_r": -33.32,
+     "max_dd_r": -40.82
     },
-    "delta_total_r": -4.12
+    "delta_total_r": -1.5
    },
    "holdout": {
     "base": {
@@ -1269,32 +1346,179 @@
      "max_dd_r": -29.5
     },
     "with_tweak": {
-     "n": 120,
-     "win_pct": 36.7,
-     "avg_r": -0.062,
-     "total_r": -7.4,
-     "max_dd_r": -23.0
+     "n": 147,
+     "win_pct": 38.1,
+     "avg_r": -0.022,
+     "total_r": -3.3,
+     "max_dd_r": -28.5
     },
-    "delta_total_r": -1.99
+    "delta_total_r": 2.11
    },
    "affected_trades": {
     "train": {
-     "n": 36,
-     "win_pct": 38.9,
-     "avg_r": 0.114,
-     "total_r": 4.12,
-     "max_dd_r": -5.28
+     "n": 18,
+     "win_pct": 33.3,
+     "avg_r": 0.083,
+     "total_r": 1.5,
+     "max_dd_r": -4.0
     },
     "holdout": {
-     "n": 32,
-     "win_pct": 43.8,
-     "avg_r": 0.062,
-     "total_r": 1.99,
-     "max_dd_r": -11.9
+     "n": 5,
+     "win_pct": 40.0,
+     "avg_r": -0.422,
+     "total_r": -2.11,
+     "max_dd_r": -3.0
     }
    },
    "checks": {
-    "enough_affected_on_train": true,
+    "enough_affected_on_train": false,
+    "total_r_up_on_train": false,
+    "total_r_up_on_holdout": true,
+    "drawdown_not_deeper": false,
+    "removed_trades_negative_both_halves": false,
+    "holdout_keeps_half_the_edge": false
+   },
+   "misses": [
+    "enough_affected_on_train",
+    "total_r_up_on_train",
+    "drawdown_not_deeper",
+    "removed_trades_negative_both_halves",
+    "holdout_keeps_half_the_edge"
+   ],
+   "verdict": "fail"
+  },
+  {
+   "name": "exit at an opposing 5m DB (management rule)",
+   "tweak": {
+    "name": "exit at an opposing 5m DB (management rule)",
+    "if": [],
+    "then": "use_col",
+    "col": "managed_r"
+   },
+   "affected_train": 0,
+   "affected_holdout": 0,
+   "train": {
+    "base": {
+     "n": 347,
+     "win_pct": 32.9,
+     "avg_r": -0.092,
+     "total_r": -31.82,
+     "max_dd_r": -39.32
+    },
+    "with_tweak": {
+     "n": 347,
+     "win_pct": 32.9,
+     "avg_r": -0.092,
+     "total_r": -31.82,
+     "max_dd_r": -39.32
+    },
+    "delta_total_r": 0.0
+   },
+   "holdout": {
+    "base": {
+     "n": 152,
+     "win_pct": 38.2,
+     "avg_r": -0.036,
+     "total_r": -5.41,
+     "max_dd_r": -29.5
+    },
+    "with_tweak": {
+     "n": 152,
+     "win_pct": 38.2,
+     "avg_r": -0.036,
+     "total_r": -5.41,
+     "max_dd_r": -29.5
+    },
+    "delta_total_r": 0.0
+   },
+   "affected_trades": {
+    "train": {
+     "n": 0
+    },
+    "holdout": {
+     "n": 0
+    }
+   },
+   "checks": {
+    "enough_affected_on_train": false,
+    "total_r_up_on_train": false,
+    "total_r_up_on_holdout": false,
+    "drawdown_not_deeper": true,
+    "changed_trades_improve_both_halves": false,
+    "holdout_keeps_half_the_edge": false
+   },
+   "misses": [
+    "enough_affected_on_train",
+    "total_r_up_on_train",
+    "total_r_up_on_holdout",
+    "changed_trades_improve_both_halves",
+    "holdout_keeps_half_the_edge"
+   ],
+   "verdict": "fail"
+  },
+  {
+   "name": "no entry within 30 min after a 5m DB against",
+   "tweak": {
+    "name": "no entry within 30 min after a 5m DB against",
+    "if": [
+     {
+      "col": "db_against_before_min",
+      "op": "<=",
+      "val": 30
+     }
+    ],
+    "then": "skip"
+   },
+   "affected_train": 2,
+   "affected_holdout": 0,
+   "train": {
+    "base": {
+     "n": 347,
+     "win_pct": 32.9,
+     "avg_r": -0.092,
+     "total_r": -31.82,
+     "max_dd_r": -39.32
+    },
+    "with_tweak": {
+     "n": 345,
+     "win_pct": 32.8,
+     "avg_r": -0.095,
+     "total_r": -32.82,
+     "max_dd_r": -40.32
+    },
+    "delta_total_r": -1.0
+   },
+   "holdout": {
+    "base": {
+     "n": 152,
+     "win_pct": 38.2,
+     "avg_r": -0.036,
+     "total_r": -5.41,
+     "max_dd_r": -29.5
+    },
+    "with_tweak": {
+     "n": 152,
+     "win_pct": 38.2,
+     "avg_r": -0.036,
+     "total_r": -5.41,
+     "max_dd_r": -29.5
+    },
+    "delta_total_r": 0.0
+   },
+   "affected_trades": {
+    "train": {
+     "n": 2,
+     "win_pct": 50.0,
+     "avg_r": 0.5,
+     "total_r": 1.0,
+     "max_dd_r": -1.0
+    },
+    "holdout": {
+     "n": 0
+    }
+   },
+   "checks": {
+    "enough_affected_on_train": false,
     "total_r_up_on_train": false,
     "total_r_up_on_holdout": false,
     "drawdown_not_deeper": false,
@@ -1302,6 +1526,86 @@
     "holdout_keeps_half_the_edge": false
    },
    "misses": [
+    "enough_affected_on_train",
+    "total_r_up_on_train",
+    "total_r_up_on_holdout",
+    "drawdown_not_deeper",
+    "removed_trades_negative_both_halves",
+    "holdout_keeps_half_the_edge"
+   ],
+   "verdict": "fail"
+  },
+  {
+   "name": "no entry within 60 min after a 5m DB against",
+   "tweak": {
+    "name": "no entry within 60 min after a 5m DB against",
+    "if": [
+     {
+      "col": "db_against_before_min",
+      "op": "<=",
+      "val": 60
+     }
+    ],
+    "then": "skip"
+   },
+   "affected_train": 3,
+   "affected_holdout": 0,
+   "train": {
+    "base": {
+     "n": 347,
+     "win_pct": 32.9,
+     "avg_r": -0.092,
+     "total_r": -31.82,
+     "max_dd_r": -39.32
+    },
+    "with_tweak": {
+     "n": 344,
+     "win_pct": 32.6,
+     "avg_r": -0.099,
+     "total_r": -34.09,
+     "max_dd_r": -41.59
+    },
+    "delta_total_r": -2.27
+   },
+   "holdout": {
+    "base": {
+     "n": 152,
+     "win_pct": 38.2,
+     "avg_r": -0.036,
+     "total_r": -5.41,
+     "max_dd_r": -29.5
+    },
+    "with_tweak": {
+     "n": 152,
+     "win_pct": 38.2,
+     "avg_r": -0.036,
+     "total_r": -5.41,
+     "max_dd_r": -29.5
+    },
+    "delta_total_r": 0.0
+   },
+   "affected_trades": {
+    "train": {
+     "n": 3,
+     "win_pct": 66.7,
+     "avg_r": 0.757,
+     "total_r": 2.27,
+     "max_dd_r": -1.0
+    },
+    "holdout": {
+     "n": 0
+    }
+   },
+   "checks": {
+    "enough_affected_on_train": false,
+    "total_r_up_on_train": false,
+    "total_r_up_on_holdout": false,
+    "drawdown_not_deeper": false,
+    "removed_trades_negative_both_halves": false,
+    "holdout_keeps_half_the_edge": false
+   },
+   "misses": [
+    "enough_affected_on_train",
     "total_r_up_on_train",
     "total_r_up_on_holdout",
     "drawdown_not_deeper",
@@ -1482,9 +1786,92 @@
     "holdout_keeps_half_the_edge"
    ],
    "verdict": "fail"
+  },
+  {
+   "name": "no entry within 30 min after a sister-pair 5m DB against",
+   "tweak": {
+    "name": "no entry within 30 min after a sister-pair 5m DB against",
+    "if": [
+     {
+      "col": "pair_db_against_before_min",
+      "op": "<=",
+      "val": 30
+     }
+    ],
+    "then": "skip"
+   },
+   "affected_train": 9,
+   "affected_holdout": 3,
+   "train": {
+    "base": {
+     "n": 347,
+     "win_pct": 32.9,
+     "avg_r": -0.092,
+     "total_r": -31.82,
+     "max_dd_r": -39.32
+    },
+    "with_tweak": {
+     "n": 338,
+     "win_pct": 32.2,
+     "avg_r": -0.119,
+     "total_r": -40.32,
+     "max_dd_r": -47.82
+    },
+    "delta_total_r": -8.5
+   },
+   "holdout": {
+    "base": {
+     "n": 152,
+     "win_pct": 38.2,
+     "avg_r": -0.036,
+     "total_r": -5.41,
+     "max_dd_r": -29.5
+    },
+    "with_tweak": {
+     "n": 149,
+     "win_pct": 36.9,
+     "avg_r": -0.067,
+     "total_r": -9.91,
+     "max_dd_r": -33.13
+    },
+    "delta_total_r": -4.5
+   },
+   "affected_trades": {
+    "train": {
+     "n": 9,
+     "win_pct": 55.6,
+     "avg_r": 0.944,
+     "total_r": 8.5,
+     "max_dd_r": -2.0
+    },
+    "holdout": {
+     "n": 3,
+     "win_pct": 100.0,
+     "avg_r": 1.5,
+     "total_r": 4.5,
+     "max_dd_r": 0.0
+    }
+   },
+   "checks": {
+    "enough_affected_on_train": false,
+    "total_r_up_on_train": false,
+    "total_r_up_on_holdout": false,
+    "drawdown_not_deeper": false,
+    "removed_trades_negative_both_halves": false,
+    "holdout_keeps_half_the_edge": false
+   },
+   "misses": [
+    "enough_affected_on_train",
+    "total_r_up_on_train",
+    "total_r_up_on_holdout",
+    "drawdown_not_deeper",
+    "removed_trades_negative_both_halves",
+    "holdout_keeps_half_the_edge"
+   ],
+   "verdict": "fail"
   }
  ],
  "note": "r = fvg-mcp's scored result at full size (2R + runner to 3R). Books after code rules. A tweak PASSES only if it helps on train AND holdout, does not deepen drawdown, and the trades it changes have the expected sign on both halves (see protocol). Small n is noise.",
- "tweaks_tried_total": 13,
- "multiple_testing_bar_t": 2.95
+ "tweaks_tried_total": 21,
+ "multiple_testing_bar_t": 3.11
 }

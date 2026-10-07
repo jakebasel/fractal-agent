@@ -135,8 +135,14 @@ when evidence is missing for a must-have is SKIP or reduced size, never inventio
 --- live_rules.md ---
 {live_rules}
 
-=== LESSONS FROM PAST PAPER TRADES (most recent first; treat as evidence, not law) ===
+=== LESSONS FROM PAST PAPER TRADES (most recent first; treat as evidence, not law; a lesson
+written under an older rulebook can contradict the amendments, and the amendments win) ===
 {lessons}
+
+Standing clarifications (Jake): time within a session is NEVER a skip reason, only a size
+downgrade; news is only a skip inside the bracket around a red-folder release (the engine
+block carries `news` with the bracket check already done); use ONLY the engine flags given in
+the state (never invent an `in_window` or news status).
 
 Reply with ONE JSON object and nothing else:
 {{

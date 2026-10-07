@@ -9,11 +9,13 @@ Pulled from the 12 live-session transcripts. Live sessions are newer than the co
 ## 1. Session timing and trading windows
 - Sessions begin where the indicator's boxes start: Asia 8pm ET, London 2am ET. NY has no box.
 - Best NY setups usually come within 30-40 minutes of the open.
-- The "two hour" rule: technically valid until the next session, but odds fall after the first hour. He has never stayed past 10:30-11:00 ET.
-- No signals at all by 10:00-10:30 ET: walk away (the delay is another layer of manipulation).
-- Sweet spot: in the trade by about 10:30-10:40 ET; later setups get reassessed.
-- Consolidation well after 10:30 ET is "a bad sign": practice only.
-- Late-session setups are downgraded to demo.
+- Time within a session is NEVER a skip (amendments 2026-10-07, Jake: the whole session is
+  tradeable; the items below are the instructor's time preference, he values his time):
+  - "Two hour" remark: technically valid until the next session, odds fall after the first hour; he personally has not stayed past 10:30-11:00 ET.
+  - No signals at all by 10:00-10:30 ET: he walks away (the delay is another layer of manipulation).
+  - Sweet spot: in the trade by about 10:30-10:40 ET; later setups get a downgrade (reduced size).
+  - Consolidation well after 10:30 ET is "a bad sign": downgrade.
+  - Late-session setups: reduced size (he says "demo").
 - Sloppy morning: skip it and check the PM session's signals.
 - "Blue zone play": from 9:30 ET price is likely to pull back to the NY blue zone, especially if untouched. Still needs the full setup (1m FVG, 30s tap, close). Don't pre-empt.
 - At the Asia open price is similarly drawn to the purple zone.

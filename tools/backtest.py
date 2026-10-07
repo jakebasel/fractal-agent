@@ -16,6 +16,8 @@ Tweak DSL (what DeepSeek proposes and code evaluates):
   cols: symbol sig mt_tf session retrace dow hour n_inv two_m tap_depth fvg_gaps v_candles
         n_stages cascade dir in_window nd ; ops: == != in not_in < <= > >=
   "allow" = take the trades a code hard rule removed when the condition holds (tests a rule).
+  "use_col" = score the trade with another R column when present (e.g. managed_r: the trade
+            closed at an opposing 5m DB), tests a management rule. ops also: abs<= abs>
 """
 import json
 import sys
@@ -30,7 +32,9 @@ from app import config, store  # noqa: E402
 SYMBOLS = ("MNQ1!", "MES1!")
 MIN_AFFECTED = 30
 COLS = ("symbol", "sig", "mt_tf", "session", "retrace", "dow", "hour", "n_inv", "two_m", "tap_depth",
-        "fvg_gaps", "v_candles", "n_stages", "cascade", "dir", "in_window", "nd")
+        "fvg_gaps", "v_candles", "n_stages", "cascade", "dir", "in_window", "nd",
+        # from tools/backtest_enrich.py (live-session rules)
+        "news_min", "news_day", "db_against_before_min", "pair_db_against_before_min", "managed_r")
 
 # Standing tweaks: the seed hypotheses plus the questions the first run raised.
 TWEAKS = [
@@ -43,14 +47,19 @@ TWEAKS = [
     {"name": "deep retrace DBs only", "if": [{"col": "sig", "op": "==", "val": "DB"},
                                             {"col": "retrace", "op": "not_in", "val": ["deep", "deep+fvg"]}], "then": "skip"},
     {"name": "no gaps invalidated on the way", "if": [{"col": "n_inv", "op": ">", "val": 0}], "then": "skip"},
+    # live-session rules (need the enriched ledger; a tweak whose column is missing is skipped)
+    {"name": "news: skip inside the +-60 min bracket", "if": [{"col": "news_min", "op": "abs<=", "val": 60}], "then": "skip"},
+    {"name": "news day: half size outside the bracket", "if": [{"col": "news_day", "op": "==", "val": 1},
+                                                              {"col": "news_min", "op": "abs>", "val": 60}], "then": "half"},
+    {"name": "no entry within 30 min after a 5m DB against", "if": [{"col": "db_against_before_min", "op": "<=", "val": 30}], "then": "skip"},
+    {"name": "no entry within 60 min after a 5m DB against", "if": [{"col": "db_against_before_min", "op": "<=", "val": 60}], "then": "skip"},
+    {"name": "no entry within 30 min after a sister-pair 5m DB against", "if": [{"col": "pair_db_against_before_min", "op": "<=", "val": 30}], "then": "skip"},
+    {"name": "immediate rebalance only (<= 4 x 30s candles to close)", "if": [{"col": "v_candles", "op": ">", "val": 4}], "then": "skip"},
+    {"name": "exit at an opposing 5m DB (management rule)", "if": [], "then": "use_col", "col": "managed_r"},
     {"name": "walk away after -2R in a day", "if": [], "then": "daily_stop", "stop_r": -2.0},
     {"name": "walk away after -1R in a day", "if": [], "then": "daily_stop", "stop_r": -1.0},
     {"name": "allow engine out-of-window (tests 2.3 flag)", "if": [{"col": "in_window", "op": "==", "val": False},
                                                                    {"col": "nd", "op": "==", "val": False}], "then": "allow"},
-    {"name": "London first 2h only (the old rule)", "if": [{"col": "session", "op": "==", "val": "london"},
-                                                           {"col": "hour", "op": ">=", "val": 4}], "then": "skip"},
-    {"name": "NY AM before 11:00 only (the old rule)", "if": [{"col": "session", "op": "==", "val": "newyork"},
-                                                              {"col": "hour", "op": ">=", "val": 11}], "then": "skip"},
 ]
 
 
@@ -112,6 +121,8 @@ def _cond(x, c):
         if op == "in": return v in t
         if op == "not_in": return v not in t
         if v is None: return False
+        if op == "abs<=": return abs(v) <= t
+        if op == "abs>": return abs(v) > t
         if op == "<": return v < t
         if op == "<=": return v <= t
         if op == ">": return v > t
@@ -129,6 +140,17 @@ def apply(rows, tweak):
     """(values of R after the tweak, number of trades affected) on the given rows. Base = code rules."""
     if tweak["then"] == "daily_stop":
         return daily_stop(rows, tweak.get("stop_r", -2.0))
+    if tweak["then"] == "use_col":
+        vals, affected = [], 0
+        for x in rows:
+            if x["rule"] is not None:
+                continue
+            alt = x.get(tweak["col"])
+            if alt is not None and alt != x["r"]:
+                vals.append(alt); affected += 1
+            else:
+                vals.append(x["r"])
+        return vals, affected
     vals, affected = [], 0
     for x in rows:
         kept = x["rule"] is None
@@ -164,7 +186,11 @@ def daily_stop(rows, stop_r=-2.0):
 
 
 def _affected_values(rows, tweak):
-    """R of the trades the tweak changes (removed, halved, re-admitted or cut by a daily stop)."""
+    """R of the trades the tweak changes (removed, halved, re-admitted or cut by a daily stop);
+    for use_col the per-trade improvement (alt - r)."""
+    if tweak["then"] == "use_col":
+        return [x[tweak["col"]] - x["r"] for x in rows if x["rule"] is None and x.get(tweak["col"]) is not None
+                and x[tweak["col"]] != x["r"]]
     if tweak["then"] == "daily_stop":
         day, cum, cut = None, 0.0, []
         for x in rows:
@@ -205,14 +231,14 @@ def evaluate(tweak, train, hold):
     vh, ah = apply(hold, tweak)
     bt, bh = store.summarize(vt), store.summarize(vh)
     cut_t, cut_h = removed_or_added(train, tweak), removed_or_added(hold, tweak)
-    adds = tweak["then"] == "allow"
+    adds = tweak["then"] in ("allow", "use_col")
     checks = {
         "enough_affected_on_train": at >= MIN_AFFECTED,
         "total_r_up_on_train": (bt.get("total_r") or 0) > (base_t.get("total_r") or 0),
         "total_r_up_on_holdout": (bh.get("total_r") or 0) > (base_h.get("total_r") or 0),
         "drawdown_not_deeper": (bt.get("max_dd_r") or 0) >= (base_t.get("max_dd_r") or 0)
                                and (bh.get("max_dd_r") or 0) >= (base_h.get("max_dd_r") or 0),
-        ("added_trades_positive_both_halves" if adds else "removed_trades_negative_both_halves"):
+        ("changed_trades_improve_both_halves" if adds else "removed_trades_negative_both_halves"):
             ((cut_t.get("avg_r") or 0) > 0 and (cut_h.get("avg_r") or 0) > 0) if adds else
             ((cut_t.get("avg_r") or 0) < 0 and (cut_h.get("avg_r") or 0) < 0),
     }
@@ -290,7 +316,11 @@ def main():
                 "A tweak PASSES only if it helps on train AND holdout, does not deepen drawdown, and the "
                 "trades it changes have the expected sign on both halves (see protocol). Small n is noise.",
     }
-    tweaks = list(TWEAKS)
+    have = set(rows[0].keys())
+    tweaks = [t for t in TWEAKS if all(c["col"] in have for c in t["if"]) and (t["then"] != "use_col" or t["col"] in have)]
+    skipped = [t["name"] for t in TWEAKS if t not in tweaks]
+    if skipped:
+        print("skipped (columns missing; run tools/backtest_enrich.py first):", ", ".join(skipped))
     if "--propose" in sys.argv:
         try:
             tweaks += propose(report)
