@@ -405,5 +405,9 @@ ok(rv.get("decision") == "TAKE" and rv.get("jev_p_take") == 0.7 and "rules_versi
 rep3 = learning.report(30)
 ok("reevaluated_skips" in rep3 and rep3["reevaluated_skips"]["re_evaluated"] >= 1, "report carries re-evaluated skips")
 
+# 16. reply parsing: prose + JSON + trailing braces, think blocks
+ok(llm.parse_json('<think>maybe {x}</think> Here: {"a": 1, "b": {"c": 2}} and then {broken')["b"]["c"] == 2, "parse_json survives think blocks and trailing junk")
+ok(llm.parse_json('```json\n{"a": [1,2]}\n```')["a"] == [1, 2], "parse_json reads fenced JSON")
+
 print("all tests passed")
 server.should_exit = True

@@ -294,8 +294,8 @@ def reeval_todo(since_iso, limit=3, rules_version: str | None = None):
     return db().execute(
         "SELECT * FROM decisions WHERE path='code' AND decision='SKIP' "
         "AND (reeval IS NULL OR reeval NOT LIKE ? "
-        "     OR (reeval LIKE '%\"error\"%' AND reeval NOT LIKE '%\"decision\"%')) "
-        "AND COALESCE(reeval_tries,0)<3 AND entry_at>=? ORDER BY entry_id DESC LIMIT ?",
+        "     OR (reeval LIKE '%\"error\"%' AND reeval NOT LIKE '%\"decision\"%' AND COALESCE(reeval_tries,0)<3)) "
+        "AND entry_at>=? ORDER BY entry_id DESC LIMIT ?",
         (ver, since_iso, limit)).fetchall()
 
 

@@ -41,6 +41,7 @@ def _post(model: str, messages: list, max_tokens: int = 1500, temperature: float
             body["models"] = [model] + config.DECISION_FALLBACK_MODELS   # OpenRouter model routing
         if config.DECISION_REASONING:
             body["reasoning"] = config.DECISION_REASONING
+        body["response_format"] = {"type": "json_object"}   # every decision-model prompt wants one object
     t0 = time.time()
     try:
         r = httpx.post(config.OPENROUTER_URL, json=body, timeout=config.LLM_TIMEOUT_S,
@@ -73,13 +74,23 @@ def _post(model: str, messages: list, max_tokens: int = 1500, temperature: float
 
 
 def parse_json(text: str) -> dict:
-    """Pull the first JSON object out of a model reply (tolerates ```json fences / prose)."""
+    """Pull the first JSON object out of a model reply: tolerates ```json fences, <think>
+    blocks, prose before and after, and trailing text with braces in it."""
+    text = re.sub(r"<think>.*?</think>", "", text, flags=re.S)
     m = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.S)
     raw = m.group(1) if m else text
-    start, end = raw.find("{"), raw.rfind("}")
-    if start < 0 or end <= start:
-        raise LLMError(f"no JSON in reply: {text[:300]}")
-    return json.loads(raw[start:end + 1])
+    dec = json.JSONDecoder()
+    pos = raw.find("{")
+    last_err = None
+    while pos >= 0:
+        try:
+            obj, _ = dec.raw_decode(raw, pos)   # first complete object; ignores what follows
+            if isinstance(obj, dict):
+                return obj
+        except ValueError as e:
+            last_err = e
+        pos = raw.find("{", pos + 1)
+    raise LLMError(f"no JSON in reply ({last_err}): {text[:300]}")
 
 
 def _mime(b: bytes) -> str:
