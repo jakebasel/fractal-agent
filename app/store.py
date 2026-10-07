@@ -287,13 +287,16 @@ def set_scan_jev(scan_id, jv):
         db().commit()
 
 
-def reeval_todo(since_iso, limit=3):
-    """Code-skipped rows not yet re-evaluated under the current rules."""
+def reeval_todo(since_iso, limit=3, rules_version: str | None = None):
+    """Code-skipped rows not yet re-evaluated under the CURRENT rules version (a rule change
+    re-opens every recent code skip)."""
+    ver = f'%"rules_version": "{rules_version}"%' if rules_version else "%"
     return db().execute(
         "SELECT * FROM decisions WHERE path='code' AND decision='SKIP' "
-        "AND (reeval IS NULL OR (reeval LIKE '%\"error\"%' AND reeval NOT LIKE '%\"decision\"%')) "
+        "AND (reeval IS NULL OR reeval NOT LIKE ? "
+        "     OR (reeval LIKE '%\"error\"%' AND reeval NOT LIKE '%\"decision\"%')) "
         "AND COALESCE(reeval_tries,0)<3 AND entry_at>=? ORDER BY entry_id DESC LIMIT ?",
-        (since_iso, limit)).fetchall()
+        (ver, since_iso, limit)).fetchall()
 
 
 def reeval_try(entry_id):

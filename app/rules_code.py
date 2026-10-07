@@ -101,8 +101,9 @@ def hard_rules(entry: dict, detail: dict, now: datetime) -> tuple[list[str], dic
     """ALL hard rules that fire, most important first (the overarching reason is reported, not
     whichever check happened to run first), plus the news check result (stored on the row).
 
-    Priority (Jake, 2026-10-07): a 2DB is never traded, ND is never traded, news, then
-    retracement, then the session window."""
+    Priority (Jake, 2026-10-07): a 2DB is never traded, ND is never traded, news bracket,
+    retracement, two losses, then the weekend / the engine's session-window flag. Time within
+    a session is a downgrade handled by the model, never a skip."""
     fired = []
     if _is_2db(entry, detail):
         fired.append("§2.4 2DB: we don't trade 2DBs")
@@ -122,12 +123,7 @@ def hard_rules(entry: dict, detail: dict, now: datetime) -> tuple[list[str], dic
     session = (detail.get("session") or "").lower()
     if et.weekday() == 5 or (et.weekday() == 6 and hm < (18, 0)):
         fired.append("§2.3 weekend (futures reopen Sunday 6 PM ET)")
-    if session == "newyork" and hm >= (11, 0):
-        fired.append("§2.3 NY AM entry after 11:00 ET (late setups are demo only)")
-    if session == "london" and (4, 0) <= hm < (20, 0):
-        fired.append("§2.3 London: only the first ~2 hours after 2 AM ET")
-    if session == "asia" and (hm >= (22, 0) or hm < (2, 0)):
-        fired.append("§2.3 Asia: done by 10 PM ET")
+    # time within a session is a downgrade, not a skip (amendments 2026-10-07)
     if detail.get("in_window") is False:
         fired.append("§2.3 outside the session window (engine flag)")
     return fired, info

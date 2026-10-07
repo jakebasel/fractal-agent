@@ -47,6 +47,10 @@ TWEAKS = [
     {"name": "walk away after -1R in a day", "if": [], "then": "daily_stop", "stop_r": -1.0},
     {"name": "allow engine out-of-window (tests 2.3 flag)", "if": [{"col": "in_window", "op": "==", "val": False},
                                                                    {"col": "nd", "op": "==", "val": False}], "then": "allow"},
+    {"name": "London first 2h only (the old rule)", "if": [{"col": "session", "op": "==", "val": "london"},
+                                                           {"col": "hour", "op": ">=", "val": 4}], "then": "skip"},
+    {"name": "NY AM before 11:00 only (the old rule)", "if": [{"col": "session", "op": "==", "val": "newyork"},
+                                                              {"col": "hour", "op": ">=", "val": 11}], "then": "skip"},
 ]
 
 
@@ -90,12 +94,6 @@ def code_hard_rules(x) -> list:
         f.append(f"§2.6 DB retrace {x['retrace']}")
     if x["et"].weekday() == 5 or (x["et"].weekday() == 6 and hm < (18, 0)):
         f.append("§2.3 weekend")
-    if s == "newyork" and hm >= (11, 0):
-        f.append("§2.3 NY after 11:00")
-    if s == "london" and (4, 0) <= hm < (20, 0):
-        f.append("§2.3 London after first 2h")
-    if s == "asia" and (hm >= (22, 0) or hm < (2, 0)):
-        f.append("§2.3 Asia after 10 PM")
     if x["in_window"] is False:
         f.append("§2.3 outside window (engine)")
     return f

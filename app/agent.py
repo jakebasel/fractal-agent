@@ -401,7 +401,7 @@ def reevaluate_skips(fvg: FVG, limit: int = 3) -> int:
         return 0
     since = datetime.fromtimestamp(datetime.now(timezone.utc).timestamp() - 3 * 86400,
                                    tz=timezone.utc).isoformat()
-    todo = store.reeval_todo(since, limit)
+    todo = store.reeval_todo(since, limit, prompts.rules_version())
     if not todo:
         return 0
     cache: dict[str, dict] = {}
@@ -416,7 +416,8 @@ def reevaluate_skips(fvg: FVG, limit: int = 3) -> int:
                 cache[sym] = {}
         entry = cache[sym].get(row["entry_id"])
         if not entry:
-            store.update_decision(row["entry_id"], reeval={"note": "engine entry no longer available"})
+            store.update_decision(row["entry_id"], reeval={"note": "engine entry no longer available",
+                                                           "rules_version": prompts.rules_version()})
             done += 1
             continue
         detail = _detail(entry)

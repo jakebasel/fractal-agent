@@ -1,5 +1,5 @@
 {
- "generated_et": "2026-10-07 02:09 ET",
+ "generated_et": "2026-10-07 09:50 ET",
  "window": "2026-08-17 to 2026-10-05 ET; train < 2026-09-11 (793), holdout >= 2026-09-11 (355)",
  "symbols": [
   "MNQ1!",
@@ -16,52 +16,28 @@
    "max_dd_r": -60.72
   },
   "after_code_hard_rules": {
-   "n": 295,
-   "win_pct": 32.9,
-   "avg_r": -0.125,
-   "total_r": -36.75,
-   "max_dd_r": -52.92
+   "n": 499,
+   "win_pct": 34.5,
+   "avg_r": -0.075,
+   "total_r": -37.23,
+   "max_dd_r": -54.93
   },
   "removed_by_code_rules": {
-   "n": 853,
-   "win_pct": 37.0,
-   "avg_r": 0.053,
-   "total_r": 45.31,
-   "max_dd_r": -42.36
+   "n": 649,
+   "win_pct": 37.1,
+   "avg_r": 0.071,
+   "total_r": 45.79,
+   "max_dd_r": -32.27
   }
  },
  "hard_rules": [
   {
-   "rule": "\u00a72.3 London after first 2h",
-   "n": 241,
-   "win_pct": 41.9,
-   "avg_r": 0.155,
-   "total_r": 37.37,
-   "max_dd_r": -21.93
-  },
-  {
    "rule": "\u00a72.3 outside window (engine)",
-   "n": 179,
-   "win_pct": 35.2,
-   "avg_r": 0.043,
-   "total_r": 7.7,
-   "max_dd_r": -24.88
-  },
-  {
-   "rule": "\u00a72.3 Asia after 10 PM",
-   "n": 178,
-   "win_pct": 32.0,
-   "avg_r": -0.053,
-   "total_r": -9.38,
-   "max_dd_r": -39.75
-  },
-  {
-   "rule": "\u00a72.3 NY after 11:00",
-   "n": 108,
-   "win_pct": 31.5,
-   "avg_r": -0.089,
-   "total_r": -9.57,
-   "max_dd_r": -28.53
+   "n": 502,
+   "win_pct": 35.9,
+   "avg_r": 0.053,
+   "total_r": 26.6,
+   "max_dd_r": -25.56
   },
   {
    "rule": "\u00a72.6 DB retrace none",
@@ -90,6 +66,22 @@
  ],
  "by_session": [
   {
+   "group": "asia",
+   "n": 166,
+   "win_pct": 33.7,
+   "avg_r": -0.065,
+   "total_r": -10.76,
+   "max_dd_r": -29.4
+  },
+  {
+   "group": "london",
+   "n": 124,
+   "win_pct": 32.3,
+   "avg_r": -0.136,
+   "total_r": -16.89,
+   "max_dd_r": -21.9
+  },
+  {
    "group": "nypm",
    "n": 78,
    "win_pct": 37.2,
@@ -106,166 +98,150 @@
    "max_dd_r": -6.62
   },
   {
-   "group": "asia",
-   "n": 65,
-   "win_pct": 27.7,
-   "avg_r": -0.276,
-   "total_r": -17.94,
-   "max_dd_r": -19.94
-  },
-  {
-   "group": "london",
-   "n": 56,
-   "win_pct": 21.4,
-   "avg_r": -0.411,
-   "total_r": -23.0,
-   "max_dd_r": -27.0
-  },
-  {
    "group": "newyork",
-   "n": 25,
-   "win_pct": 32.0,
-   "avg_r": -0.143,
-   "total_r": -3.58,
-   "max_dd_r": -7.0
+   "n": 60,
+   "win_pct": 28.3,
+   "avg_r": -0.289,
+   "total_r": -17.35,
+   "max_dd_r": -19.09
   }
  ],
  "by_signal": [
   {
    "group": "DB",
-   "n": 172,
-   "win_pct": 31.4,
-   "avg_r": -0.156,
-   "total_r": -26.89,
-   "max_dd_r": -34.42
+   "n": 320,
+   "win_pct": 34.1,
+   "avg_r": -0.075,
+   "total_r": -24.01,
+   "max_dd_r": -35.66
   },
   {
    "group": "M",
-   "n": 115,
-   "win_pct": 37.4,
-   "avg_r": -0.016,
-   "total_r": -1.86,
-   "max_dd_r": -21.71
+   "n": 159,
+   "win_pct": 38.4,
+   "avg_r": 0.001,
+   "total_r": 0.18,
+   "max_dd_r": -20.7
   },
   {
    "group": "2M",
-   "n": 8,
-   "win_pct": 0.0,
-   "avg_r": -1.0,
-   "total_r": -8.0,
-   "max_dd_r": -8.0
+   "n": 20,
+   "win_pct": 10.0,
+   "avg_r": -0.67,
+   "total_r": -13.4,
+   "max_dd_r": -13.4
   }
  ],
  "by_signal_tf": [
   {
    "group": "1m",
-   "n": 250,
-   "win_pct": 32.4,
-   "avg_r": -0.128,
-   "total_r": -31.97,
-   "max_dd_r": -42.75
+   "n": 411,
+   "win_pct": 34.3,
+   "avg_r": -0.072,
+   "total_r": -29.67,
+   "max_dd_r": -43.68
   },
   {
    "group": "5m",
-   "n": 45,
-   "win_pct": 35.6,
-   "avg_r": -0.106,
-   "total_r": -4.78,
-   "max_dd_r": -11.97
+   "n": 88,
+   "win_pct": 35.2,
+   "avg_r": -0.086,
+   "total_r": -7.56,
+   "max_dd_r": -14.85
   }
  ],
  "by_retrace": [
   {
    "group": "None",
-   "n": 123,
-   "win_pct": 35.0,
-   "avg_r": -0.08,
-   "total_r": -9.86,
-   "max_dd_r": -24.3
+   "n": 179,
+   "win_pct": 35.2,
+   "avg_r": -0.074,
+   "total_r": -13.22,
+   "max_dd_r": -25.66
   },
   {
    "group": "deep",
-   "n": 75,
-   "win_pct": 22.7,
-   "avg_r": -0.373,
-   "total_r": -27.97,
-   "max_dd_r": -28.71
+   "n": 145,
+   "win_pct": 28.3,
+   "avg_r": -0.23,
+   "total_r": -33.41,
+   "max_dd_r": -38.57
   },
   {
    "group": "medium",
-   "n": 61,
-   "win_pct": 41.0,
-   "avg_r": 0.081,
-   "total_r": 4.93,
-   "max_dd_r": -10.44
+   "n": 124,
+   "win_pct": 42.7,
+   "avg_r": 0.15,
+   "total_r": 18.65,
+   "max_dd_r": -12.0
   },
   {
    "group": "leg-fvg",
-   "n": 36,
-   "win_pct": 33.3,
-   "avg_r": -0.107,
-   "total_r": -3.85,
-   "max_dd_r": -13.41
+   "n": 51,
+   "win_pct": 29.4,
+   "avg_r": -0.181,
+   "total_r": -9.25,
+   "max_dd_r": -18.81
   }
  ],
  "by_day_of_week": [
   {
+   "group": "Wed",
+   "n": 123,
+   "win_pct": 30.9,
+   "avg_r": -0.154,
+   "total_r": -18.96,
+   "max_dd_r": -40.02
+  },
+  {
    "group": "Thu",
-   "n": 76,
-   "win_pct": 36.8,
-   "avg_r": -0.042,
-   "total_r": -3.18,
-   "max_dd_r": -13.41
+   "n": 117,
+   "win_pct": 34.2,
+   "avg_r": -0.076,
+   "total_r": -8.87,
+   "max_dd_r": -21.05
   },
   {
    "group": "Mon",
-   "n": 69,
-   "win_pct": 33.3,
-   "avg_r": -0.095,
-   "total_r": -6.58,
-   "max_dd_r": -16.94
-  },
-  {
-   "group": "Wed",
-   "n": 61,
-   "win_pct": 26.2,
-   "avg_r": -0.344,
-   "total_r": -21.01,
-   "max_dd_r": -25.54
+   "n": 96,
+   "win_pct": 32.3,
+   "avg_r": -0.117,
+   "total_r": -11.26,
+   "max_dd_r": -19.62
   },
   {
    "group": "Tue",
-   "n": 50,
-   "win_pct": 38.0,
-   "avg_r": 0.055,
-   "total_r": 2.76,
-   "max_dd_r": -8.5
+   "n": 83,
+   "win_pct": 31.3,
+   "avg_r": -0.165,
+   "total_r": -13.72,
+   "max_dd_r": -18.83
   },
   {
    "group": "Fri",
-   "n": 29,
-   "win_pct": 27.6,
-   "avg_r": -0.215,
-   "total_r": -6.24,
-   "max_dd_r": -10.0
+   "n": 55,
+   "win_pct": 43.6,
+   "avg_r": 0.121,
+   "total_r": 6.65,
+   "max_dd_r": -12.0
   },
   {
    "group": "Sun",
-   "n": 10,
-   "win_pct": 30.0,
-   "avg_r": -0.25,
-   "total_r": -2.5,
+   "n": 25,
+   "win_pct": 52.0,
+   "avg_r": 0.357,
+   "total_r": 8.93,
    "max_dd_r": -5.0
   }
  ],
  "by_hour_et": [
   {
    "group": "00",
-   "n": 1,
+   "n": 2,
    "win_pct": 0.0,
    "avg_r": -1.0,
-   "total_r": -1.0,
-   "max_dd_r": -1.0
+   "total_r": -2.0,
+   "max_dd_r": -2.0
   },
   {
    "group": "01",
@@ -290,6 +266,30 @@
    "avg_r": -0.42,
    "total_r": -18.91,
    "max_dd_r": -19.41
+  },
+  {
+   "group": "04",
+   "n": 32,
+   "win_pct": 43.8,
+   "avg_r": 0.121,
+   "total_r": 3.86,
+   "max_dd_r": -5.38
+  },
+  {
+   "group": "05",
+   "n": 34,
+   "win_pct": 41.2,
+   "avg_r": 0.125,
+   "total_r": 4.25,
+   "max_dd_r": -11.0
+  },
+  {
+   "group": "06",
+   "n": 2,
+   "win_pct": 0.0,
+   "avg_r": -1.0,
+   "total_r": -2.0,
+   "max_dd_r": -2.0
   },
   {
    "group": "07",
@@ -325,11 +325,11 @@
   },
   {
    "group": "11",
-   "n": 2,
-   "win_pct": 50.0,
-   "avg_r": 0.75,
-   "total_r": 1.5,
-   "max_dd_r": -1.0
+   "n": 37,
+   "win_pct": 27.0,
+   "avg_r": -0.332,
+   "total_r": -12.27,
+   "max_dd_r": -15.77
   },
   {
    "group": "12",
@@ -402,167 +402,109 @@
    "avg_r": -0.176,
    "total_r": -7.56,
    "max_dd_r": -11.56
+  },
+  {
+   "group": "22",
+   "n": 44,
+   "win_pct": 43.2,
+   "avg_r": 0.256,
+   "total_r": 11.25,
+   "max_dd_r": -9.0
+  },
+  {
+   "group": "23",
+   "n": 56,
+   "win_pct": 33.9,
+   "avg_r": -0.055,
+   "total_r": -3.07,
+   "max_dd_r": -14.5
   }
  ],
  "by_symbol": [
   {
    "group": "MNQ1!",
-   "n": 166,
-   "win_pct": 30.7,
-   "avg_r": -0.188,
-   "total_r": -31.18,
-   "max_dd_r": -46.65
+   "n": 284,
+   "win_pct": 32.7,
+   "avg_r": -0.109,
+   "total_r": -30.9,
+   "max_dd_r": -49.58
   },
   {
    "group": "MES1!",
-   "n": 129,
-   "win_pct": 35.7,
-   "avg_r": -0.043,
-   "total_r": -5.57,
-   "max_dd_r": -20.57
+   "n": 215,
+   "win_pct": 36.7,
+   "avg_r": -0.029,
+   "total_r": -6.33,
+   "max_dd_r": -24.21
   }
  ],
  "by_week": [
   {
    "group": "2026-W34",
-   "n": 75,
-   "win_pct": 32.0,
-   "avg_r": -0.192,
-   "total_r": -14.42,
-   "max_dd_r": -23.62
+   "n": 133,
+   "win_pct": 33.1,
+   "avg_r": -0.157,
+   "total_r": -20.84,
+   "max_dd_r": -38.77
   },
   {
    "group": "2026-W35",
-   "n": 50,
-   "win_pct": 30.0,
-   "avg_r": -0.107,
-   "total_r": -5.37,
-   "max_dd_r": -12.68
+   "n": 76,
+   "win_pct": 34.2,
+   "avg_r": 0.009,
+   "total_r": 0.71,
+   "max_dd_r": -13.03
   },
   {
    "group": "2026-W36",
-   "n": 45,
-   "win_pct": 40.0,
-   "avg_r": 0.18,
-   "total_r": 8.08,
-   "max_dd_r": -7.63
+   "n": 69,
+   "win_pct": 39.1,
+   "avg_r": 0.083,
+   "total_r": 5.76,
+   "max_dd_r": -8.57
   },
   {
    "group": "2026-W37",
-   "n": 47,
-   "win_pct": 25.5,
-   "avg_r": -0.203,
-   "total_r": -9.53,
-   "max_dd_r": -16.03
+   "n": 87,
+   "win_pct": 34.5,
+   "avg_r": -0.047,
+   "total_r": -4.06,
+   "max_dd_r": -22.95
   },
   {
    "group": "2026-W38",
-   "n": 4,
-   "win_pct": 0.0,
-   "avg_r": -1.0,
-   "total_r": -4.0,
-   "max_dd_r": -4.0
+   "n": 8,
+   "win_pct": 12.5,
+   "avg_r": -0.75,
+   "total_r": -6.0,
+   "max_dd_r": -7.0
   },
   {
    "group": "2026-W39",
-   "n": 44,
-   "win_pct": 25.0,
-   "avg_r": -0.352,
-   "total_r": -15.48,
-   "max_dd_r": -15.98
+   "n": 78,
+   "win_pct": 26.9,
+   "avg_r": -0.186,
+   "total_r": -14.48,
+   "max_dd_r": -23.0
   },
   {
    "group": "2026-W40",
-   "n": 24,
-   "win_pct": 62.5,
-   "avg_r": 0.26,
-   "total_r": 6.23,
-   "max_dd_r": -4.0
+   "n": 41,
+   "win_pct": 51.2,
+   "avg_r": 0.12,
+   "total_r": 4.94,
+   "max_dd_r": -7.65
   },
   {
    "group": "2026-W41",
-   "n": 6,
-   "win_pct": 33.3,
-   "avg_r": -0.377,
-   "total_r": -2.26,
-   "max_dd_r": -2.26
+   "n": 7,
+   "win_pct": 28.6,
+   "avg_r": -0.466,
+   "total_r": -3.26,
+   "max_dd_r": -3.26
   }
  ],
  "tweaks": [
-  {
-   "name": "walk away after -1R in a day",
-   "tweak": {
-    "name": "walk away after -1R in a day",
-    "if": [],
-    "then": "daily_stop",
-    "stop_r": -1.0
-   },
-   "affected_train": 123,
-   "affected_holdout": 54,
-   "train": {
-    "base": {
-     "n": 212,
-     "win_pct": 31.6,
-     "avg_r": -0.103,
-     "total_r": -21.74,
-     "max_dd_r": -33.12
-    },
-    "with_tweak": {
-     "n": 89,
-     "win_pct": 40.4,
-     "avg_r": 0.075,
-     "total_r": 6.65,
-     "max_dd_r": -14.0
-    },
-    "delta_total_r": 28.39
-   },
-   "holdout": {
-    "base": {
-     "n": 83,
-     "win_pct": 36.1,
-     "avg_r": -0.181,
-     "total_r": -15.01,
-     "max_dd_r": -23.48
-    },
-    "with_tweak": {
-     "n": 29,
-     "win_pct": 44.8,
-     "avg_r": -0.048,
-     "total_r": -1.38,
-     "max_dd_r": -9.0
-    },
-    "delta_total_r": 13.63
-   },
-   "affected_trades": {
-    "train": {
-     "n": 123,
-     "win_pct": 25.2,
-     "avg_r": -0.231,
-     "total_r": -28.39,
-     "max_dd_r": -29.39
-    },
-    "holdout": {
-     "n": 54,
-     "win_pct": 31.5,
-     "avg_r": -0.252,
-     "total_r": -13.63,
-     "max_dd_r": -16.48
-    }
-   },
-   "checks": {
-    "enough_affected_on_train": true,
-    "total_r_up_on_train": true,
-    "total_r_up_on_holdout": true,
-    "drawdown_not_deeper": true,
-    "removed_trades_negative_both_halves": true,
-    "holdout_keeps_half_the_edge": true
-   },
-   "misses": [
-    "holdout t 1.57 < bar 2.9 after 11 tweaks tried"
-   ],
-   "verdict": "PASS (below multiple-testing bar)",
-   "holdout_t": 1.57
-  },
   {
    "name": "walk away after -2R in a day",
    "tweak": {
@@ -571,56 +513,56 @@
     "then": "daily_stop",
     "stop_r": -2.0
    },
-   "affected_train": 105,
-   "affected_holdout": 30,
+   "affected_train": 223,
+   "affected_holdout": 70,
    "train": {
     "base": {
-     "n": 212,
-     "win_pct": 31.6,
-     "avg_r": -0.103,
-     "total_r": -21.74,
-     "max_dd_r": -33.12
+     "n": 347,
+     "win_pct": 32.9,
+     "avg_r": -0.092,
+     "total_r": -31.82,
+     "max_dd_r": -39.32
     },
     "with_tweak": {
-     "n": 107,
-     "win_pct": 34.6,
-     "avg_r": -0.068,
-     "total_r": -7.26,
-     "max_dd_r": -19.41
+     "n": 124,
+     "win_pct": 33.9,
+     "avg_r": -0.09,
+     "total_r": -11.16,
+     "max_dd_r": -22.0
     },
-    "delta_total_r": 14.48
+    "delta_total_r": 20.66
    },
    "holdout": {
     "base": {
-     "n": 83,
-     "win_pct": 36.1,
-     "avg_r": -0.181,
-     "total_r": -15.01,
-     "max_dd_r": -23.48
+     "n": 152,
+     "win_pct": 38.2,
+     "avg_r": -0.036,
+     "total_r": -5.41,
+     "max_dd_r": -29.5
     },
     "with_tweak": {
-     "n": 53,
-     "win_pct": 43.4,
-     "avg_r": -0.033,
-     "total_r": -1.75,
-     "max_dd_r": -9.98
+     "n": 82,
+     "win_pct": 45.1,
+     "avg_r": 0.069,
+     "total_r": 5.64,
+     "max_dd_r": -12.0
     },
-    "delta_total_r": 13.26
+    "delta_total_r": 11.05
    },
    "affected_trades": {
     "train": {
-     "n": 105,
-     "win_pct": 28.6,
-     "avg_r": -0.138,
-     "total_r": -14.48,
-     "max_dd_r": -21.62
+     "n": 223,
+     "win_pct": 32.3,
+     "avg_r": -0.093,
+     "total_r": -20.66,
+     "max_dd_r": -28.99
     },
     "holdout": {
-     "n": 30,
-     "win_pct": 23.3,
-     "avg_r": -0.442,
-     "total_r": -13.26,
-     "max_dd_r": -16.26
+     "n": 70,
+     "win_pct": 30.0,
+     "avg_r": -0.158,
+     "total_r": -11.05,
+     "max_dd_r": -22.9
     }
    },
    "checks": {
@@ -632,10 +574,169 @@
     "holdout_keeps_half_the_edge": true
    },
    "misses": [
-    "holdout t 2.23 < bar 2.9 after 11 tweaks tried"
+    "holdout t 0.97 < bar 2.95 after 13 tweaks tried"
    ],
    "verdict": "PASS (below multiple-testing bar)",
-   "holdout_t": 2.23
+   "holdout_t": 0.97
+  },
+  {
+   "name": "NY after 10:30 half size",
+   "tweak": {
+    "name": "NY after 10:30 half size",
+    "if": [
+     {
+      "col": "session",
+      "op": "==",
+      "val": "newyork"
+     },
+     {
+      "col": "hour",
+      "op": ">=",
+      "val": 10.5
+     }
+    ],
+    "then": "half"
+   },
+   "affected_train": 33,
+   "affected_holdout": 19,
+   "train": {
+    "base": {
+     "n": 347,
+     "win_pct": 32.9,
+     "avg_r": -0.092,
+     "total_r": -31.82,
+     "max_dd_r": -39.32
+    },
+    "with_tweak": {
+     "n": 347,
+     "win_pct": 32.9,
+     "avg_r": -0.082,
+     "total_r": -28.43,
+     "max_dd_r": -36.77
+    },
+    "delta_total_r": 3.39
+   },
+   "holdout": {
+    "base": {
+     "n": 152,
+     "win_pct": 38.2,
+     "avg_r": -0.036,
+     "total_r": -5.41,
+     "max_dd_r": -29.5
+    },
+    "with_tweak": {
+     "n": 152,
+     "win_pct": 38.2,
+     "avg_r": -0.016,
+     "total_r": -2.37,
+     "max_dd_r": -29.0
+    },
+    "delta_total_r": 3.04
+   },
+   "affected_trades": {
+    "train": {
+     "n": 33,
+     "win_pct": 30.3,
+     "avg_r": -0.205,
+     "total_r": -6.77,
+     "max_dd_r": -16.0
+    },
+    "holdout": {
+     "n": 19,
+     "win_pct": 31.6,
+     "avg_r": -0.32,
+     "total_r": -6.08,
+     "max_dd_r": -6.82
+    }
+   },
+   "checks": {
+    "enough_affected_on_train": true,
+    "total_r_up_on_train": true,
+    "total_r_up_on_holdout": true,
+    "drawdown_not_deeper": true,
+    "removed_trades_negative_both_halves": true,
+    "holdout_keeps_half_the_edge": true
+   },
+   "misses": [
+    "holdout t 1.18 < bar 2.95 after 13 tweaks tried"
+   ],
+   "verdict": "PASS (below multiple-testing bar)",
+   "holdout_t": 1.18
+  },
+  {
+   "name": "walk away after -1R in a day",
+   "tweak": {
+    "name": "walk away after -1R in a day",
+    "if": [],
+    "then": "daily_stop",
+    "stop_r": -1.0
+   },
+   "affected_train": 244,
+   "affected_holdout": 119,
+   "train": {
+    "base": {
+     "n": 347,
+     "win_pct": 32.9,
+     "avg_r": -0.092,
+     "total_r": -31.82,
+     "max_dd_r": -39.32
+    },
+    "with_tweak": {
+     "n": 103,
+     "win_pct": 38.8,
+     "avg_r": 0.042,
+     "total_r": 4.34,
+     "max_dd_r": -16.5
+    },
+    "delta_total_r": 36.16
+   },
+   "holdout": {
+    "base": {
+     "n": 152,
+     "win_pct": 38.2,
+     "avg_r": -0.036,
+     "total_r": -5.41,
+     "max_dd_r": -29.5
+    },
+    "with_tweak": {
+     "n": 33,
+     "win_pct": 36.4,
+     "avg_r": -0.269,
+     "total_r": -8.88,
+     "max_dd_r": -12.32
+    },
+    "delta_total_r": -3.47
+   },
+   "affected_trades": {
+    "train": {
+     "n": 244,
+     "win_pct": 30.3,
+     "avg_r": -0.148,
+     "total_r": -36.16,
+     "max_dd_r": -39.01
+    },
+    "holdout": {
+     "n": 119,
+     "win_pct": 38.7,
+     "avg_r": 0.029,
+     "total_r": 3.47,
+     "max_dd_r": -25.0
+    }
+   },
+   "checks": {
+    "enough_affected_on_train": true,
+    "total_r_up_on_train": true,
+    "total_r_up_on_holdout": false,
+    "drawdown_not_deeper": true,
+    "removed_trades_negative_both_halves": false,
+    "holdout_keeps_half_the_edge": false
+   },
+   "misses": [
+    "total_r_up_on_holdout",
+    "removed_trades_negative_both_halves",
+    "holdout_keeps_half_the_edge"
+   ],
+   "verdict": "fail"
   },
   {
    "name": "5m signals only",
@@ -650,215 +751,56 @@
     ],
     "then": "skip"
    },
-   "affected_train": 181,
-   "affected_holdout": 69,
+   "affected_train": 288,
+   "affected_holdout": 123,
    "train": {
     "base": {
-     "n": 212,
-     "win_pct": 31.6,
-     "avg_r": -0.103,
-     "total_r": -21.74,
-     "max_dd_r": -33.12
+     "n": 347,
+     "win_pct": 32.9,
+     "avg_r": -0.092,
+     "total_r": -31.82,
+     "max_dd_r": -39.32
     },
     "with_tweak": {
-     "n": 31,
-     "win_pct": 32.3,
-     "avg_r": -0.16,
-     "total_r": -4.97,
-     "max_dd_r": -9.97
+     "n": 59,
+     "win_pct": 33.9,
+     "avg_r": -0.123,
+     "total_r": -7.25,
+     "max_dd_r": -14.85
     },
-    "delta_total_r": 16.77
+    "delta_total_r": 24.57
    },
    "holdout": {
     "base": {
-     "n": 83,
-     "win_pct": 36.1,
-     "avg_r": -0.181,
-     "total_r": -15.01,
-     "max_dd_r": -23.48
+     "n": 152,
+     "win_pct": 38.2,
+     "avg_r": -0.036,
+     "total_r": -5.41,
+     "max_dd_r": -29.5
     },
     "with_tweak": {
-     "n": 14,
-     "win_pct": 42.9,
-     "avg_r": 0.014,
-     "total_r": 0.19,
-     "max_dd_r": -6.0
+     "n": 29,
+     "win_pct": 37.9,
+     "avg_r": -0.011,
+     "total_r": -0.31,
+     "max_dd_r": -9.0
     },
-    "delta_total_r": 15.2
+    "delta_total_r": 5.1
    },
    "affected_trades": {
     "train": {
-     "n": 181,
-     "win_pct": 31.5,
-     "avg_r": -0.093,
-     "total_r": -16.77,
-     "max_dd_r": -29.8
+     "n": 288,
+     "win_pct": 32.6,
+     "avg_r": -0.085,
+     "total_r": -24.57,
+     "max_dd_r": -32.07
     },
     "holdout": {
-     "n": 69,
-     "win_pct": 34.8,
-     "avg_r": -0.22,
-     "total_r": -15.2,
-     "max_dd_r": -19.98
-    }
-   },
-   "checks": {
-    "enough_affected_on_train": true,
-    "total_r_up_on_train": true,
-    "total_r_up_on_holdout": true,
-    "drawdown_not_deeper": true,
-    "removed_trades_negative_both_halves": true,
-    "holdout_keeps_half_the_edge": false
-   },
-   "misses": [
-    "holdout_keeps_half_the_edge"
-   ],
-   "verdict": "inconclusive"
-  },
-  {
-   "name": "no gaps invalidated on the way",
-   "tweak": {
-    "name": "no gaps invalidated on the way",
-    "if": [
-     {
-      "col": "n_inv",
-      "op": ">",
-      "val": 0
-     }
-    ],
-    "then": "skip"
-   },
-   "affected_train": 108,
-   "affected_holdout": 48,
-   "train": {
-    "base": {
-     "n": 212,
-     "win_pct": 31.6,
-     "avg_r": -0.103,
-     "total_r": -21.74,
-     "max_dd_r": -33.12
-    },
-    "with_tweak": {
-     "n": 104,
-     "win_pct": 28.8,
-     "avg_r": -0.168,
-     "total_r": -17.51,
-     "max_dd_r": -22.51
-    },
-    "delta_total_r": 4.23
-   },
-   "holdout": {
-    "base": {
-     "n": 83,
-     "win_pct": 36.1,
-     "avg_r": -0.181,
-     "total_r": -15.01,
-     "max_dd_r": -23.48
-    },
-    "with_tweak": {
-     "n": 35,
-     "win_pct": 31.4,
-     "avg_r": -0.214,
-     "total_r": -7.5,
-     "max_dd_r": -13.5
-    },
-    "delta_total_r": 7.51
-   },
-   "affected_trades": {
-    "train": {
-     "n": 108,
-     "win_pct": 34.3,
-     "avg_r": -0.039,
-     "total_r": -4.23,
-     "max_dd_r": -22.52
-    },
-    "holdout": {
-     "n": 48,
-     "win_pct": 39.6,
-     "avg_r": -0.156,
-     "total_r": -7.51,
-     "max_dd_r": -11.34
-    }
-   },
-   "checks": {
-    "enough_affected_on_train": true,
-    "total_r_up_on_train": true,
-    "total_r_up_on_holdout": true,
-    "drawdown_not_deeper": true,
-    "removed_trades_negative_both_halves": true,
-    "holdout_keeps_half_the_edge": false
-   },
-   "misses": [
-    "holdout_keeps_half_the_edge"
-   ],
-   "verdict": "inconclusive"
-  },
-  {
-   "name": "DB only (no lone M)",
-   "tweak": {
-    "name": "DB only (no lone M)",
-    "if": [
-     {
-      "col": "sig",
-      "op": "in",
-      "val": [
-       "M",
-       "2M"
-      ]
-     }
-    ],
-    "then": "skip"
-   },
-   "affected_train": 90,
-   "affected_holdout": 33,
-   "train": {
-    "base": {
-     "n": 212,
-     "win_pct": 31.6,
-     "avg_r": -0.103,
-     "total_r": -21.74,
-     "max_dd_r": -33.12
-    },
-    "with_tweak": {
-     "n": 122,
-     "win_pct": 31.1,
-     "avg_r": -0.106,
-     "total_r": -12.94,
-     "max_dd_r": -20.44
-    },
-    "delta_total_r": 8.8
-   },
-   "holdout": {
-    "base": {
-     "n": 83,
-     "win_pct": 36.1,
-     "avg_r": -0.181,
-     "total_r": -15.01,
-     "max_dd_r": -23.48
-    },
-    "with_tweak": {
-     "n": 50,
-     "win_pct": 32.0,
-     "avg_r": -0.279,
-     "total_r": -13.95,
-     "max_dd_r": -16.48
-    },
-    "delta_total_r": 1.06
-   },
-   "affected_trades": {
-    "train": {
-     "n": 90,
-     "win_pct": 32.2,
-     "avg_r": -0.098,
-     "total_r": -8.8,
-     "max_dd_r": -21.71
-    },
-    "holdout": {
-     "n": 33,
-     "win_pct": 42.4,
-     "avg_r": -0.032,
-     "total_r": -1.06,
-     "max_dd_r": -11.0
+     "n": 123,
+     "win_pct": 38.2,
+     "avg_r": -0.041,
+     "total_r": -5.1,
+     "max_dd_r": -22.0
     }
    },
    "checks": {
@@ -892,136 +834,139 @@
     ],
     "then": "allow"
    },
-   "affected_train": 120,
-   "affected_holdout": 59,
+   "affected_train": 333,
+   "affected_holdout": 169,
    "train": {
     "base": {
-     "n": 212,
-     "win_pct": 31.6,
-     "avg_r": -0.103,
-     "total_r": -21.74,
-     "max_dd_r": -33.12
+     "n": 347,
+     "win_pct": 32.9,
+     "avg_r": -0.092,
+     "total_r": -31.82,
+     "max_dd_r": -39.32
     },
     "with_tweak": {
-     "n": 332,
-     "win_pct": 33.1,
-     "avg_r": -0.032,
-     "total_r": -10.52,
-     "max_dd_r": -35.71
+     "n": 680,
+     "win_pct": 33.7,
+     "avg_r": -0.021,
+     "total_r": -14.1,
+     "max_dd_r": -61.83
     },
-    "delta_total_r": 11.22
+    "delta_total_r": 17.72
    },
    "holdout": {
     "base": {
-     "n": 83,
-     "win_pct": 36.1,
-     "avg_r": -0.181,
-     "total_r": -15.01,
-     "max_dd_r": -23.48
+     "n": 152,
+     "win_pct": 38.2,
+     "avg_r": -0.036,
+     "total_r": -5.41,
+     "max_dd_r": -29.5
     },
     "with_tweak": {
-     "n": 142,
-     "win_pct": 35.2,
-     "avg_r": -0.13,
-     "total_r": -18.53,
-     "max_dd_r": -36.06
+     "n": 321,
+     "win_pct": 38.3,
+     "avg_r": 0.011,
+     "total_r": 3.47,
+     "max_dd_r": -49.82
     },
-    "delta_total_r": -3.52
+    "delta_total_r": 8.88
    },
    "affected_trades": {
     "train": {
-     "n": 120,
-     "win_pct": 35.8,
-     "avg_r": 0.093,
-     "total_r": 11.22,
-     "max_dd_r": -14.5
+     "n": 333,
+     "win_pct": 34.5,
+     "avg_r": 0.053,
+     "total_r": 17.72,
+     "max_dd_r": -25.56
     },
     "holdout": {
-     "n": 59,
-     "win_pct": 33.9,
-     "avg_r": -0.06,
-     "total_r": -3.52,
-     "max_dd_r": -19.08
+     "n": 169,
+     "win_pct": 38.5,
+     "avg_r": 0.053,
+     "total_r": 8.88,
+     "max_dd_r": -23.56
     }
    },
    "checks": {
     "enough_affected_on_train": true,
     "total_r_up_on_train": true,
-    "total_r_up_on_holdout": false,
+    "total_r_up_on_holdout": true,
     "drawdown_not_deeper": false,
-    "added_trades_positive_both_halves": false,
+    "added_trades_positive_both_halves": true,
     "holdout_keeps_half_the_edge": true
    },
    "misses": [
-    "total_r_up_on_holdout",
-    "drawdown_not_deeper",
-    "added_trades_positive_both_halves"
+    "drawdown_not_deeper"
    ],
-   "verdict": "fail"
+   "verdict": "inconclusive"
   },
   {
-   "name": "no Friday",
+   "name": "NY AM before 11:00 only (the old rule)",
    "tweak": {
-    "name": "no Friday",
+    "name": "NY AM before 11:00 only (the old rule)",
     "if": [
      {
-      "col": "dow",
+      "col": "session",
       "op": "==",
-      "val": "Fri"
+      "val": "newyork"
+     },
+     {
+      "col": "hour",
+      "op": ">=",
+      "val": 11
      }
     ],
     "then": "skip"
    },
-   "affected_train": 16,
+   "affected_train": 22,
    "affected_holdout": 13,
    "train": {
     "base": {
-     "n": 212,
-     "win_pct": 31.6,
-     "avg_r": -0.103,
-     "total_r": -21.74,
-     "max_dd_r": -33.12
+     "n": 347,
+     "win_pct": 32.9,
+     "avg_r": -0.092,
+     "total_r": -31.82,
+     "max_dd_r": -39.32
     },
     "with_tweak": {
-     "n": 196,
-     "win_pct": 32.1,
-     "avg_r": -0.101,
-     "total_r": -19.74,
-     "max_dd_r": -30.62
+     "n": 325,
+     "win_pct": 33.2,
+     "avg_r": -0.068,
+     "total_r": -22.05,
+     "max_dd_r": -35.77
     },
-    "delta_total_r": 2.0
+    "delta_total_r": 9.77
    },
    "holdout": {
     "base": {
-     "n": 83,
-     "win_pct": 36.1,
-     "avg_r": -0.181,
-     "total_r": -15.01,
-     "max_dd_r": -23.48
+     "n": 152,
+     "win_pct": 38.2,
+     "avg_r": -0.036,
+     "total_r": -5.41,
+     "max_dd_r": -29.5
     },
     "with_tweak": {
-     "n": 70,
-     "win_pct": 37.1,
-     "avg_r": -0.154,
-     "total_r": -10.77,
-     "max_dd_r": -15.5
+     "n": 139,
+     "win_pct": 39.6,
+     "avg_r": -0.01,
+     "total_r": -1.41,
+     "max_dd_r": -28.5
     },
-    "delta_total_r": 4.24
+    "delta_total_r": 4.0
    },
    "affected_trades": {
     "train": {
-     "n": 16,
-     "win_pct": 25.0,
-     "avg_r": -0.125,
-     "total_r": -2.0,
-     "max_dd_r": -5.5
+     "n": 22,
+     "win_pct": 27.3,
+     "avg_r": -0.444,
+     "total_r": -9.77,
+     "max_dd_r": -12.0
     },
     "holdout": {
      "n": 13,
-     "win_pct": 30.8,
-     "avg_r": -0.326,
-     "total_r": -4.24,
-     "max_dd_r": -8.0
+     "win_pct": 23.1,
+     "avg_r": -0.308,
+     "total_r": -4.0,
+     "max_dd_r": -5.0
     }
    },
    "checks": {
@@ -1036,6 +981,167 @@
     "enough_affected_on_train"
    ],
    "verdict": "inconclusive"
+  },
+  {
+   "name": "DB only (no lone M)",
+   "tweak": {
+    "name": "DB only (no lone M)",
+    "if": [
+     {
+      "col": "sig",
+      "op": "in",
+      "val": [
+       "M",
+       "2M"
+      ]
+     }
+    ],
+    "then": "skip"
+   },
+   "affected_train": 135,
+   "affected_holdout": 44,
+   "train": {
+    "base": {
+     "n": 347,
+     "win_pct": 32.9,
+     "avg_r": -0.092,
+     "total_r": -31.82,
+     "max_dd_r": -39.32
+    },
+    "with_tweak": {
+     "n": 212,
+     "win_pct": 31.1,
+     "avg_r": -0.128,
+     "total_r": -27.16,
+     "max_dd_r": -34.66
+    },
+    "delta_total_r": 4.66
+   },
+   "holdout": {
+    "base": {
+     "n": 152,
+     "win_pct": 38.2,
+     "avg_r": -0.036,
+     "total_r": -5.41,
+     "max_dd_r": -29.5
+    },
+    "with_tweak": {
+     "n": 108,
+     "win_pct": 39.8,
+     "avg_r": 0.029,
+     "total_r": 3.15,
+     "max_dd_r": -21.15
+    },
+    "delta_total_r": 8.56
+   },
+   "affected_trades": {
+    "train": {
+     "n": 135,
+     "win_pct": 35.6,
+     "avg_r": -0.035,
+     "total_r": -4.66,
+     "max_dd_r": -20.7
+    },
+    "holdout": {
+     "n": 44,
+     "win_pct": 34.1,
+     "avg_r": -0.195,
+     "total_r": -8.56,
+     "max_dd_r": -18.5
+    }
+   },
+   "checks": {
+    "enough_affected_on_train": true,
+    "total_r_up_on_train": true,
+    "total_r_up_on_holdout": true,
+    "drawdown_not_deeper": true,
+    "removed_trades_negative_both_halves": true,
+    "holdout_keeps_half_the_edge": false
+   },
+   "misses": [
+    "holdout_keeps_half_the_edge"
+   ],
+   "verdict": "inconclusive"
+  },
+  {
+   "name": "no gaps invalidated on the way",
+   "tweak": {
+    "name": "no gaps invalidated on the way",
+    "if": [
+     {
+      "col": "n_inv",
+      "op": ">",
+      "val": 0
+     }
+    ],
+    "then": "skip"
+   },
+   "affected_train": 192,
+   "affected_holdout": 89,
+   "train": {
+    "base": {
+     "n": 347,
+     "win_pct": 32.9,
+     "avg_r": -0.092,
+     "total_r": -31.82,
+     "max_dd_r": -39.32
+    },
+    "with_tweak": {
+     "n": 155,
+     "win_pct": 31.0,
+     "avg_r": -0.164,
+     "total_r": -25.43,
+     "max_dd_r": -30.43
+    },
+    "delta_total_r": 6.39
+   },
+   "holdout": {
+    "base": {
+     "n": 152,
+     "win_pct": 38.2,
+     "avg_r": -0.036,
+     "total_r": -5.41,
+     "max_dd_r": -29.5
+    },
+    "with_tweak": {
+     "n": 63,
+     "win_pct": 34.9,
+     "avg_r": -0.105,
+     "total_r": -6.64,
+     "max_dd_r": -14.5
+    },
+    "delta_total_r": -1.23
+   },
+   "affected_trades": {
+    "train": {
+     "n": 192,
+     "win_pct": 34.4,
+     "avg_r": -0.033,
+     "total_r": -6.39,
+     "max_dd_r": -20.15
+    },
+    "holdout": {
+     "n": 89,
+     "win_pct": 40.4,
+     "avg_r": 0.014,
+     "total_r": 1.23,
+     "max_dd_r": -19.5
+    }
+   },
+   "checks": {
+    "enough_affected_on_train": true,
+    "total_r_up_on_train": true,
+    "total_r_up_on_holdout": false,
+    "drawdown_not_deeper": true,
+    "removed_trades_negative_both_halves": false,
+    "holdout_keeps_half_the_edge": false
+   },
+   "misses": [
+    "total_r_up_on_holdout",
+    "removed_trades_negative_both_halves",
+    "holdout_keeps_half_the_edge"
+   ],
+   "verdict": "fail"
   },
   {
    "name": "skip NY PM",
@@ -1054,35 +1160,35 @@
    "affected_holdout": 24,
    "train": {
     "base": {
-     "n": 212,
-     "win_pct": 31.6,
-     "avg_r": -0.103,
-     "total_r": -21.74,
-     "max_dd_r": -33.12
+     "n": 347,
+     "win_pct": 32.9,
+     "avg_r": -0.092,
+     "total_r": -31.82,
+     "max_dd_r": -39.32
     },
     "with_tweak": {
-     "n": 158,
-     "win_pct": 32.3,
-     "avg_r": -0.085,
-     "total_r": -13.38,
-     "max_dd_r": -27.44
+     "n": 293,
+     "win_pct": 33.4,
+     "avg_r": -0.08,
+     "total_r": -23.46,
+     "max_dd_r": -33.85
     },
     "delta_total_r": 8.36
    },
    "holdout": {
     "base": {
-     "n": 83,
-     "win_pct": 36.1,
-     "avg_r": -0.181,
-     "total_r": -15.01,
-     "max_dd_r": -23.48
+     "n": 152,
+     "win_pct": 38.2,
+     "avg_r": -0.036,
+     "total_r": -5.41,
+     "max_dd_r": -29.5
     },
     "with_tweak": {
-     "n": 59,
-     "win_pct": 28.8,
-     "avg_r": -0.315,
-     "total_r": -18.58,
-     "max_dd_r": -22.0
+     "n": 128,
+     "win_pct": 35.2,
+     "avg_r": -0.07,
+     "total_r": -8.98,
+     "max_dd_r": -28.76
     },
     "delta_total_r": -3.57
    },
@@ -1118,86 +1224,170 @@
    "verdict": "fail"
   },
   {
-   "name": "NY after 10:30 half size",
+   "name": "London first 2h only (the old rule)",
    "tweak": {
-    "name": "NY after 10:30 half size",
+    "name": "London first 2h only (the old rule)",
     "if": [
      {
       "col": "session",
       "op": "==",
-      "val": "newyork"
+      "val": "london"
      },
      {
       "col": "hour",
       "op": ">=",
-      "val": 10.5
+      "val": 4
      }
     ],
-    "then": "half"
+    "then": "skip"
    },
-   "affected_train": 11,
-   "affected_holdout": 6,
+   "affected_train": 36,
+   "affected_holdout": 32,
    "train": {
     "base": {
-     "n": 212,
-     "win_pct": 31.6,
-     "avg_r": -0.103,
-     "total_r": -21.74,
-     "max_dd_r": -33.12
+     "n": 347,
+     "win_pct": 32.9,
+     "avg_r": -0.092,
+     "total_r": -31.82,
+     "max_dd_r": -39.32
     },
     "with_tweak": {
-     "n": 212,
-     "win_pct": 31.6,
-     "avg_r": -0.11,
-     "total_r": -23.24,
-     "max_dd_r": -31.44
+     "n": 311,
+     "win_pct": 32.2,
+     "avg_r": -0.116,
+     "total_r": -35.94,
+     "max_dd_r": -43.44
     },
-    "delta_total_r": -1.5
+    "delta_total_r": -4.12
    },
    "holdout": {
     "base": {
-     "n": 83,
-     "win_pct": 36.1,
-     "avg_r": -0.181,
-     "total_r": -15.01,
-     "max_dd_r": -23.48
+     "n": 152,
+     "win_pct": 38.2,
+     "avg_r": -0.036,
+     "total_r": -5.41,
+     "max_dd_r": -29.5
     },
     "with_tweak": {
-     "n": 83,
-     "win_pct": 36.1,
-     "avg_r": -0.168,
-     "total_r": -13.97,
-     "max_dd_r": -21.98
+     "n": 120,
+     "win_pct": 36.7,
+     "avg_r": -0.062,
+     "total_r": -7.4,
+     "max_dd_r": -23.0
     },
-    "delta_total_r": 1.04
+    "delta_total_r": -1.99
    },
    "affected_trades": {
     "train": {
-     "n": 11,
-     "win_pct": 36.4,
-     "avg_r": 0.273,
-     "total_r": 3.0,
-     "max_dd_r": -5.0
+     "n": 36,
+     "win_pct": 38.9,
+     "avg_r": 0.114,
+     "total_r": 4.12,
+     "max_dd_r": -5.28
     },
     "holdout": {
-     "n": 6,
-     "win_pct": 50.0,
-     "avg_r": -0.347,
-     "total_r": -2.08,
-     "max_dd_r": -3.0
+     "n": 32,
+     "win_pct": 43.8,
+     "avg_r": 0.062,
+     "total_r": 1.99,
+     "max_dd_r": -11.9
+    }
+   },
+   "checks": {
+    "enough_affected_on_train": true,
+    "total_r_up_on_train": false,
+    "total_r_up_on_holdout": false,
+    "drawdown_not_deeper": false,
+    "removed_trades_negative_both_halves": false,
+    "holdout_keeps_half_the_edge": false
+   },
+   "misses": [
+    "total_r_up_on_train",
+    "total_r_up_on_holdout",
+    "drawdown_not_deeper",
+    "removed_trades_negative_both_halves",
+    "holdout_keeps_half_the_edge"
+   ],
+   "verdict": "fail"
+  },
+  {
+   "name": "no Friday",
+   "tweak": {
+    "name": "no Friday",
+    "if": [
+     {
+      "col": "dow",
+      "op": "==",
+      "val": "Fri"
+     }
+    ],
+    "then": "skip"
+   },
+   "affected_train": 26,
+   "affected_holdout": 29,
+   "train": {
+    "base": {
+     "n": 347,
+     "win_pct": 32.9,
+     "avg_r": -0.092,
+     "total_r": -31.82,
+     "max_dd_r": -39.32
+    },
+    "with_tweak": {
+     "n": 321,
+     "win_pct": 32.7,
+     "avg_r": -0.102,
+     "total_r": -32.82,
+     "max_dd_r": -40.32
+    },
+    "delta_total_r": -1.0
+   },
+   "holdout": {
+    "base": {
+     "n": 152,
+     "win_pct": 38.2,
+     "avg_r": -0.036,
+     "total_r": -5.41,
+     "max_dd_r": -29.5
+    },
+    "with_tweak": {
+     "n": 123,
+     "win_pct": 35.0,
+     "avg_r": -0.09,
+     "total_r": -11.06,
+     "max_dd_r": -29.0
+    },
+    "delta_total_r": -5.65
+   },
+   "affected_trades": {
+    "train": {
+     "n": 26,
+     "win_pct": 34.6,
+     "avg_r": 0.038,
+     "total_r": 1.0,
+     "max_dd_r": -7.0
+    },
+    "holdout": {
+     "n": 29,
+     "win_pct": 51.7,
+     "avg_r": 0.195,
+     "total_r": 5.65,
+     "max_dd_r": -12.0
     }
    },
    "checks": {
     "enough_affected_on_train": false,
     "total_r_up_on_train": false,
-    "total_r_up_on_holdout": true,
-    "drawdown_not_deeper": true,
+    "total_r_up_on_holdout": false,
+    "drawdown_not_deeper": false,
     "removed_trades_negative_both_halves": false,
     "holdout_keeps_half_the_edge": false
    },
    "misses": [
     "enough_affected_on_train",
     "total_r_up_on_train",
+    "total_r_up_on_holdout",
+    "drawdown_not_deeper",
     "removed_trades_negative_both_halves",
     "holdout_keeps_half_the_edge"
    ],
@@ -1224,68 +1414,69 @@
     ],
     "then": "skip"
    },
-   "affected_train": 70,
-   "affected_holdout": 27,
+   "affected_train": 108,
+   "affected_holdout": 67,
    "train": {
     "base": {
-     "n": 212,
-     "win_pct": 31.6,
-     "avg_r": -0.103,
-     "total_r": -21.74,
-     "max_dd_r": -33.12
+     "n": 347,
+     "win_pct": 32.9,
+     "avg_r": -0.092,
+     "total_r": -31.82,
+     "max_dd_r": -39.32
     },
     "with_tweak": {
-     "n": 142,
-     "win_pct": 28.9,
-     "avg_r": -0.187,
-     "total_r": -26.51,
-     "max_dd_r": -40.16
+     "n": 239,
+     "win_pct": 31.0,
+     "avg_r": -0.163,
+     "total_r": -38.92,
+     "max_dd_r": -48.42
     },
-    "delta_total_r": -4.77
+    "delta_total_r": -7.1
    },
    "holdout": {
     "base": {
-     "n": 83,
-     "win_pct": 36.1,
-     "avg_r": -0.181,
-     "total_r": -15.01,
-     "max_dd_r": -23.48
+     "n": 152,
+     "win_pct": 38.2,
+     "avg_r": -0.036,
+     "total_r": -5.41,
+     "max_dd_r": -29.5
     },
     "with_tweak": {
-     "n": 56,
-     "win_pct": 33.9,
-     "avg_r": -0.202,
-     "total_r": -11.32,
-     "max_dd_r": -18.5
+     "n": 85,
+     "win_pct": 35.3,
+     "avg_r": -0.091,
+     "total_r": -7.71,
+     "max_dd_r": -24.5
     },
-    "delta_total_r": 3.69
+    "delta_total_r": -2.3
    },
    "affected_trades": {
     "train": {
-     "n": 70,
-     "win_pct": 37.1,
-     "avg_r": 0.068,
-     "total_r": 4.77,
-     "max_dd_r": -14.47
+     "n": 108,
+     "win_pct": 37.0,
+     "avg_r": 0.066,
+     "total_r": 7.1,
+     "max_dd_r": -20.8
     },
     "holdout": {
-     "n": 27,
-     "win_pct": 40.7,
-     "avg_r": -0.137,
-     "total_r": -3.69,
-     "max_dd_r": -6.0
+     "n": 67,
+     "win_pct": 41.8,
+     "avg_r": 0.034,
+     "total_r": 2.3,
+     "max_dd_r": -14.11
     }
    },
    "checks": {
     "enough_affected_on_train": true,
     "total_r_up_on_train": false,
-    "total_r_up_on_holdout": true,
+    "total_r_up_on_holdout": false,
     "drawdown_not_deeper": false,
     "removed_trades_negative_both_halves": false,
     "holdout_keeps_half_the_edge": false
    },
    "misses": [
     "total_r_up_on_train",
+    "total_r_up_on_holdout",
     "drawdown_not_deeper",
     "removed_trades_negative_both_halves",
     "holdout_keeps_half_the_edge"
@@ -1294,6 +1485,6 @@
   }
  ],
  "note": "r = fvg-mcp's scored result at full size (2R + runner to 3R). Books after code rules. A tweak PASSES only if it helps on train AND holdout, does not deepen drawdown, and the trades it changes have the expected sign on both halves (see protocol). Small n is noise.",
- "tweaks_tried_total": 11,
- "multiple_testing_bar_t": 2.9
+ "tweaks_tried_total": 13,
+ "multiple_testing_bar_t": 2.95
 }
