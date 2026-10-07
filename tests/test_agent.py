@@ -352,5 +352,19 @@ fired, _ = rules_code.hard_rules(e, d, now_utc)
 ok(any("§2.13" in f and "2 losses" in f for f in fired), f"two session losses stop trading ({fired})")
 ok(rules_code.session_losses(now_utc - timedelta(hours=9)) == 0, "losses are counted per session block only")
 
+# 14. higher-timeframe FVGs from the tape + rule 2.8
+from app import htf  # noqa: E402
+H = 4 * 3600_000
+tape3 = []
+for i, (o, h, l, c) in enumerate([(100, 101, 99, 100.5), (102, 103, 101.5, 102.5), (104, 105, 103.5, 104.5), (104, 104.2, 103.8, 104)]):
+    tape3 += [(t0 + i * H + k * 60000, p) for k, p in enumerate([o, h, l, c])]
+cs = htf.candles(tape3, 240)
+ok(len(cs) == 4 and cs[0]["h"] == 101 and cs[0]["l"] == 99, "4H candles from ticks")
+gaps = htf.fvgs_of(cs, "4h")
+ok(len(gaps) == 2 and gaps[0]["dir"] == "bull" and gaps[0]["bottom"] == 101 and gaps[0]["top"] == 103.5 and not gaps[0]["filled"], f"bullish 4H FVG found ({gaps})")
+ok(htf.rule_2_8("bear", 102.0, [{**gaps[0], "at_et": "x"}]) and htf.rule_2_8("bull", 102.0, [{**gaps[0], "at_et": "x"}]) is None,
+   "rule 2.8: short inside a bullish 4H FVG is flagged, long is not")
+ok(htf.relation(102.0, gaps)[0]["price_is"] == "inside" and "above" in htf.relation(110.0, gaps)[0]["price_is"], "price vs gap relation")
+
 print("all tests passed")
 server.should_exit = True

@@ -9,7 +9,7 @@ import threading
 import time
 from datetime import datetime, timezone
 
-from . import config, jev, knowledge, learning, llm, prompts, rules_code, scanner, store
+from . import config, htf, jev, knowledge, learning, llm, prompts, rules_code, scanner, store
 from .mcp_client import FVG
 
 log = logging.getLogger("agent")
@@ -134,7 +134,20 @@ def build_context(fvg: FVG, entry: dict, detail: dict, chart_read, shot_age) -> 
         "pair_mt_recent": _mt_events(fvg, pair) if pair else None,
         "chart_read": chart_read,
         "screenshot_age_s": round(shot_age, 1) if shot_age is not None else None,
+        "htf_fvgs": _htf(fvg, sym, entry.get("entry")),
     }
+
+
+def _htf(fvg: FVG, sym: str, price) -> dict | None:
+    """4H / daily FVGs from the archived tape, with where the entry sits relative to each."""
+    try:
+        h = htf.htf_fvgs(fvg, sym)
+    except Exception as e:   # optional context: never block the decision
+        log.warning("htf fvgs: %s", e)
+        return None
+    if price:
+        h = {**h, "4h": htf.relation(price, h["4h"]), "1d": htf.relation(price, h["1d"])}
+    return h
 
 
 def normalise(dec: dict) -> dict:
@@ -211,6 +224,16 @@ def review(fvg: FVG, entry: dict):
     context = build_context(fvg, entry, detail, chart_read, shot_age)
     if news:
         context["news"] = news
+    # rule 2.8 from the archive (not the vision model): long inside an overhead 4H FVG / short below
+    h = context.get("htf_fvgs") or {}
+    if h.get("age_h") is not None and h["age_h"] <= 30 and entry.get("entry"):
+        r28 = htf.rule_2_8(entry.get("direction"), float(entry["entry"]), h["4h"])
+        if r28:
+            row.update(decision="SKIP", grade="C", size="none", hard_rule=r28, reasons=[r28],
+                       model_decision="code", path="code", chart_read=chart_read, screenshot=shot_file,
+                       screenshot_age_s=shot_age, context=context)
+            store.insert_decision(row)
+            return row
 
     jv = jev.score(context)
     if jv:
