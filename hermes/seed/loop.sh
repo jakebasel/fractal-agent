@@ -13,14 +13,14 @@ cp "$SEED/skills/trading-review/SKILL.md" "$DATA/skills/trading-review/SKILL.md"
 cp "$SEED"/bin/*.sh "$DATA/trading-review/bin/"; chmod 700 "$DATA"/trading-review/bin/*.sh
 printf 'AGENT_TOKEN=%s\n' "${AGENT_TOKEN:-}" > "$DATA/trading-review/.token"; chmod 600 "$DATA/trading-review/.token"
 echo "[hermes-loop] seeded; reviewing every ${REVIEW_EVERY_MIN:-20} min"
-echo "[hermes-loop] doctor:"; timeout 120 hermes doctor 2>&1 | tail -15
-echo "[hermes-loop] tools:"; timeout 120 hermes tools --summary 2>&1 | tail -25
 while true; do
-  n=$(curl -sS -m 30 -H "X-Agent-Token: ${AGENT_TOKEN:-}" "${AGENT_URL:-https://agent.motivationpro.tech}/api/review_queue?reviewer=hermes&limit=2" | python3 -c 'import sys,json
+  resp=$(curl -sS -m 30 -H "X-Agent-Token: ${AGENT_TOKEN:-}" "${AGENT_URL:-https://agent.motivationpro.tech}/api/review_queue?reviewer=hermes&limit=2" 2>&1)
+  n=$(printf '%s' "$resp" | python3 -c 'import sys,json
 try: print(len(json.load(sys.stdin)))
-except Exception: print(0)' 2>/dev/null || echo 0)
-  if [ "${n:-0}" -gt 0 ]; then
-    echo "[hermes-loop] $(date -u +%FT%TZ) $n trade(s) to review"
+except Exception as e: print(0)' 2>/dev/null)
+  n=${n:-0}
+  echo "[hermes-loop] $(date -u +%FT%TZ) queue=$n $( [ "$n" = 0 ] && printf '%s' "$resp" | head -c 120 )"
+  if [ "$n" -gt 0 ] 2>/dev/null; then
     # --yolo: no approval prompts (headless; the container holds only the agent token). The
     # MCP toolsets come from config.yaml. -Q = programmatic mode (without it the run hangs).
     # Output streams line by line to the container log and to runs.log on the volume.
