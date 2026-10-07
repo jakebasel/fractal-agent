@@ -62,11 +62,13 @@ Read this carefully before reacting:
   before Sep 3. fvg-mcp's history explains it: "ND trend-fallback retired by default"
   (2026-08-11) and "ND toggle, default off" (08-20). ND is not part of the strategy and fvg-mcp's
   own analysis drops it, so the backtest does too. Not an edge.
-- **One tweak passes the full protocol: "walk away after −2R in a day"** (the instructor's own
-  rule): train +15.5R, holdout +15.8R, ~106 trades affected, drawdown not deeper, holdout t-stat
-  above the multiple-testing bar. "Walk away after −1R" also helps but sits just under the bar.
-  I added both to the live dashboard as computed books (Agent/Core + walk-away), no model call.
-  Recommend: approve "walk away at −2R/day" into amendments.md once the live book agrees.
+- **The best tweak is "walk away after −2R in a day"** (the instructor's own rule): train
+  +14.5R, holdout +13.3R, ~105 trades affected, drawdown not deeper, losers cut on both halves.
+  It passes every check except the multiple-testing bar (holdout t = 2.2 vs 2.9 required after
+  11 tweaks tried), so the protocol calls it borderline, not proven. "Walk away after −1R" is
+  similar and weaker. Both are on the live dashboard as computed books (Agent/Core +
+  walk-away), no model call. Recommend: keep it as the leading candidate and approve it into
+  amendments.md once the live book agrees over a few weeks.
 - "5m signals only" (train +16R, holdout +14R) and "allow out-of-window entries" (holdout +22R)
   are *inconclusive*: real on both halves but failing one check each. Keep watching live.
 - Friday, NY-after-10:30 half size, deep-retrace-only, DB-only, skip-NYPM: inconclusive or fail.
@@ -106,8 +108,9 @@ Labelled by two helpers (no API spend): `knowledge/labels/*.json`, 97 events, 93
   hypothesis, measurable in the ledger and live.
 
 ## 4. Suggested changes (ready for your yes/no)
-1. **Approve "walk away at −2R/day"** after a week of live confirmation (it is the only tweak
-   that passed the protocol, and it is his rule, not a data-mined one).
+1. **"Walk away at −2R/day"** is the leading candidate (his rule, not data-mined; helps on
+   both halves; borderline on the multiple-testing bar). Approve after a few weeks of live
+   confirmation.
 2. ~~Compute higher-timeframe FVGs from archived prices~~ Done tonight (`app/htf.py`): 4H and
    daily gaps from fvg-mcp's tape go into every decision with the entry's position relative to
    each; long inside a bearish 4H FVG / short inside a bullish one is now a code skip (rule
@@ -151,7 +154,31 @@ code. Full report with verbatim quotes: `reports/rules_audit_2026-10-07.md`. App
   not have, those transcripts would settle it.
 
 ## 6. Code review findings and what was fixed
-(filled in below when the review finished)
+A second helper reviewed every new file for bugs (threading, time zones, retries, auth, maths)
+and reproduced the serious ones. All fixed and tested (65 tests), deployed:
+- **Dashboard rendering**: the Backtest card read a key I had renamed, so the JavaScript
+  died there and the Learning / Setups / Breakdown / Spend tabs would have come up empty. Fixed
+  and guarded; "ago" times now come from epoch timestamps (no DST edge).
+- **Credit-burning retry loops**: a failing vision call inside a scan window would have been
+  retried every 15 s (4 calls/min) with no budget check; a single trade whose shadow call
+  always fails would have cost one call per tick forever and blocked every other shadow test.
+  Both now cache/count failures and move on.
+- **One crash stalling the loop**: an unexpected error inside a decision would have retried
+  every 15 s and blocked settlement, scanner and shadow tests until the entry aged out. Now it
+  becomes an ERROR row, retried while the entry is fresh; ERROR/MISSED rows still settle so
+  the core book stays complete (otherwise "core" quietly excluded the days the service
+  misbehaved).
+- **SQLite**: the HTTP thread and the agent thread shared one connection; a commit on one
+  could silently truncate a read on the other (reproduced: 280 of 600 rows). Now one connection
+  per thread with WAL.
+- Also: half-uploaded screenshot batches no longer get read as complete; tape downloads for
+  4H FVGs happen outside the live decision; the opposing-5m-DB lookup covers 400 events (60
+  was too few for 2 hours of MNQ+MES); non-ASCII passwords returned 500 instead of 401; the
+  backtest's "allow" tweaks no longer re-admit trades another rule also removes; hypothesis
+  tables count trades taken (n) the same way as the headline book.
+- Open (not fixed, low risk): the dashboard cookie is a 30-day bearer with no server-side
+  revocation (log out only clears the browser); `/api/dashboard` reloads the whole table on
+  every refresh (fine at today's size).
 
 ## 7. macOS permissions and startup items this project uses
 - **Screen Recording**: `/bin/bash` (the uploader, under launchd). Granted.
