@@ -1,0 +1,65 @@
+# Hermes Agent config for the trade reviewer (see tools/backtest_protocol.md for how its
+# proposals are judged). Only the LLM costs money: web/search/image/tts/browser/vision are off.
+model:
+  provider: "openrouter"
+  default: "deepseek/deepseek-v3.2"
+  base_url: ""
+  api_mode: chat_completions
+provider_routing:
+  sort: "price"
+  data_collection: "deny"
+agent:
+  max_turns: 40
+  run_budget_seconds: 1200
+  reasoning_effort: low
+  disabled_toolsets: [web, search, browser, vision, image_gen, video_gen, tts, delegation,
+                      code_execution, computer_use, cronjob, clarify, messaging, todo, kanban]
+auxiliary:
+  vision: {provider: openrouter, model: deepseek/deepseek-v3.2}
+  compression: {provider: auto, model: ''}
+  background_review: {enabled: false}
+memory:
+  memory_enabled: true
+  user_profile_enabled: true
+  memory_char_limit: 2200
+  user_char_limit: 1375
+  write_approval: false
+skills:
+  write_approval: false
+  guard_agent_created: true
+  create_dir: "/opt/data/skills-agent"
+  auto_load: ["trading-review"]
+  project_discovery: false
+terminal:
+  backend: local
+  cwd: "/opt/data/trading-review"
+  timeout: 120
+approvals:
+  mode: smart
+  single_query_mode: deny
+  cron_mode: deny
+  unattended_mode: deny
+command_allowlist:
+  - post_review.sh
+  - propose.sh
+  - /opt/data/trading-review/bin/post_review.sh
+  - /opt/data/trading-review/bin/propose.sh
+security:
+  allow_lazy_installs: false
+compression:
+  enabled: true
+  threshold: 0.50
+  target_ratio: 0.20
+mcp_servers:
+  fvg:
+    url: "https://fvg.motivationpro.tech/mcp"
+    timeout: 120
+    connect_timeout: 30
+    enabled: true
+    lazy: false
+  paper:
+    url: "https://agent.motivationpro.tech/mcp"
+    timeout: 180
+    connect_timeout: 30
+    enabled: true
+    lazy: false
