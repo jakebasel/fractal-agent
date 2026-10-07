@@ -92,7 +92,7 @@ def fake_post(model, messages, max_tokens=1500, temperature=0.1, purpose="other"
         return json.dumps({str(i): {"decision": "SKIP", "size": "none", "applies": True, "why": "test"}
                            for i in ids})
     assert "RULEBOOK" in sysmsg and "Hard rules" in sysmsg, "rulebook not in prompt"
-    return 'Sure. {"decision":"TAKE","play":"DB continuation","grade":"B","size":"full","confidence":0.6,"hard_rule":null,' \
+    return 'Sure. {"decision":"TAKE","play_kind":"continuation","grade":"B","size":"full","confidence":0.6,"hard_rule":null,' \
            '"boosters":["DB"],"reasons":["§3 DB continuation"]}'
 
 
@@ -106,7 +106,7 @@ def fake_system_one(state, questions, purpose="jev"):
     ans = {k: {"type": "noul", "noul": 0.1} for k in questions if questions[k]["type"] == "noul"}
     ans["take"] = {"type": "choice", "choice": "TAKE", "probabilities": {"TAKE": 0.7, "SKIP": 0.3}}
     ans["grade"] = {"type": "choice", "choice": "A", "probabilities": {"A": 1.0}}
-    ans["play"] = {"type": "choice", "choice": "DB continuation", "probabilities": {}}
+    ans["play"] = {"type": "choice", "choice": "continuation", "probabilities": {}}
     store.log_api_call(purpose, "typesafe/jev-1.13", 400, 0, 0.00002, 90, True)
     return {"answers": ans, "model": "jev-1.13.0", "ms": 90}
 
@@ -161,7 +161,7 @@ n_calls = len(PURPOSES)
 FAKE["entries"]["MNQ1!"].append(mk_entry(3, trend_fallback=True))
 agent.tick(fvg)
 r3 = [r for r in store.decisions() if r["entry_id"] == 3][0]
-ok(r3["decision"] == "SKIP" and "ND" in r3["hard_rule"]
+ok(r3["decision"] == "SKIP" and "ND" in r3["hard_rule"] and r3["play"] == "5m DB continuation"
    and not {"decision", "vision"} & set(PURPOSES[n_calls:]),
    "ND entry skipped by code, no model call")
 
@@ -216,8 +216,8 @@ fired, _ = rules_code.hard_rules(e, d, _dt.now(timezone.utc))
 ok(fired[0].startswith("§2.4 2DB") and any("window" in f for f in fired), f"2DB reported before the window ({fired})")
 
 row2 = [r for r in store.decisions() if r["entry_id"] == 2][0]
-ok(row2["jev_p_take"] == 0.7 and json.loads(row2["jev"])["play"] == "DB continuation", "Jev shadow score stored on the row")
-ok(row2["rules_version"] and row2["path"] == "model" and row2["play"] == "DB continuation", "row carries rules_version, path, play")
+ok(row2["jev_p_take"] == 0.7 and json.loads(row2["jev"])["play"] == "continuation", "Jev shadow score stored on the row")
+ok(row2["rules_version"] and row2["path"] == "model" and row2["play"] == "5m DB continuation", f"row carries rules_version, path, play ({row2['play']})")
 ok(JEV_CALLS and "take" in JEV_CALLS[0] and "r2_5" in JEV_CALLS[0], "Jev asked the hard-rule questions")
 
 hyps = store.hypotheses()
@@ -229,7 +229,8 @@ rep = learning.report(30)
 hres = [h for h in rep["hypotheses"] if h["source"] == "lesson"][0]
 ok(hres["books_same_trades"]["agent"]["total_r"] == 1.25 and hres["books_same_trades"]["with_change"]["total_r"] == 0.0
    and hres["delta_total_r_vs_agent"] == -1.25, "hypothesis compared on the same trades")
-ok(rep["books"]["core_strategy_all_engine_entries"]["n"] == 1 and rep["core_by_play"][0]["group"] == "DB continuation", "report breakdowns")
+ok(rep["books"]["core_strategy_all_engine_entries"]["n"] == 1 and rep["core_by_play"][0]["group"] == "5m DB continuation"
+   and rep["core_by_timeframe_signal"][0]["group"] == "5m DB", "report breakdowns by play and timeframe x signal")
 ok(store.spend()["calls"] >= 1 and store.spend()["total_usd"] > 0, "API spend logged")
 
 # Jev gate mode: a sure hard rule skips without DeepSeek
@@ -286,12 +287,12 @@ ok(scanner.in_window(_dt2(2026, 10, 7, 9, 40, tzinfo=ET)) and not scanner.in_win
 def fake_scan_post(model, messages, max_tokens=1500, temperature=0.1, purpose="other"):
     if purpose == "scan":
         PURPOSES.append(purpose)
-        return '{"setups":[{"symbol":"MES1!","play":"reversal set up","direction":"bear","stage":"forming","confidence":0.6,"reasons":["red reversal zone printed"],"engine_has_it":false}]}'
+        return '{"setups":[{"symbol":"MES1!","play":"5m DB reversal set up","direction":"bear","stage":"forming","confidence":0.6,"reasons":["red reversal zone printed"],"engine_has_it":false}]}'
     return fake_post(model, messages, max_tokens, temperature, purpose)
 llm._post = fake_scan_post
 scanner._last.update(at=0.0, files=None)
 found = scanner.scan(fvg, cr, "x.jpg", _dt2(2026, 10, 7, 9, 40, tzinfo=ET))
-ok(found and store.scans(1)[0]["play"] == "reversal set up", "scanner logs a spotted setup")
+ok(found and store.scans(1)[0]["play"] == "5m DB reversal set up", "scanner logs a spotted setup")
 ok(scanner.scan(fvg, cr, "x.jpg", _dt2(2026, 10, 7, 9, 41, tzinfo=ET)) is None, "scanner does not re-scan the same screenshot")
 config.DAILY_BUDGET_USD = 0.000001
 ok(store.over_budget() and learning.run_shadow() == 0, "budget guard pauses shadow tests")

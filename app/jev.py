@@ -43,8 +43,8 @@ def questions() -> dict:
     q["grade"] = {"type": "choice", "instructions": "Grade per rulebook §3.", "criteria": {
         "A+": "all must-haves and 3+ boosters", "A": "all must-haves and 1-2 boosters",
         "B": "must-haves met but a downgrade applies", "C": "a must-have is missing"}}
-    q["play"] = {"type": "choice", "instructions": "Which play is this setup?",
-                 "criteria": dict(prompts.PLAYS)}
+    q["play"] = {"type": "choice", "instructions": "Which kind of play is this setup?",
+                 "criteria": dict(prompts.PLAY_KINDS)}
     return q
 
 

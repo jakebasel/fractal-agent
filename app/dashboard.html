@@ -449,7 +449,9 @@ function render() {
     <div class="t2">${esc(l.lesson)}</div>${l.proposal ? `<div style="font-size:12px;margin-top:2px">Proposal: ${esc(l.proposal)}</div>` : ""}</div>`).join("") || `<div class="empty">Lessons appear when trades settle (usually within ~2 hours).</div>`;
   const j = rep.jev;
   $("#breakdowns").innerHTML = [
-    groupTable("By play", rep.core_by_play, "Play", "core strategy, AI-reviewed setups, full size"),
+    groupTable("By play", rep.core_by_play, "Play", "core strategy (every entry, full size): timeframe · signal · kind"),
+    groupTable("By timeframe × signal", rep.core_by_timeframe_signal, "TF signal", "core strategy: 1m vs 5m, M vs DB"),
+    groupTable("By timeframe", rep.core_by_timeframe, "Timeframe", "core strategy"),
     groupTable("Agent by play", rep.agent_by_play, "Play", "agent paper book"),
     groupTable("By session", rep.core_by_session, "Session", "core strategy"),
     groupTable("By signal config", rep.core_by_signal_config, "Config", "core strategy"),

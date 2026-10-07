@@ -7,7 +7,44 @@ from . import config, store
 
 RULE_FILES = ("amendments.md", "rulebook.md", "live_rules.md")
 
-# the plays the strategy names (rulebook + live sessions + Reversal Set Up video)
+# A play = <timeframe> <signal> <kind>, e.g. "5m DB continuation", "1m M continuation",
+# "5m reversal set up". Timeframe and signal come from the engine (mt_tf, mt_cfg) in code; the
+# model only decides the kind. The kinds the strategy names (rulebook + live sessions + video):
+PLAY_KINDS = {
+    "continuation": "retracement into the signal's leg / zone, then the cascade in the signal direction",
+    "reversal set up": "HTF FVG / liquidity hit + body close through the signal's white line + reversal zone",
+    "2M return": "two Ms; price returns to the first 5m FVG between them",
+    "true triangle": "M, M, DB: return to the FVG between the Ms, then the DB direction",
+    "false triangle": "M, DB, M: stick with the DB",
+    "zone play": "pullback into the NY blue zone or Asia purple zone, then the cascade",
+    "M via reversal zone": "reversal zone after a close through the M line used to continue the M",
+    "other": "none of the above",
+}
+PLAY_TFS = ("1m", "5m")
+PLAY_SIGNALS = ("M", "2M", "DB", "2DB")
+
+
+def play_name(tf, signal, kind) -> str:
+    tf = tf if tf in PLAY_TFS else "?"
+    signal = signal if signal in PLAY_SIGNALS else (signal or "?")
+    kind = kind if kind in PLAY_KINDS else "other"
+    return f"{tf} {signal} {kind}"
+
+
+def signal_of(entry: dict, detail: dict) -> str:
+    cfg = (detail.get("mt_cfg") or "").upper()
+    text = (entry.get("mt_text") or "").upper()
+    for s in ("2DB", "2M"):
+        if s in cfg or f"({s})" in text:
+            return s
+    if "DB" in cfg or "DOUBLE BREAK" in text:
+        return "DB"
+    if "M" in cfg or "MANIPULATION" in text:
+        return "M"
+    return cfg or "?"
+
+
+# kept for the scanner and older rows
 PLAYS = {
     "DB continuation": "Double Break, retracement into the DB leg / zone, cascade in the DB direction",
     "M continuation": "single M signal, retracement and cascade in the M direction",
@@ -102,7 +139,7 @@ when evidence is missing for a must-have is SKIP or reduced size, never inventio
 Reply with ONE JSON object and nothing else:
 {{
   "decision": "TAKE" | "SKIP",
-  "play": one of {plays},
+  "play_kind": one of {plays},   // the timeframe and signal are known; you name the kind
   "grade": "A+" | "A" | "B" | "C",
   "size": "full" | "reduced" | "none",
   "confidence": 0.0-1.0,
@@ -132,7 +169,7 @@ def decision_system() -> str:
     return DECISION_SYSTEM.format(
         amendments=_read("amendments.md"), rulebook=_read("rulebook.md"),
         live_rules=_read("live_rules.md"), lessons=_lessons_block(),
-        plays=json.dumps(list(PLAYS)))
+        plays=json.dumps(list(PLAY_KINDS)))
 
 
 def decision_user(context: dict) -> str:
@@ -200,7 +237,8 @@ the same direction (check `engine_armed`).
 Rulebook §5 and plays:
 {reversal}
 
-Reply with ONE JSON object: {{"setups": [{{"symbol": "MNQ1!"|"MES1!", "play": one of {plays},
+Reply with ONE JSON object: {{"setups": [{{"symbol": "MNQ1!"|"MES1!",
+"play": "<1m|5m> <M|2M|DB|2DB> <kind>" with kind one of {plays} (e.g. "5m DB reversal set up", "1m M continuation"),
 "direction": "bull"|"bear", "stage": "forming"|"ready"|"entered", "entry": number|null,
 "stop": number|null, "target": number|null, "confidence": 0.0-1.0,
 "reasons": ["2-4 short reasons citing what was read"], "engine_has_it": true|false}}]}}
@@ -210,7 +248,7 @@ Empty list if nothing qualifies."""
 def scan_system() -> str:
     rb = _read("rulebook.md")
     i = rb.find("## 5.")
-    return SCAN_SYSTEM.format(reversal=rb[i:] if i >= 0 else rb[-3000:], plays=json.dumps(list(PLAYS)))
+    return SCAN_SYSTEM.format(reversal=rb[i:] if i >= 0 else rb[-3000:], plays=json.dumps(list(PLAY_KINDS)))
 
 
 def scan_user(chart_read, armed, now) -> str:

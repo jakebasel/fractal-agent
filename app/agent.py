@@ -151,7 +151,8 @@ def normalise(dec: dict) -> dict:
         conf = float(dec.get("confidence"))
     except (TypeError, ValueError):
         conf = None
-    play = dec.get("play") if dec.get("play") in prompts.PLAYS else "other"
+    kind = dec.get("play_kind") or dec.get("play")
+    play = kind if kind in prompts.PLAY_KINDS else "other"
     return {"decision": d, "grade": grade, "size": size, "confidence": conf, "play": play,
             "hard_rule": dec.get("hard_rule"), "reasons": dec.get("reasons") or [],
             "boosters": dec.get("boosters") or [],
@@ -181,6 +182,8 @@ def review(fvg: FVG, entry: dict):
         return row
 
     row["rules_version"] = prompts.rules_version()
+    signal = prompts.signal_of(entry, detail)
+    row["play"] = prompts.play_name(entry.get("mt_tf"), signal, "continuation")   # kind refined by the model
     fired, news = rules_code.hard_rules(entry, detail, now)
     row["news"] = news or None
     if fired:
@@ -212,7 +215,8 @@ def review(fvg: FVG, entry: dict):
         row["jev_p_take"] = jv.get("p_take")
         if config.JEV_MODE == "gate" and jv.get("gate_rule"):
             row.update(decision="SKIP", grade="C", size="none", hard_rule=jv["gate_rule"],
-                       reasons=[f"Jev: {jv['gate_rule']}"], play=jv.get("play"), path="jev",
+                       reasons=[f"Jev: {jv['gate_rule']}"],
+                       play=prompts.play_name(entry.get("mt_tf"), signal, jv.get("play")), path="jev",
                        chart_read=chart_read, screenshot=shot_file, screenshot_age_s=shot_age,
                        context=context, model_decision=config.JEV_MODEL)
             store.insert_decision(row)
@@ -229,8 +233,8 @@ def review(fvg: FVG, entry: dict):
         store.insert_decision(row)
         return row
 
-    row.update(decision=dec["decision"], grade=dec["grade"], size=dec["size"], play=dec["play"],
-               path="model",
+    row.update(decision=dec["decision"], grade=dec["grade"], size=dec["size"],
+               play=prompts.play_name(entry.get("mt_tf"), signal, dec["play"]), path="model",
                confidence=dec["confidence"], hard_rule=dec["hard_rule"], reasons=dec["reasons"],
                boosters=dec["boosters"], chart_read=chart_read, screenshot=shot_file,
                screenshot_age_s=shot_age, context=context, model_decision=config.DECISION_MODEL,
