@@ -24,9 +24,29 @@ except Exception as e: print(0)' 2>/dev/null)
     # --yolo: no approval prompts (headless; the container holds only the agent token). The
     # MCP toolsets come from config.yaml. -Q = programmatic mode (without it the run hangs).
     # Output streams line by line to the container log and to runs.log on the volume.
+    # --format stream-json: one JSON event per line as it happens (tool calls, results, text),
+    # so the container log shows progress instead of only the final answer
     timeout 900 hermes chat --query-file "$DATA/trading-review/PROMPT.md" --oneshot -Q --yolo \
-      -s trading-review --max-turns 30 --source trading-review 2>&1 \
-      | tee -a "$DATA/trading-review/runs.log" | cut -c1-300
+      --format stream-json -s trading-review --max-turns 30 --source trading-review 2>&1 \
+      | tee -a "$DATA/trading-review/runs.log" \
+      | python3 -u -c '
+import sys, json
+for line in sys.stdin:
+    line = line.rstrip()
+    if not line:
+        continue
+    try:
+        e = json.loads(line)
+    except ValueError:
+        print(line[:220]); continue
+    t = e.get("type") or e.get("event") or ""
+    name = e.get("name") or e.get("tool") or (e.get("tool_call") or {}).get("name") or ""
+    body = e.get("content") or e.get("text") or e.get("result") or e.get("arguments") or e.get("input") or ""
+    if not isinstance(body, str):
+        body = json.dumps(body)
+    print(f"[{t}] {name} {body[:200]}".strip())
+'
+
     echo "[hermes-loop] $(date -u +%FT%TZ) run finished (exit ${PIPESTATUS[0]})"
   fi
   # backlog: go again after a short pause; otherwise wait the normal interval
