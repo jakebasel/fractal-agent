@@ -290,7 +290,8 @@ def set_scan_jev(scan_id, jv):
 def reeval_todo(since_iso, limit=3):
     """Code-skipped rows not yet re-evaluated under the current rules."""
     return db().execute(
-        "SELECT * FROM decisions WHERE path='code' AND decision='SKIP' AND reeval IS NULL "
+        "SELECT * FROM decisions WHERE path='code' AND decision='SKIP' "
+        "AND (reeval IS NULL OR (reeval LIKE '%\"error\"%' AND reeval NOT LIKE '%\"decision\"%')) "
         "AND COALESCE(reeval_tries,0)<3 AND entry_at>=? ORDER BY entry_id DESC LIMIT ?",
         (since_iso, limit)).fetchall()
 
