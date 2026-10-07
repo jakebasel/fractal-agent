@@ -31,6 +31,14 @@ OPENROUTER_URL = _env("OPENROUTER_URL", "https://openrouter.ai/api/v1/chat/compl
 DECISION_MODEL = _env("DECISION_MODEL", "deepseek/deepseek-chat")   # take/skip + lessons
 VISION_MODEL = _env("VISION_MODEL", "google/gemini-2.5-flash")      # reads the screenshot
 LLM_TIMEOUT_S = int(_env("LLM_TIMEOUT_S", "60"))
+# Jev (TypeSafe "System One" model) via OpenRouter's /systemone endpoint: fast rule-by-rule
+# probabilities. JEV_MODE: off | shadow (score every setup, decide nothing; default) |
+# gate (a hard rule Jev is sure about skips without calling DeepSeek).
+JEV_MODEL = _env("JEV_MODEL", "typesafe/jev-1.13")
+JEV_URL = _env("JEV_URL", "https://openrouter.ai/api/v1/systemone")
+JEV_MODE = _env("JEV_MODE", "shadow").lower()
+JEV_GATE_P = float(_env("JEV_GATE_P", "0.9"))
+JEV_TIMEOUT_S = int(_env("JEV_TIMEOUT_S", "15"))
 
 # --- screenshots from the Mac -----------------------------------------------------------------
 AGENT_TOKEN = _env("AGENT_TOKEN")             # shared secret for /screenshot and /log.csv
@@ -40,6 +48,21 @@ SCREEN_LAYOUT = _env(
     "Two TradingView windows side by side: 5-minute charts on the LEFT, 1-minute charts on "
     "the RIGHT. Each window shows MNQ (Nasdaq micro) and MES (S&P micro), possibly MYM (Dow).",
 )
+
+# --- news filter (rule 2.2): high-impact USD events from the public weekly calendar ---------
+NEWS_FILTER = _env("NEWS_FILTER", "1") == "1"
+NEWS_URL = _env("NEWS_URL", "https://nfs.faireconomy.media/ff_calendar_thisweek.json")
+# events that make the whole week demo-only (rule 2.2: CPI/PPI/FOMC week)
+NEWS_WEEK_WORDS = [w.strip().lower() for w in _env("NEWS_WEEK_WORDS", "CPI,PPI,FOMC").split(",") if w.strip()]
+
+# --- learning loop ------------------------------------------------------------------------------
+MAX_TESTING_HYPOTHESES = int(_env("MAX_TESTING_HYPOTHESES", "8"))
+SHADOW_PER_TICK = int(_env("SHADOW_PER_TICK", "3"))        # shadow re-decisions per loop
+SHADOW_BACKFILL_DAYS = int(_env("SHADOW_BACKFILL_DAYS", "60"))
+MIN_N_FOR_VERDICT = int(_env("MIN_N_FOR_VERDICT", "30"))   # settled trades before a hypothesis is "ready"
+
+# --- dashboard ----------------------------------------------------------------------------------
+DASHBOARD_PASSWORD = _env("DASHBOARD_PASSWORD")   # empty = dashboard closed
 
 # --- reporting ----------------------------------------------------------------------------------
 TELEGRAM_BOT_TOKEN = _env("TELEGRAM_BOT_TOKEN")

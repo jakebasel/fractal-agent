@@ -66,7 +66,54 @@ CREATE TABLE IF NOT EXISTS screenshots (
   bytes       INTEGER
 );
 CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT);
+CREATE TABLE IF NOT EXISTS api_calls (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  at          TEXT,
+  purpose     TEXT,     -- vision | decision | lesson | hypothesis | shadow | jev
+  model       TEXT,
+  in_tokens   INTEGER,
+  out_tokens  INTEGER,
+  cost        REAL,     -- USD as reported by OpenRouter
+  ms          INTEGER,
+  ok          INTEGER,
+  error       TEXT
+);
+CREATE TABLE IF NOT EXISTS rule_versions (
+  version     TEXT PRIMARY KEY,   -- short hash of rules/*.md
+  first_seen  TEXT,
+  amendments  TEXT                -- amendments.md at the time, for the history view
+);
+CREATE TABLE IF NOT EXISTS hypotheses (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  created_at  TEXT,
+  title       TEXT,     -- short name
+  rule        TEXT,     -- the proposed change, phrased as a rule
+  rule_ref    TEXT,
+  source      TEXT,     -- lesson | engine-data | jake
+  status      TEXT,     -- testing | queued | approved | rejected | retired
+  support     INTEGER DEFAULT 1,   -- how many lessons proposed it
+  entry_ids   TEXT,     -- JSON list of the trades that suggested it
+  decided_at  TEXT,
+  note        TEXT
+);
+CREATE TABLE IF NOT EXISTS shadow (
+  entry_id    INTEGER,
+  hyp_id      INTEGER,
+  decision    TEXT,     -- what the agent would have done with this change in the rules
+  size        TEXT,
+  changed     INTEGER,  -- 1 if different from the real decision
+  why         TEXT,
+  at          TEXT,
+  PRIMARY KEY (entry_id, hyp_id)
+);
 """
+
+# columns added after v1; ALTERed into an existing database at start-up
+MIGRATIONS = {
+    "decisions": {"play": "TEXT", "rules_version": "TEXT", "jev": "TEXT", "jev_p_take": "REAL",
+                  "path": "TEXT", "news": "TEXT"},
+    "screenshots": {"batch": "TEXT", "part": "INTEGER"},
+}
 
 SIZE_MULT = {"full": 1.0, "reduced": 0.5, "none": 0.0}
 
@@ -100,6 +147,11 @@ def db() -> sqlite3.Connection:
     if _conn is None:
         _conn = connect()
         _conn.executescript(SCHEMA)
+        for table, cols in MIGRATIONS.items():
+            have = {r["name"] for r in _conn.execute(f"PRAGMA table_info({table})")}
+            for col, typ in cols.items():
+                if col not in have:
+                    _conn.execute(f"ALTER TABLE {table} ADD COLUMN {col} {typ}")
         _conn.commit()
     return _conn
 
@@ -162,10 +214,10 @@ def recent_lessons(n: int):
     return db().execute("SELECT * FROM lessons ORDER BY id DESC LIMIT ?", (n,)).fetchall()
 
 
-def add_screenshot(file: str, nbytes: int):
+def add_screenshot(file: str, nbytes: int, batch: str | None = None, part: int | None = None):
     with _lock:
-        db().execute("INSERT INTO screenshots(received_at,file,bytes) VALUES(?,?,?)",
-                     (now_utc(), file, nbytes))
+        db().execute("INSERT INTO screenshots(received_at,file,bytes,batch,part) VALUES(?,?,?,?,?)",
+                     (now_utc(), file, nbytes, batch, part))
         db().commit()
 
 
@@ -173,10 +225,146 @@ def latest_screenshot():
     return db().execute("SELECT * FROM screenshots ORDER BY id DESC LIMIT 1").fetchone()
 
 
+def latest_screenshot_set():
+    """The newest screenshot plus the other windows captured in the same batch, left first."""
+    last = latest_screenshot()
+    if not last or not last["batch"]:
+        return [last] if last else []
+    return db().execute("SELECT * FROM screenshots WHERE batch=? ORDER BY part",
+                        (last["batch"],)).fetchall()
+
+
+# ---- spend -----------------------------------------------------------------------------------
+
+def log_api_call(purpose, model, in_tok, out_tok, cost, ms, ok, error=None):
+    with _lock:
+        db().execute("INSERT INTO api_calls(at,purpose,model,in_tokens,out_tokens,cost,ms,ok,error) "
+                      "VALUES(?,?,?,?,?,?,?,?,?)",
+                      (now_utc(), purpose, model, in_tok, out_tok, cost, ms, 1 if ok else 0, error))
+        db().commit()
+
+
+def spend(since_iso=None) -> dict:
+    where, args = "", []
+    if since_iso:
+        where, args = "WHERE at>=?", [since_iso]
+    rows = db().execute(
+        f"SELECT purpose, model, COUNT(*) n, SUM(COALESCE(cost,0)) cost, AVG(ms) ms, "
+        f"SUM(1-ok) errors FROM api_calls {where} GROUP BY purpose, model ORDER BY cost DESC",
+        args).fetchall()
+    out = [{"purpose": r["purpose"], "model": r["model"], "calls": r["n"],
+            "cost_usd": round(r["cost"] or 0, 6), "avg_ms": int(r["ms"] or 0),
+            "errors": r["errors"]} for r in rows]
+    return {"total_usd": round(sum(x["cost_usd"] for x in out), 6),
+            "calls": sum(x["calls"] for x in out), "by_purpose": out}
+
+
+def spend_by_day(days=30):
+    since = datetime.fromtimestamp(datetime.now(timezone.utc).timestamp() - days * 86400,
+                                   tz=timezone.utc).isoformat()
+    rows = db().execute("SELECT at, cost FROM api_calls WHERE at>=?", (since,)).fetchall()
+    by = {}
+    for r in rows:
+        d = to_et(r["at"])[:10]
+        by[d] = by.get(d, 0.0) + (r["cost"] or 0)
+    return [{"day": d, "cost_usd": round(v, 4)} for d, v in sorted(by.items())]
+
+
+# ---- rule versions ---------------------------------------------------------------------------
+
+def note_rule_version(version: str, amendments: str):
+    with _lock:
+        db().execute("INSERT OR IGNORE INTO rule_versions(version,first_seen,amendments) "
+                     "VALUES(?,?,?)", (version, now_utc(), amendments))
+        db().commit()
+
+
+def rule_versions():
+    return db().execute("SELECT * FROM rule_versions ORDER BY first_seen").fetchall()
+
+
+# ---- hypotheses + shadow tests ---------------------------------------------------------------
+
+def add_hypothesis(title, rule, rule_ref, source, status, entry_ids=None, note=None) -> int:
+    with _lock:
+        cur = db().execute(
+            "INSERT INTO hypotheses(created_at,title,rule,rule_ref,source,status,support,entry_ids,note) "
+            "VALUES(?,?,?,?,?,?,1,?,?)",
+            (now_utc(), title, rule, rule_ref, source, status, json.dumps(entry_ids or []), note))
+        db().commit()
+        return cur.lastrowid
+
+
+def hypotheses(status=None):
+    if status:
+        qs = status if isinstance(status, (list, tuple)) else [status]
+        return db().execute(f"SELECT * FROM hypotheses WHERE status IN ({','.join('?' * len(qs))}) "
+                            "ORDER BY id", qs).fetchall()
+    return db().execute("SELECT * FROM hypotheses ORDER BY id").fetchall()
+
+
+def hypothesis(hid):
+    return db().execute("SELECT * FROM hypotheses WHERE id=?", (hid,)).fetchone()
+
+
+def support_hypothesis(hid, entry_id):
+    h = hypothesis(hid)
+    if not h:
+        return
+    ids = json.loads(h["entry_ids"] or "[]")
+    if entry_id not in ids:
+        ids.append(entry_id)
+    with _lock:
+        db().execute("UPDATE hypotheses SET support=support+1, entry_ids=? WHERE id=?",
+                     (json.dumps(ids), hid))
+        db().commit()
+
+
+def set_hypothesis_status(hid, status, note=None):
+    with _lock:
+        db().execute("UPDATE hypotheses SET status=?, decided_at=?, note=COALESCE(?,note) WHERE id=?",
+                     (status, now_utc(), note, hid))
+        db().commit()
+
+
+def add_shadow(entry_id, hyp_id, decision, size, changed, why):
+    with _lock:
+        db().execute("INSERT OR REPLACE INTO shadow(entry_id,hyp_id,decision,size,changed,why,at) "
+                     "VALUES(?,?,?,?,?,?,?)",
+                     (entry_id, hyp_id, decision, size, 1 if changed else 0, why, now_utc()))
+        db().commit()
+
+
+def shadow_todo(hyp_ids, since_iso, limit):
+    """Reviewed rows (newest first) that still need a shadow decision for some testing hypothesis."""
+    if not hyp_ids:
+        return []
+    out = []
+    rows = db().execute(
+        "SELECT * FROM decisions WHERE decision IN ('TAKE','SKIP') AND entry_at>=? "
+        "ORDER BY entry_id DESC", (since_iso,)).fetchall()
+    for r in rows:
+        have = {x["hyp_id"] for x in db().execute(
+            "SELECT hyp_id FROM shadow WHERE entry_id=?", (r["entry_id"],))}
+        missing = [h for h in hyp_ids if h not in have]
+        if missing:
+            out.append((r, missing))
+            if len(out) >= limit:
+                break
+    return out
+
+
+def shadows_for(hyp_id):
+    return db().execute(
+        "SELECT s.*, d.r, d.decision AS real_decision, d.size AS real_size, d.entry_at, d.symbol "
+        "FROM shadow s JOIN decisions d ON d.entry_id=s.entry_id WHERE s.hyp_id=? "
+        "ORDER BY s.entry_id", (hyp_id,)).fetchall()
+
+
 # ---- reporting -----------------------------------------------------------------------------
 
 CSV_COLS = ["entry_id", "symbol", "entry_at_et", "session", "cascade", "direction", "mt_text",
-            "mt_tf", "mt_cfg", "retrace", "entry", "stop", "target", "decision", "grade", "size",
+            "mt_tf", "mt_cfg", "retrace", "play", "rules_version", "path", "jev_p_take", "entry", "stop", "target", "decision", "grade", "size",
             "confidence", "hard_rule", "reasons", "outcome", "r", "paper_r", "closed_at_et",
             "lesson", "screenshot_age_s"]
 
@@ -215,7 +403,8 @@ def export_csv() -> str:
         except ValueError:
             pass
         w.writerow([r["entry_id"], r["symbol"], to_et(r["entry_at"]), r["session"], r["cascade"],
-                    r["direction"], r["mt_text"], r["mt_tf"], r["mt_cfg"], r["retrace"], r["entry"],
+                    r["direction"], r["mt_text"], r["mt_tf"], r["mt_cfg"], r["retrace"], r["play"],
+                    r["rules_version"], r["path"], r["jev_p_take"], r["entry"],
                     r["stop"], r["target"], r["decision"], r["grade"], r["size"], r["confidence"],
                     r["hard_rule"], reasons, r["outcome"], r["r"], r["paper_r"],
                     to_et(r["closed_at"]), _lesson_text(r["lesson"]), r["screenshot_age_s"]])
@@ -228,32 +417,38 @@ def write_csv_file():
     return path
 
 
+def summarize(vals) -> dict:
+    """n, win%, avg R, total R, max drawdown (R) for a list of R results in time order."""
+    vals = [v for v in vals if v is not None]
+    n = len(vals)
+    if not n:
+        return {"n": 0}
+    wins = sum(1 for v in vals if v > 0)
+    cum, peak, dd = 0.0, 0.0, 0.0
+    for v in vals:
+        cum += v
+        peak = max(peak, cum)
+        dd = min(dd, cum - peak)
+    return {"n": n, "win_pct": round(100 * wins / n, 1), "avg_r": round(sum(vals) / n, 3),
+            "total_r": round(sum(vals), 2), "max_dd_r": round(dd, 2)}
+
+
+def settled(since_iso=None):
+    rows = [r for r in decisions(limit=100000, since_iso=since_iso) if r["r"] is not None]
+    rows.sort(key=lambda x: x["entry_id"])
+    return rows
+
+
 def stats(since_iso=None):
     """Paper results: how the AI's TAKEs did vs what it SKIPPED (the filter's edge)."""
-    rows = [r for r in decisions(limit=100000, since_iso=since_iso) if r["r"] is not None]
-
-    def summ(rs, key="r"):
-        vals = [x[key] for x in rs if x[key] is not None]
-        n = len(vals)
-        if not n:
-            return {"n": 0}
-        wins = sum(1 for v in vals if v > 0)
-        cum, peak, dd = 0.0, 0.0, 0.0
-        for v in vals:
-            cum += v
-            peak = max(peak, cum)
-            dd = min(dd, cum - peak)
-        return {"n": n, "win_pct": round(100 * wins / n, 1), "avg_r": round(sum(vals) / n, 3),
-                "total_r": round(sum(vals), 2), "max_dd_r": round(dd, 2)}
-
-    rows.sort(key=lambda x: x["entry_id"])
+    rows = settled(since_iso)
     takes = [r for r in rows if r["decision"] == "TAKE"]
     skips = [r for r in rows if r["decision"] == "SKIP"]
     return {
-        "paper_book": summ(takes, "paper_r"),
-        "taken_as_full_size": summ(takes),
-        "skipped_counterfactual": summ(skips),
-        "all_engine_entries": summ(rows),
+        "paper_book": summarize([r["paper_r"] for r in takes]),
+        "taken_as_full_size": summarize([r["r"] for r in takes]),
+        "skipped_counterfactual": summarize([r["r"] for r in skips]),
+        "all_engine_entries": summarize([r["r"] for r in rows]),
         "note": "r = fvg-mcp's scored result as if taken at full size; paper_r applies the "
                 "agent's size (reduced = 0.5). The filter adds value if taken avg_r > all avg_r.",
     }

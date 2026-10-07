@@ -12,4 +12,8 @@ Read HANDOFF.md first.
   sessions and the Reversal Set Up video. Lessons may *propose* changes; only Jake approves them
   into `rules/amendments.md`.
 - **Every results table carries n, win%, avgR, total R and max drawdown**, and says the window.
+- **Hypotheses are compared on the same trades.** A proposed change is judged by its shadow
+  book vs the agent vs the core strategy on identical settled entries, never on different windows.
+- **Approving a hypothesis = Jake clicks Approve, then the rule is committed to
+  `rules/amendments.md`** (that bumps `rules_version`). Never edit amendments.md on a proposal alone.
 - Jake wants plain language, short answers, bottom line first.

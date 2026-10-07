@@ -1,7 +1,9 @@
-"""OpenRouter calls: a cheap vision model reads the chart, DeepSeek decides and writes lessons."""
+"""OpenRouter calls: a cheap vision model reads the chart, DeepSeek decides and writes lessons,
+Jev (System One) scores each rule. Every call is logged with its cost (store.api_calls)."""
 import base64
 import json
 import re
+import time
 
 import httpx
 
@@ -12,19 +14,41 @@ class LLMError(RuntimeError):
     pass
 
 
-def _post(model: str, messages: list, max_tokens: int = 1500, temperature: float = 0.1) -> str:
+def _headers() -> dict:
+    return {"Authorization": f"Bearer {config.OPENROUTER_API_KEY}",
+            "HTTP-Referer": "https://fvg.motivationpro.tech", "X-Title": "fractal-agent"}
+
+
+def _log(purpose, model, usage, ms, ok, err=None):
+    from . import store   # late import: store imports config only
+    u = usage or {}
+    try:
+        store.log_api_call(purpose, model, u.get("prompt_tokens", u.get("input_tokens")),
+                           u.get("completion_tokens", u.get("output_tokens")), u.get("cost"),
+                           ms, ok, err)
+    except Exception:
+        pass   # spend logging must never break a decision
+
+
+def _post(model: str, messages: list, max_tokens: int = 1500, temperature: float = 0.1,
+          purpose: str = "other") -> str:
     if not config.OPENROUTER_API_KEY:
         raise LLMError("OPENROUTER_API_KEY is not set")
     body = {"model": model, "messages": messages, "max_tokens": max_tokens,
-            "temperature": temperature}
-    r = httpx.post(config.OPENROUTER_URL, json=body, timeout=config.LLM_TIMEOUT_S, headers={
-        "Authorization": f"Bearer {config.OPENROUTER_API_KEY}",
-        "HTTP-Referer": "https://fvg.motivationpro.tech",
-        "X-Title": "fractal-agent",
-    })
+            "temperature": temperature, "usage": {"include": True}}
+    t0 = time.time()
+    try:
+        r = httpx.post(config.OPENROUTER_URL, json=body, timeout=config.LLM_TIMEOUT_S,
+                       headers=_headers())
+    except httpx.HTTPError as e:
+        _log(purpose, model, None, int((time.time() - t0) * 1000), False, str(e)[:200])
+        raise LLMError(f"{model}: {e}") from e
+    ms = int((time.time() - t0) * 1000)
     if r.status_code >= 400:
+        _log(purpose, model, None, ms, False, f"HTTP {r.status_code}")
         raise LLMError(f"{model}: HTTP {r.status_code} {r.text[:300]}")
     data = r.json()
+    _log(purpose, model, data.get("usage"), ms, True)
     try:
         return data["choices"][0]["message"]["content"] or ""
     except (KeyError, IndexError) as e:
@@ -41,15 +65,42 @@ def parse_json(text: str) -> dict:
     return json.loads(raw[start:end + 1])
 
 
-def read_chart(image_bytes: bytes, prompt: str, mime: str = "image/jpeg") -> dict:
-    b64 = base64.b64encode(image_bytes).decode()
-    messages = [{"role": "user", "content": [
-        {"type": "text", "text": prompt},
-        {"type": "image_url", "image_url": {"url": f"data:{mime};base64,{b64}"}},
-    ]}]
-    return parse_json(_post(config.VISION_MODEL, messages, max_tokens=1800))
+def _mime(b: bytes) -> str:
+    return "image/png" if b[:4] == b"\x89PNG" else "image/jpeg"
 
 
-def decide(system: str, user: str) -> dict:
+def read_chart(images, prompt: str) -> dict:
+    """images: one bytes object or a list of them (one per TradingView window)."""
+    if isinstance(images, (bytes, bytearray)):
+        images = [images]
+    content = [{"type": "text", "text": prompt}]
+    for b in images:
+        content.append({"type": "image_url", "image_url": {
+            "url": f"data:{_mime(b)};base64,{base64.b64encode(b).decode()}"}})
+    return parse_json(_post(config.VISION_MODEL, [{"role": "user", "content": content}],
+                            max_tokens=2500, purpose="vision"))
+
+
+def decide(system: str, user: str, purpose: str = "decision") -> dict:
     messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
-    return parse_json(_post(config.DECISION_MODEL, messages, max_tokens=1500))
+    return parse_json(_post(config.DECISION_MODEL, messages, max_tokens=1500, purpose=purpose))
+
+
+def system_one(state, questions: dict, purpose: str = "jev") -> dict:
+    """Jev via OpenRouter's /systemone endpoint. Returns the `answers` map."""
+    if not config.OPENROUTER_API_KEY:
+        raise LLMError("OPENROUTER_API_KEY is not set")
+    body = {"model": config.JEV_MODEL, "state": state, "questions": questions}
+    t0 = time.time()
+    try:
+        r = httpx.post(config.JEV_URL, json=body, timeout=config.JEV_TIMEOUT_S, headers=_headers())
+    except httpx.HTTPError as e:
+        _log(purpose, config.JEV_MODEL, None, int((time.time() - t0) * 1000), False, str(e)[:200])
+        raise LLMError(f"jev: {e}") from e
+    ms = int((time.time() - t0) * 1000)
+    if r.status_code >= 400:
+        _log(purpose, config.JEV_MODEL, None, ms, False, f"HTTP {r.status_code}")
+        raise LLMError(f"jev: HTTP {r.status_code} {r.text[:300]}")
+    data = r.json()
+    _log(purpose, config.JEV_MODEL, data.get("usage"), ms, True)
+    return {"answers": data.get("answers") or {}, "model": data.get("model"), "ms": ms}

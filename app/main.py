@@ -6,10 +6,16 @@
   GET  /stats?token=...        paper results: taken vs skipped
   GET  /decisions?token=...    recent rows as JSON
   GET  /lessons?token=...      lessons + proposed rule changes
+  GET  /report?token=...       strategy report: core vs agent vs hypotheses, breakdowns, spend
+  GET  /                       dashboard (password login, 30-day cookie)
   /mcp                         read-only MCP connector so Claude can query the log
 """
+import asyncio
+import hashlib
 import hmac
 import json
+import re
+import time
 import logging
 import os
 import threading
@@ -18,10 +24,13 @@ from datetime import datetime, timezone
 from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
 from starlette.requests import Request
-from starlette.responses import JSONResponse, PlainTextResponse, Response
+from starlette.responses import (FileResponse, HTMLResponse, JSONResponse, PlainTextResponse,
+                                 RedirectResponse, Response)
 from starlette.routing import Route
 
-from . import agent, config, store
+from pathlib import Path
+
+from . import agent, config, learning, store
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 log = logging.getLogger("main")
@@ -38,7 +47,7 @@ mcp = FastMCP(
 
 def _row(r, full=False) -> dict:
     d = {k: r[k] for k in r.keys()}
-    for k in ("reasons", "boosters", "chart_read", "context", "lesson"):
+    for k in ("reasons", "boosters", "chart_read", "context", "lesson", "jev", "news"):
         if d.get(k):
             try:
                 d[k] = json.loads(d[k])
@@ -49,6 +58,7 @@ def _row(r, full=False) -> dict:
     if not full:
         d.pop("context", None)
         d.pop("chart_read", None)
+        d.pop("jev", None)
     return d
 
 
@@ -94,9 +104,55 @@ def lessons(limit: int = 30) -> list[dict]:
     return out
 
 
+@mcp.tool()
+def strategy_report(days: float = 30) -> dict:
+    """The full picture over the last `days`: core strategy (every engine entry) vs the AI's
+    paper book vs each shadow-tested hypothesis on the same trades; breakdowns by play, session,
+    signal config, grade, booster and hard rule; results per rules version; Jev agreement;
+    API spend. Every table has n, win%, avg R, total R, max drawdown."""
+    return learning.report(days)
+
+
+@mcp.tool()
+def hypotheses() -> list[dict]:
+    """Proposed strategy changes and their shadow-test results vs the agent and the core
+    strategy on the same settled trades. Only Jake approves; approved ones go into
+    rules/amendments.md."""
+    return [learning.hypothesis_result(h) for h in store.hypotheses()]
+
+
+@mcp.tool()
+def api_spend(days: float = 30) -> dict:
+    """OpenRouter spend (USD) by purpose and model, plus a per-day series."""
+    since = datetime.fromtimestamp(datetime.now(timezone.utc).timestamp() - days * 86400,
+                                   tz=timezone.utc).isoformat()
+    return {**store.spend(since), "by_day": store.spend_by_day(int(days))}
+
+
 # ---- plain HTTP routes ---------------------------------------------------------------------
 
+COOKIE = "fa_session"
+SESSION_DAYS = 30
+
+
+def _sign(exp: int) -> str:
+    key = (config.DASHBOARD_PASSWORD + "|" + config.AGENT_TOKEN).encode()
+    return hmac.new(key, str(exp).encode(), hashlib.sha256).hexdigest()
+
+
+def _cookie_ok(request: Request) -> bool:
+    if not config.DASHBOARD_PASSWORD:
+        return False
+    raw = request.cookies.get(COOKIE, "")
+    exp, _, sig = raw.partition(".")
+    if not exp.isdigit() or int(exp) < time.time():
+        return False
+    return hmac.compare_digest(sig, _sign(int(exp)))
+
+
 def _authed(request: Request) -> bool:
+    if _cookie_ok(request):
+        return True
     if not config.AGENT_TOKEN:
         return False   # closed until a token is configured
     tok = request.query_params.get("token") or request.headers.get("x-agent-token", "")
@@ -116,9 +172,12 @@ async def screenshot(request: Request):
     ext = "png" if body[:4] == b"\x89PNG" else "jpg"
     shots = config.DATA_DIR / "shots"
     shots.mkdir(parents=True, exist_ok=True)
-    name = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S") + f".{ext}"
+    # one upload per TradingView window: ?batch=<id>&part=<n> groups them into one set
+    batch = re.sub(r"[^0-9A-Za-z_-]", "", request.query_params.get("batch", ""))[:40] or None
+    part = int(request.query_params.get("part", "0") or 0) if batch else None
+    name = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S") + (f"_{part}" if batch else "") + f".{ext}"
     (shots / name).write_bytes(body)
-    store.add_screenshot(name, len(body))
+    store.add_screenshot(name, len(body), batch, part)
     # keep the folder small: only the newest 400 files (~3h at one every 30s)
     files = sorted(shots.iterdir())
     for old in files[:-400]:
@@ -152,6 +211,129 @@ async def lessons_route(request: Request):
     return JSONResponse(lessons(int(request.query_params.get("limit", "50"))))
 
 
+async def report_route(request: Request):
+    if not _authed(request):
+        return PlainTextResponse("unauthorized", status_code=401)
+    return JSONResponse(learning.report(float(request.query_params.get("days", "30"))))
+
+
+# ---- dashboard -------------------------------------------------------------------------------
+
+DASH_HTML = Path(__file__).resolve().parent / "dashboard.html"
+LOGIN_HTML = """<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Fractal Agent</title>
+<style>:root{color-scheme:dark}body{margin:0;min-height:100vh;display:grid;place-items:center;
+background:#121212;color:#eee;font:16px system-ui,-apple-system,sans-serif}
+form{background:#1c1c1b;padding:28px;border-radius:12px;width:min(320px,90vw);display:grid;gap:12px}
+input,button{font:inherit;padding:10px 12px;border-radius:8px;border:1px solid #3a3a38;background:#121212;color:#eee}
+button{background:#3987e5;border:0;color:#fff;cursor:pointer}p{margin:0;color:#e66767;font-size:14px}
+</style></head><body><form method="post" action="/login"><strong>Fractal Agent</strong>
+<input type="password" name="password" placeholder="Password" autofocus autocomplete="current-password">
+<button>Log in</button>%s</form></body></html>"""
+
+
+async def dashboard(request: Request):
+    if not _cookie_ok(request):
+        return HTMLResponse(LOGIN_HTML % "")
+    return HTMLResponse(DASH_HTML.read_text())
+
+
+async def login(request: Request):
+    form = await request.form()
+    pw = str(form.get("password", ""))
+    if not config.DASHBOARD_PASSWORD or not hmac.compare_digest(pw, config.DASHBOARD_PASSWORD):
+        await asyncio.sleep(1)   # slow down guessing
+        return HTMLResponse(LOGIN_HTML % "<p>Wrong password</p>", status_code=401)
+    exp = int(time.time()) + SESSION_DAYS * 86400
+    resp = RedirectResponse("/", status_code=303)
+    resp.set_cookie(COOKIE, f"{exp}.{_sign(exp)}", max_age=SESSION_DAYS * 86400, httponly=True,
+                    secure=request.url.scheme == "https" or
+                    request.headers.get("x-forwarded-proto") == "https", samesite="lax")
+    return resp
+
+
+async def logout(request: Request):
+    resp = RedirectResponse("/", status_code=303)
+    resp.delete_cookie(COOKIE)
+    return resp
+
+
+def _curve(rows, key):
+    cum, out = 0.0, []
+    for r in rows:
+        v = r[key] if r[key] is not None else 0.0
+        cum += v
+        out.append(round(cum, 3))
+    return out
+
+
+async def api_dashboard(request: Request):
+    if not _authed(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    days = float(request.query_params.get("days", "30"))
+    rep_ = learning.report(days)
+    since = datetime.fromtimestamp(datetime.now(timezone.utc).timestamp() - days * 86400,
+                                   tz=timezone.utc).isoformat()
+    settled = store.settled(since)
+    today = datetime.now(config.ET).strftime("%Y-%m-%d")
+    today_rows = [r for r in settled if store.to_et(r["entry_at"]).startswith(today)]
+    feed = []
+    for r in store.decisions(limit=60):
+        d = _row(r)
+        d["chart_read"] = json.loads(r["chart_read"]) if r["chart_read"] else None
+        d["jev"] = json.loads(r["jev"]) if r["jev"] else None
+        d["news"] = json.loads(r["news"]) if r["news"] else None
+        d["shots"] = sorted(p.name for p in (config.DATA_DIR / "decision_shots").glob(f"{r['entry_id']}_*"))
+        feed.append(d)
+    since_month = datetime.now(config.ET).replace(day=1, hour=0, minute=0, second=0).astimezone(timezone.utc).isoformat()
+    since_today = datetime.now(config.ET).replace(hour=0, minute=0, second=0).astimezone(timezone.utc).isoformat()
+    shot = store.latest_screenshot_set()
+    return JSONResponse({
+        "status": agent.status(),
+        "latest_shots": [s["file"] for s in shot],
+        "today": {"agent": store.summarize([r["paper_r"] for r in today_rows if r["decision"] == "TAKE"]),
+                  "core": store.summarize([r["r"] for r in today_rows]),
+                  "reviewed": sum(1 for r in store.decisions(limit=500, since_iso=since_today))},
+        "spend": {"today": store.spend(since_today)["total_usd"],
+                  "month": store.spend(since_month)["total_usd"],
+                  "window": rep_["spend"], "by_day": store.spend_by_day(int(max(days, 1)))},
+        "curve": {"labels": [store.to_et(r["entry_at"])[:16] for r in settled],
+                  "core": _curve(settled, "r"), "agent": _curve(settled, "paper_r")},
+        "report": rep_,
+        "feed": feed,
+        "hypotheses_other": [learning.hypothesis_result(h)
+                             for h in store.hypotheses(["rejected", "retired"])],
+        "lessons": lessons(40),
+        "rule_versions": [{"version": v["version"], "first_seen_et": store.to_et(v["first_seen"]),
+                           "amendments": v["amendments"]} for v in store.rule_versions()],
+    }, headers={"Cache-Control": "no-store"})
+
+
+async def api_hypothesis(request: Request):
+    if not _cookie_ok(request) and not _authed(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    hid = int(request.path_params["hid"])
+    body = await request.json()
+    status = body.get("status")
+    if status not in ("approved", "rejected", "retired", "testing") or not store.hypothesis(hid):
+        return JSONResponse({"error": "bad request"}, status_code=400)
+    store.set_hypothesis_status(hid, status, (body.get("note") or None))
+    return JSONResponse({"ok": True, "id": hid, "status": status})
+
+
+async def shot_file(request: Request):
+    if not _authed(request):
+        return PlainTextResponse("unauthorized", status_code=401)
+    name = request.path_params["name"]
+    if not re.fullmatch(r"[0-9A-Za-z_.-]+", name):
+        return PlainTextResponse("bad name", status_code=400)
+    for folder in ("decision_shots", "shots"):
+        p = config.DATA_DIR / folder / name
+        if p.exists():
+            return FileResponse(p, headers={"Cache-Control": "private, max-age=86400"})
+    return PlainTextResponse("not found", status_code=404)
+
+
 app = mcp.streamable_http_app()
 app.router.routes.extend([
     Route("/health", health),
@@ -160,6 +342,13 @@ app.router.routes.extend([
     Route("/stats", stats_route),
     Route("/decisions", decisions_route),
     Route("/lessons", lessons_route),
+    Route("/report", report_route),
+    Route("/", dashboard),
+    Route("/login", login, methods=["POST"]),
+    Route("/logout", logout),
+    Route("/api/dashboard", api_dashboard),
+    Route("/api/hypotheses/{hid:int}", api_hypothesis, methods=["POST"]),
+    Route("/shot/{name}", shot_file),
 ])
 
 # ---- background loop ---------------------------------------------------------------------

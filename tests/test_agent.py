@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 TMP = tempfile.mkdtemp()
 os.environ.update(DATA_DIR=TMP, RUN_LOOP="0", OPENROUTER_API_KEY="test", AGENT_TOKEN="tok",
-                  SYMBOLS="MNQ1!,MES1!", MAX_ENTRY_AGE_S="300")
+                  SYMBOLS="MNQ1!,MES1!", MAX_ENTRY_AGE_S="300", DASHBOARD_PASSWORD="pw")
 
 import uvicorn  # noqa: E402
 from mcp.server.fastmcp import FastMCP  # noqa: E402
@@ -66,28 +66,54 @@ for _ in range(50):
         time.sleep(0.1)
 os.environ["FVG_MCP_URL"] = f"http://127.0.0.1:{PORT}/mcp"
 
-from app import agent, config, llm, store  # noqa: E402
+from app import agent, config, learning, llm, rules_code, store  # noqa: E402
 from app.mcp_client import FVG  # noqa: E402
 
 config.FVG_MCP_URL = os.environ["FVG_MCP_URL"]
 
 # ---------------------------------------------------------------- fake LLM
 CALLS = []
+PURPOSES = []
 
 
-def fake_post(model, messages, max_tokens=1500, temperature=0.1):
+def fake_post(model, messages, max_tokens=1500, temperature=0.1, purpose="other"):
     CALLS.append(model)
+    PURPOSES.append(purpose)
     sysmsg = messages[0]["content"] if isinstance(messages[0]["content"], str) else ""
     if model == config.VISION_MODEL:
         return json.dumps({"charts": [{"symbol": "MNQ", "timeframe": "5m"}], "readability": "good"})
     if "review a finished PAPER trade" in sysmsg:
-        return '```json\n{"verdict":"right_take","lesson":"DB retrace into purple worked","rule_ref":"§3","proposal":null}\n```'
+        return '```json\n{"verdict":"right_take","lesson":"DB retrace into purple worked","rule_ref":"§3",' \
+               '"proposal":"IF the DB retrace taps a purple zone THEN TAKE full size","proposal_title":"Purple zone DB full"}\n```'
+    if "file proposed rule changes" in sysmsg:
+        return '{"same_as": null, "title": "Purple zone DB full"}'
+    if "re-deciding a PAPER trade" in sysmsg:
+        ids = [h["id"] for h in json.loads(messages[1]["content"])["hypotheses"]]
+        return json.dumps({str(i): {"decision": "SKIP", "size": "none", "applies": True, "why": "test"}
+                           for i in ids})
     assert "RULEBOOK" in sysmsg and "Hard rules" in sysmsg, "rulebook not in prompt"
-    return 'Sure. {"decision":"TAKE","grade":"B","size":"full","confidence":0.6,"hard_rule":null,' \
+    return 'Sure. {"decision":"TAKE","play":"DB continuation","grade":"B","size":"full","confidence":0.6,"hard_rule":null,' \
            '"boosters":["DB"],"reasons":["§3 DB continuation"]}'
 
 
 llm._post = fake_post
+
+JEV_CALLS = []
+
+
+def fake_system_one(state, questions, purpose="jev"):
+    JEV_CALLS.append(sorted(questions))
+    ans = {k: {"type": "noul", "noul": 0.1} for k in questions if questions[k]["type"] == "noul"}
+    ans["take"] = {"type": "choice", "choice": "TAKE", "probabilities": {"TAKE": 0.7, "SKIP": 0.3}}
+    ans["grade"] = {"type": "choice", "choice": "A", "probabilities": {"A": 1.0}}
+    ans["play"] = {"type": "choice", "choice": "DB continuation", "probabilities": {}}
+    store.log_api_call(purpose, "typesafe/jev-1.13", 400, 0, 0.00002, 90, True)
+    return {"answers": ans, "model": "jev-1.13.0", "ms": 90}
+
+
+llm.system_one = fake_system_one
+NEWS = {"events": []}
+rules_code.news_events = lambda: NEWS["events"]
 
 
 def mk_entry(i, sym="MNQ1!", age_s=10, trend_fallback=False, cascade="2-stage", r=None):
@@ -131,11 +157,12 @@ ok(row["decision"] == "TAKE" and row["size"] == "reduced", f"grade B TAKE is red
 ok(row["chart_read"] is not None and config.VISION_MODEL in CALLS, "vision model read the screenshot")
 
 # 4. ND entry is skipped by code without any model call
-n_calls = len(CALLS)
+n_calls = len(PURPOSES)
 FAKE["entries"]["MNQ1!"].append(mk_entry(3, trend_fallback=True))
 agent.tick(fvg)
 r3 = [r for r in store.decisions() if r["entry_id"] == 3][0]
-ok(r3["decision"] == "SKIP" and "ND" in r3["hard_rule"] and len(CALLS) == n_calls,
+ok(r3["decision"] == "SKIP" and "ND" in r3["hard_rule"]
+   and not {"decision", "vision"} & set(PURPOSES[n_calls:]),
    "ND entry skipped by code, no model call")
 
 # 5. stale entry -> MISSED; Gold Strategy ignored
@@ -170,6 +197,75 @@ with TestClient(main.app) as c:
                              "params": {"name": "paper_stats", "arguments": {"days": 7}}},
                headers={"Accept": "application/json, text/event-stream"})
     ok(r.status_code == 200 and "paper_book" in r.text, "agent MCP tool paper_stats works")
+
+# 9. new in v2: hard rules in code, news filter, Jev shadow, hypotheses + shadow tests, spend,
+#    dashboard login, multi-window screenshots, strategy report
+from datetime import datetime as _dt  # noqa: E402
+
+e = mk_entry(6)
+d = json.loads(e["detail"]); d["retrace"] = "none"; e["detail"] = json.dumps(d)
+ok(rules_code.hard_rule(e, d, _dt.now(timezone.utc))[0].startswith("§2.6"), "code rule: DB with no retrace skipped")
+NEWS["events"] = [{"title": "CPI m/m", "at": _dt.now(timezone.utc)}]
+e = mk_entry(7)
+fired, info = rules_code.hard_rule(e, json.loads(e["detail"]), _dt.now(timezone.utc))
+ok(fired and "news today" in fired and info["today"], f"code rule: news day skipped ({fired})")
+NEWS["events"] = []
+
+row2 = [r for r in store.decisions() if r["entry_id"] == 2][0]
+ok(row2["jev_p_take"] == 0.7 and json.loads(row2["jev"])["play"] == "DB continuation", "Jev shadow score stored on the row")
+ok(row2["rules_version"] and row2["path"] == "model" and row2["play"] == "DB continuation", "row carries rules_version, path, play")
+ok(JEV_CALLS and "take" in JEV_CALLS[0] and "r2_5" in JEV_CALLS[0], "Jev asked the hard-rule questions")
+
+hyps = store.hypotheses()
+ok(any(h["source"] == "lesson" and h["status"] == "testing" for h in hyps), "lesson proposal became a testing hypothesis")
+ok(any(h["source"] == "engine-data" for h in hyps), "seed hypotheses present")
+sh = store.shadows_for([h for h in hyps if h["source"] == "lesson"][0]["id"])
+ok(sh and sh[0]["decision"] == "SKIP" and sh[0]["changed"] == 1, "shadow decision recorded for a settled trade")
+rep = learning.report(30)
+hres = [h for h in rep["hypotheses"] if h["source"] == "lesson"][0]
+ok(hres["books_same_trades"]["agent"]["total_r"] == 1.25 and hres["books_same_trades"]["with_change"]["total_r"] == 0.0
+   and hres["delta_total_r_vs_agent"] == -1.25, "hypothesis compared on the same trades")
+ok(rep["books"]["core_strategy_all_engine_entries"]["n"] == 1 and rep["core_by_play"][0]["group"] == "DB continuation", "report breakdowns")
+ok(store.spend()["calls"] >= 1 and store.spend()["total_usd"] > 0, "API spend logged")
+
+# Jev gate mode: a sure hard rule skips without DeepSeek
+config.JEV_MODE = "gate"
+def sure_jev(state, questions, purpose="jev"):
+    ans = {k: {"type": "noul", "noul": 0.97 if k == "r2_7" else 0.05} for k in questions if questions[k]["type"] == "noul"}
+    ans["take"] = {"type": "choice", "choice": "SKIP", "probabilities": {"TAKE": 0.1, "SKIP": 0.9}}
+    ans["grade"] = {"type": "choice", "choice": "C", "probabilities": {}}
+    ans["play"] = {"type": "choice", "choice": "other", "probabilities": {}}
+    return {"answers": ans, "model": "jev-1.13.0", "ms": 80}
+llm.system_one = sure_jev
+n_calls = len(PURPOSES)
+FAKE["entries"]["MNQ1!"].append(mk_entry(8))
+agent.tick(fvg)
+r8 = [r for r in store.decisions() if r["entry_id"] == 8][0]
+ok(r8["decision"] == "SKIP" and r8["path"] == "jev" and "§2.7" in r8["hard_rule"]
+   and "decision" not in PURPOSES[n_calls:], "Jev gate skips a sure hard rule without DeepSeek")
+config.JEV_MODE = "shadow"; llm.system_one = fake_system_one
+
+c = TestClient(main.app)   # no lifespan: the MCP session manager only starts once
+if True:
+    ok(c.get("/").status_code == 200 and "password" in c.get("/").text, "dashboard shows login")
+    ok(c.get("/api/dashboard").status_code == 401, "dashboard API closed without login")
+    r = c.post("/login", data={"password": "wrong"})
+    ok(r.status_code == 401, "wrong password rejected")
+    r = c.post("/login", data={"password": "pw"}, follow_redirects=False)
+    ok(r.status_code == 303 and "fa_session" in r.headers.get("set-cookie", ""), "login sets the session cookie")
+    dash = c.get("/api/dashboard?days=30")
+    ok(dash.status_code == 200 and dash.json()["report"]["hypotheses"], "dashboard API with cookie")
+    ok("Cumulative R" in c.get("/").text, "dashboard page served after login")
+    hid = hyps[0]["id"]
+    ok(c.post(f"/api/hypotheses/{hid}", json={"status": "approved"}).json()["status"] == "approved"
+       and store.hypothesis(hid)["status"] == "approved", "hypothesis approved from the dashboard")
+    c.post("/screenshot?token=tok&batch=b1&part=0", content=b"\xff\xd8left")
+    c.post("/screenshot?token=tok&batch=b1&part=1", content=b"\xff\xd8right")
+    sset = store.latest_screenshot_set()
+    ok(len(sset) == 2 and sset[0]["part"] == 0, "two-window screenshot batch grouped, left first")
+    ok(TestClient(main.app).get(f"/shot/{sset[0]['file']}").status_code == 401 and c.get(f"/shot/{sset[0]['file']}").status_code == 200, "screenshot file needs login")
+    ok("core_by_play" in main.strategy_report(30) and main.hypotheses() and "by_day" in main.api_spend(7),
+       "MCP tools strategy_report / hypotheses / api_spend work")
 
 print("all tests passed")
 server.should_exit = True

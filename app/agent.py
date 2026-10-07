@@ -4,11 +4,12 @@ PAPER ONLY. Nothing here places, modifies or cancels an order.
 """
 import json
 import logging
+import shutil
 import threading
 import time
 from datetime import datetime, timezone
 
-from . import config, knowledge, llm, prompts, store
+from . import config, jev, knowledge, learning, llm, prompts, rules_code, store
 from .mcp_client import FVG
 
 log = logging.getLogger("agent")
@@ -43,21 +44,6 @@ def _detail(entry: dict) -> dict:
     return d or {}
 
 
-def code_hard_rules(entry: dict, detail: dict, now: datetime) -> str | None:
-    """Rules that need no judgment. Returning a string = SKIP without calling the model."""
-    if detail.get("trend_fallback"):
-        return "§2.1 no Market Translator signal (ND / trend-fallback)"
-    if detail.get("in_window") is False:
-        return "§2.3 outside the session window (engine flag)"
-    et = _iso_to_dt(entry["at"]).astimezone(config.ET)
-    session = (detail.get("session") or "").lower()
-    if session == "newyork" and (et.hour, et.minute) >= (11, 0):
-        return "§2.3 NY entry after 11:00 ET"
-    if et.weekday() >= 5:
-        return "§2.3 weekend"
-    return None
-
-
 def _summarise_setups(s: dict) -> list:
     out = []
     for x in (s or {}).get("setups", []) or []:
@@ -81,22 +67,27 @@ def _mt_events(fvg: FVG, symbol: str) -> list:
 
 
 def chart_read_for_now():
-    """Latest screenshot, read once by the vision model and cached. -> (read|None, file, age_s)"""
-    shot = store.latest_screenshot()
-    if not shot:
+    """Latest screenshot set (one image per TradingView window), read once by the vision model
+    and cached. -> (read|None, files, age_s)"""
+    shots = store.latest_screenshot_set()
+    if not shots:
         return None, None, None
-    age = (datetime.now(timezone.utc) - _iso_to_dt(shot["received_at"])).total_seconds()
+    files = ",".join(s["file"] for s in shots)
+    age = (datetime.now(timezone.utc) - _iso_to_dt(shots[-1]["received_at"])).total_seconds()
     if age > config.SCREENSHOT_MAX_AGE_S:
-        return None, shot["file"], age
-    if shot["file"] in _vision_cache:
-        return _vision_cache[shot["file"]], shot["file"], age
-    path = config.DATA_DIR / "shots" / shot["file"]
-    if not path.exists():
-        return None, shot["file"], age
-    read = llm.read_chart(path.read_bytes(), prompts.vision_prompt())
+        return None, files, age
+    if files in _vision_cache:
+        return _vision_cache[files], files, age
+    paths = [config.DATA_DIR / "shots" / s["file"] for s in shots]
+    paths = [p for p in paths if p.exists()]
+    if not paths:
+        return None, files, age
+    read = llm.read_chart([p.read_bytes() for p in paths], prompts.vision_prompt())
+    if (read or {}).get("readability") == "not_chart":
+        read = None   # TradingView wasn't on screen: don't feed a video to the decision
     _vision_cache.clear()
-    _vision_cache[shot["file"]] = read
-    return read, shot["file"], age
+    _vision_cache[files] = read
+    return read, files, age
 
 
 # ---- review ----------------------------------------------------------------------------------
@@ -160,10 +151,23 @@ def normalise(dec: dict) -> dict:
         conf = float(dec.get("confidence"))
     except (TypeError, ValueError):
         conf = None
-    return {"decision": d, "grade": grade, "size": size, "confidence": conf,
+    play = dec.get("play") if dec.get("play") in prompts.PLAYS else "other"
+    return {"decision": d, "grade": grade, "size": size, "confidence": conf, "play": play,
             "hard_rule": dec.get("hard_rule"), "reasons": dec.get("reasons") or [],
             "boosters": dec.get("boosters") or [],
             "extra": {"unknowns": dec.get("unknowns"), "kill_conditions": dec.get("kill_conditions")}}
+
+
+def _keep_shots(entry_id, files):
+    """Copy the screenshots a decision used (the rolling folder only keeps ~3 hours)."""
+    if not files:
+        return
+    dst = config.DATA_DIR / "decision_shots"
+    dst.mkdir(parents=True, exist_ok=True)
+    for i, f in enumerate(files.split(",")):
+        src = config.DATA_DIR / "shots" / f
+        if src.exists():
+            shutil.copyfile(src, dst / f"{entry_id}_{i}{src.suffix}")
 
 
 def review(fvg: FVG, entry: dict):
@@ -176,10 +180,12 @@ def review(fvg: FVG, entry: dict):
         store.insert_decision(row)
         return row
 
-    hard = code_hard_rules(entry, detail, now)
+    row["rules_version"] = prompts.rules_version()
+    hard, news = rules_code.hard_rule(entry, detail, now)
+    row["news"] = news or None
     if hard:
         row.update(decision="SKIP", grade="C", size="none", hard_rule=hard, reasons=[hard],
-                   model_decision="code")
+                   model_decision="code", path="code")
         store.insert_decision(row)
         return row
 
@@ -190,7 +196,26 @@ def review(fvg: FVG, entry: dict):
         log.warning("vision failed: %s", e)
         row["error"] = f"vision: {e}"[:500]
 
+    try:
+        _keep_shots(entry["id"], shot_file if shot_age is not None and shot_age <= config.SCREENSHOT_MAX_AGE_S else None)
+    except OSError as e:
+        log.warning("keep shots: %s", e)
     context = build_context(fvg, entry, detail, chart_read, shot_age)
+    if news:
+        context["news"] = news
+
+    jv = jev.score(context)
+    if jv:
+        row["jev"] = jv
+        row["jev_p_take"] = jv.get("p_take")
+        if config.JEV_MODE == "gate" and jv.get("gate_rule"):
+            row.update(decision="SKIP", grade="C", size="none", hard_rule=jv["gate_rule"],
+                       reasons=[f"Jev: {jv['gate_rule']}"], play=jv.get("play"), path="jev",
+                       chart_read=chart_read, screenshot=shot_file, screenshot_age_s=shot_age,
+                       context=context, model_decision=config.JEV_MODEL)
+            store.insert_decision(row)
+            return row
+
     try:
         context["course_passages"] = knowledge.passages_for(context)
     except Exception as e:  # search must never block a decision
@@ -202,7 +227,8 @@ def review(fvg: FVG, entry: dict):
         store.insert_decision(row)
         return row
 
-    row.update(decision=dec["decision"], grade=dec["grade"], size=dec["size"],
+    row.update(decision=dec["decision"], grade=dec["grade"], size=dec["size"], play=dec["play"],
+               path="model",
                confidence=dec["confidence"], hard_rule=dec["hard_rule"], reasons=dec["reasons"],
                boosters=dec["boosters"], chart_read=chart_read, screenshot=shot_file,
                screenshot_age_s=shot_age, context=context, model_decision=config.DECISION_MODEL,
@@ -226,10 +252,12 @@ def settle(entry_row, scored: dict):
     outcome = {"r_if_taken_full": r, "outcome": scored.get("f_outcome"),
                "exit": scored.get("f_exit")}
     try:
-        les = llm.decide(prompts.lesson_system(), prompts.lesson_user(entry_row, outcome))
+        les = llm.decide(prompts.lesson_system(), prompts.lesson_user(entry_row, outcome),
+                         purpose="lesson")
         store.update_decision(entry_row["entry_id"], lesson=les)
         store.add_lesson(entry_row["entry_id"], entry_row["symbol"], les.get("verdict"),
                          les.get("lesson"), les.get("rule_ref"), les.get("proposal"))
+        learning.register_proposal(les, entry_row["entry_id"])
     except Exception as e:
         log.warning("lesson failed for %s: %s", entry_row["entry_id"], e)
         store.update_decision(entry_row["entry_id"], error=f"lesson: {e}"[:500])
@@ -245,6 +273,7 @@ def _wanted(entry: dict) -> bool:
 
 
 def tick(fvg: FVG):
+    learning.seed()
     changed = False
     by_id: dict[int, dict] = {}
     for sym in config.SYMBOLS:
@@ -264,6 +293,11 @@ def tick(fvg: FVG):
         scored = by_id.get(row["entry_id"])
         if scored and settle(row, scored):
             changed = True
+    learning.promote_queued()
+    try:
+        learning.run_shadow()
+    except Exception as e:   # the learning loop must never stop the review loop
+        log.warning("shadow failed: %s", e)
     if changed:
         store.write_csv_file()
     return changed
@@ -287,6 +321,7 @@ def status() -> dict:
     shot = store.latest_screenshot()
     return {"paper_only": True, "symbols": config.SYMBOLS,
             "decision_model": config.DECISION_MODEL, "vision_model": config.VISION_MODEL,
+            "jev_model": config.JEV_MODEL, "jev_mode": config.JEV_MODE,
             "key_set": bool(config.OPENROUTER_API_KEY),
             "last_loop_et": store.to_et(_state["last_loop"]), "loops": _state["loops"],
             "last_error": _state["last_error"],

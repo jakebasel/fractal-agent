@@ -1,8 +1,26 @@
 """Prompt text. The rulebook files are re-read on every call, so editing rules/ (or approving
 an amendment) takes effect without a restart."""
+import hashlib
 import json
 
 from . import config, store
+
+RULE_FILES = ("amendments.md", "rulebook.md", "live_rules.md")
+
+# the plays the strategy names (rulebook + live sessions + Reversal Set Up video)
+PLAYS = {
+    "DB continuation": "Double Break, retracement into the DB leg / zone, cascade in the DB direction",
+    "M continuation": "single M signal, retracement and cascade in the M direction",
+    "2M return": "two Ms; price returns to the first 5m FVG between them",
+    "true triangle": "M, M, DB: return to the FVG between the Ms, then the DB direction",
+    "false triangle": "M, DB, M: stick with the DB",
+    "2DB": "two Double Breaks; resolved by the reversal-zone rule",
+    "reversal set up": "HTF FVG / liquidity hit + body close through a white line + reversal zone",
+    "M via reversal zone": "reversal zone after a close through the M line used to continue the M",
+    "1m play": "1m signal skipping the 5m step: immediate rebalance, 1m FVG, 30s FVG, close",
+    "blue/purple zone play": "pullback into the NY blue zone or Asia purple zone, then the cascade",
+    "other": "none of the above",
+}
 
 
 def _read(name: str) -> str:
@@ -10,10 +28,24 @@ def _read(name: str) -> str:
     return p.read_text() if p.exists() else ""
 
 
+def rules_version() -> str:
+    """Short hash of the rule files: every decision records which rulebook it was made under."""
+    h = hashlib.sha1()
+    for f in RULE_FILES:
+        h.update(_read(f).encode())
+    v = h.hexdigest()[:8]
+    store.note_rule_version(v, _read("amendments.md"))
+    return v
+
+
 VISION_PROMPT = """You are reading a TradingView screenshot for a futures trader who uses the
 Fractal Effects "Market Translator" and "Spotlight" indicators.
 
 Layout: {layout}
+
+You may get one image per TradingView window, left window first.
+If an image is NOT a TradingView chart (a video, browser page, desktop...), set "readability"
+to "not_chart" and return no charts for it.
 
 Report ONLY what is visible. If something is not visible or unreadable, use null / "unknown".
 Do not guess prices you cannot read from the axis.
@@ -43,7 +75,7 @@ Return one JSON object:
     }}
   ],
   "screen_time_et": "the clock shown on screen if visible, else null",
-  "readability": "good" | "partial" | "poor"
+  "readability": "good" | "partial" | "poor" | "not_chart"
 }}"""
 
 
@@ -70,6 +102,7 @@ when evidence is missing for a must-have is SKIP or reduced size, never inventio
 Reply with ONE JSON object and nothing else:
 {{
   "decision": "TAKE" | "SKIP",
+  "play": one of {plays},
   "grade": "A+" | "A" | "B" | "C",
   "size": "full" | "reduced" | "none",
   "confidence": 0.0-1.0,
@@ -98,7 +131,8 @@ def _lessons_block() -> str:
 def decision_system() -> str:
     return DECISION_SYSTEM.format(
         amendments=_read("amendments.md"), rulebook=_read("rulebook.md"),
-        live_rules=_read("live_rules.md"), lessons=_lessons_block())
+        live_rules=_read("live_rules.md"), lessons=_lessons_block(),
+        plays=json.dumps(list(PLAYS)))
 
 
 def decision_user(context: dict) -> str:
@@ -113,8 +147,10 @@ def decision_user(context: dict) -> str:
 LESSON_SYSTEM = """You review a finished PAPER trade for a Fractal Effects trader and write a
 short, specific lesson that would make the next decision better. Use the rulebook language.
 Do not overfit: one trade is weak evidence. Only propose a rule change if this trade clearly
-exposes a gap or a contradiction in the rules, and phrase it as a proposal for the trader to
-approve.
+exposes a gap or a contradiction in the rules. Phrase a proposal as ONE testable rule another
+reviewer could apply to any setup, in the form "IF <condition visible in the data> THEN
+<TAKE | SKIP | reduce size>". Proposals are shadow-tested on past and future trades and only the
+trader can approve them.
 
 Rulebook (for reference):
 {rulebook}
@@ -124,7 +160,8 @@ Reply with ONE JSON object:
   "verdict": "right_take" | "wrong_take" | "right_skip" | "wrong_skip",
   "lesson": "one or two sentences, concrete (what to look for next time)",
   "rule_ref": "rule section this concerns, e.g. §2.6",
-  "proposal": "a proposed rule change, or null"
+  "proposal": "IF ... THEN ... (a testable rule change), or null",
+  "proposal_title": "3-6 word name for the proposal, or null"
 }}
 A TAKE that lost is wrong_take only if the rules or chart gave a reason to skip; a rule-following
 loss is a 'business expense' and still right_take. Same logic for skips."""
@@ -145,8 +182,59 @@ def lesson_user(row, outcome: dict) -> str:
         "signal_tf": row["mt_tf"], "config": row["mt_cfg"], "retrace": row["retrace"],
         "entry": row["entry"], "stop": row["stop"], "target": row["target"],
         "decision": row["decision"], "grade": row["grade"], "size": row["size"],
-        "reasons": j(row["reasons"]), "hard_rule": row["hard_rule"],
+        "play": row["play"], "reasons": j(row["reasons"]), "hard_rule": row["hard_rule"],
         "chart_read_at_entry": j(row["chart_read"]),
         "result": outcome,
     }
     return json.dumps(payload, indent=1, default=str)
+
+
+MATCH_SYSTEM = """You file proposed rule changes for a trading strategy. Given a NEW proposal
+and the list of EXISTING hypotheses, decide whether the new one says the same thing as an
+existing one (same condition, same action; wording may differ).
+Reply with ONE JSON object: {"same_as": <existing id or null>, "title": "3-6 word name"}"""
+
+
+def match_user(proposal: str, existing) -> str:
+    return json.dumps({"new_proposal": proposal,
+                       "existing": [{"id": h["id"], "rule": h["rule"]} for h in existing]}, indent=1)
+
+
+SHADOW_SYSTEM = """You are re-deciding a PAPER trade setup for the Fractal Effects strategy to
+test proposed rule changes. For EACH hypothesis, imagine ONLY that one change is added to the
+rulebook (highest priority) and say what the decision would be. If the hypothesis does not
+apply to this setup, the decision stays the same as the actual one. Judge only from the data
+given; you do not know the outcome.
+
+=== RULEBOOK ===
+{rulebook}
+
+Reply with ONE JSON object:
+{{"<hypothesis id>": {{"decision": "TAKE"|"SKIP", "size": "full"|"reduced"|"none",
+                        "applies": true|false, "why": "one short sentence"}}, ...}}"""
+
+
+def shadow_system() -> str:
+    return SHADOW_SYSTEM.format(rulebook=_read("amendments.md") + "\n" + _read("rulebook.md"))
+
+
+def shadow_user(row, hyps) -> str:
+    def j(x):
+        try:
+            return json.loads(x) if x else None
+        except ValueError:
+            return x
+    setup = j(row["context"]) or {
+        "engine": {"symbol": row["symbol"], "direction": row["direction"], "cascade": row["cascade"],
+                   "signal": row["mt_text"], "signal_tf": row["mt_tf"], "config": row["mt_cfg"],
+                   "retrace": row["retrace"], "session": row["session"],
+                   "entry_at": store.to_et(row["entry_at"])}}
+    if isinstance(setup, dict):
+        setup.pop("course_passages", None)
+    return json.dumps({
+        "setup": setup,
+        "actual": {"decision": row["decision"], "grade": row["grade"], "size": row["size"],
+                   "hard_rule": row["hard_rule"], "reasons": j(row["reasons"]),
+                   "play": row["play"]},
+        "hypotheses": [{"id": h["id"], "rule": h["rule"]} for h in hyps],
+    }, indent=1, default=str)

@@ -39,6 +39,26 @@ Mac screenshot ──► fractal-agent ──► OpenRouter: cheap vision model 
    rule-change proposal). The last 20 lessons go back into every decision prompt. **Proposals
    never change rules on their own** — Jake approves, then they go in `rules/amendments.md`.
 
+7. **Learning loop** (`app/learning.py`, added 2026-10-07). Every proposal becomes a
+   *hypothesis* (duplicates merge and count as support). Up to 8 are "testing" at once: each
+   reviewed setup, past (60-day backfill) and future, gets a shadow decision per hypothesis
+   (one DeepSeek call covers all of them). When trades settle, each hypothesis' book is
+   compared with the agent's and the core strategy's **on the same trades**. Jake approves or
+   rejects on the dashboard; approved ones are then committed to `rules/amendments.md`. Every
+   decision records `rules_version` (hash of rules/) so results can be split per rulebook.
+8. **Jev** (TypeSafe System One, via OpenRouter `/systemone`, `app/jev.py`): one ~100 ms call
+   per setup returns a probability for each judgment hard rule (§2.4-2.12), P(TAKE), grade and
+   play. `JEV_MODE=shadow` (default) only records it; `gate` lets a rule Jev is >=90% sure of
+   skip the setup without DeepSeek. Switch to gate once the Breakdown tab shows Jev agreeing
+   with the agent and its TAKE book holding up.
+9. Code hard rules now also cover §2.2 news (ForexFactory weekly calendar, high-impact USD:
+   release day = skip, CPI/PPI/FOMC week = demo-only skip), London/Asia windows, and DB
+   setups with retrace `none`/`shallow` (§2.6). `app/rules_code.py`.
+10. Dashboard at `/` (password: `DASHBOARD_PASSWORD`, 30-day cookie): status, cumulative R
+    agent vs core, live screen, setups feed with the screenshots each decision used, learning
+    tab with approve/reject, breakdowns by play/session/config/grade/booster/hard rule, spend
+    by purpose/model/day, rulebook versions. `app/dashboard.html`, data from `/api/dashboard`.
+
 There is no order-placement code in this repo. Keep it that way until Jake says otherwise.
 
 ## Rules and course material
@@ -70,6 +90,9 @@ Not deployed yet. Steps:
      Coolify Shared Variable and reference it from both apps).
    - `AGENT_TOKEN` — any long random string; protects `/screenshot` and `/log.csv`. The same
      value goes in `~/.fractal-agent.env` on the Mac.
+   - `DASHBOARD_PASSWORD` — login for the dashboard at `/`.
+   - Optional: `JEV_MODE` (shadow | gate | off), `NEWS_FILTER` (1), `MAX_TESTING_HYPOTHESES` (8),
+     `MIN_N_FOR_VERDICT` (30).
    - Optional: `DECISION_MODEL` (default `deepseek/deepseek-chat`), `VISION_MODEL` (default
      `google/gemini-2.5-flash`), `SYMBOLS` (default `MNQ1!,MES1!`), `POLL_SECONDS` (15),
      `FVG_MCP_URL` (default public URL; inside Coolify the internal container URL is faster).
@@ -88,6 +111,12 @@ tail -f ~/Library/Logs/fractal-capture.log
 ```
 
 Grant Screen Recording to `bash` when macOS asks (System Settings → Privacy & Security).
+The uploader (`mac/capture.sh`) captures **only TradingView windows** (the desktop app, or a
+browser window whose title matches `TV_MATCH`), each one separately, even when other windows
+cover them, and sends them as one set (left window first). Browser tab titles are only visible
+to it if `osascript` also has Screen Recording permission; otherwise, or when no TradingView
+window is open, it sends the whole screen and the vision model marks non-charts `not_chart`,
+which the agent ignores. `CAPTURE=screen` restores the old whole-screen mode.
 Layout assumption (set in `SCREEN_LAYOUT`): 5m charts on the LEFT, 1m on the RIGHT, MNQ and
 MES visible. If TradingView is on an external monitor, set `SCREEN=2` in the env file.
 
@@ -111,15 +140,18 @@ stats, token gate, screenshot upload, the agent's own MCP tool.
 
 ## Next steps (in order)
 
-1. Deploy + Mac uploader (above). Watch one session; check `decision_detail` rows to see what
+Done 2026-10-07: deployed on Coolify (project fractal-agent), Mac uploader running, dashboard,
+learning loop, Jev shadow scoring, news filter, spend tracking. Still open:
+
+1. ~~Deploy + Mac uploader (above).~~ Watch one session; check `decision_detail` rows to see what
    the vision model actually read off the screen. Tune `VISION_PROMPT` in `app/prompts.py`
    until it reliably reads white lines and reversal zones. This is the weakest link.
    Reference chart images are in `knowledge/reference/images/`; sending one or two with each
    vision call as examples of what the markers look like should improve the read.
 2. Confirm fvg-mcp's `entries` rows for MNQ1!/MES1! carry `f_pnl_r` within ~2h (they did on
    2026-10-05). `scoring_health` on fvg-mcp shows whether scoring is on time.
-3. News filter: rule §2.2 (news days) is not enforced by code yet. Add an economic-calendar
-   check (high-impact USD events) as a code hard rule.
+3. ~~News filter~~ done (`rules_code.news_rule`). Check the dashboard's "Hard rules" table
+   after a few weeks: if §2.2 skips would have been profitable, loosen it via a hypothesis.
 4. Higher-timeframe context: 4H/daily FVGs are usually off-screen. Options: a third
    screenshot of a 4H chart, or compute them from fvg-mcp's archived prices.
 5. Weekly report: compare TAKE vs SKIP vs all engine entries per setup type/session; collect
