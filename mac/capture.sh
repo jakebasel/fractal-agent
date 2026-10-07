@@ -5,8 +5,8 @@
 #   AGENT_TOKEN=...            (same value as AGENT_TOKEN on the server)
 #   SCREEN=1                   (display number: 1 = main display; 2 = external, ...)
 #   ACTIVE_HOURS="0-23"        (optional ET hour range to send, e.g. "1-12")
-#   CAPTURE=windows            windows (default): only TradingView windows, even if covered
-#                              screen: the whole display (old behaviour)
+# Only TradingView windows are ever captured (window-level capture, even when covered); the
+# whole screen is never sent. Pause: `bash mac/install.sh pause`; resume: `... resume`.
 #   TV_MATCH="..."             regex for window titles that count as TradingView
 # TradingView in Chrome: it must be the ACTIVE tab of its window to be capturable, so keep it in
 # its own Chrome window (drag the tab out). Then it is captured even when covered.
@@ -18,6 +18,12 @@ source "$ENV_FILE"
 : "${AGENT_URL:?}" "${AGENT_TOKEN:?}"
 SCREEN="${SCREEN:-1}"
 ACTIVE_HOURS="${ACTIVE_HOURS:-0-23}"
+
+# paused? nothing is captured or sent while ~/.fractal-agent.pause exists
+if [ -f "$HOME/.fractal-agent.pause" ]; then
+  /usr/bin/curl -sS -m 10 -X POST -H "X-Agent-Token: $AGENT_TOKEN" "$AGENT_URL/capture_status?state=paused" >/dev/null 2>&1
+  exit 0
+fi
 
 # skip outside the chosen hours (ET) and on Saturdays
 HOUR=$(TZ=America/New_York date +%-H)
@@ -48,11 +54,6 @@ send() {   # file, query string
 TMPD=$(mktemp -d -t fa)
 trap 'rm -rf "$TMPD"' EXIT
 
-if [ "${CAPTURE:-windows}" = "screen" ]; then
-  /usr/sbin/screencapture -x -t jpg -D "$SCREEN" "$TMPD/s.jpg" || { note "capture failed"; exit 1; }
-  send "$TMPD/s.jpg" "?kind=screen" && note "ok: whole screen"
-  exit 0
-fi
 
 # Where is TradingView? Ask Chrome for the window whose ACTIVE tab is tradingview.com (a tab in
 # the background cannot be captured: Chrome does not draw it), then list capturable windows.

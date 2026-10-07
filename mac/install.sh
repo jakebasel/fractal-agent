@@ -7,6 +7,12 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 LABEL="com.jake.fractal-capture"
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
 
+if [ "${1:-}" = "pause" ]; then
+  touch "$HOME/.fractal-agent.pause"; echo "paused: nothing is captured or sent until 'bash mac/install.sh resume'"; exit 0
+fi
+if [ "${1:-}" = "resume" ]; then
+  rm -f "$HOME/.fractal-agent.pause"; echo "resumed"; exit 0
+fi
 if [ "${1:-}" = "uninstall" ]; then
   launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
   rm -f "$PLIST"; echo "removed"; exit 0
