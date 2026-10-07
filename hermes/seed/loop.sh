@@ -41,6 +41,8 @@ for line in sys.stdin:
         print(line[:220]); continue
     t = e.get("type") or e.get("event") or ""
     name = e.get("name") or e.get("tool") or (e.get("tool_call") or {}).get("name") or ""
+    if "result" in t:
+        print(f"[{t}] {name} " + json.dumps(e)[:400]); continue
     body = e.get("content") or e.get("text") or e.get("result") or e.get("arguments") or e.get("input") or ""
     if not isinstance(body, str):
         body = json.dumps(body)
