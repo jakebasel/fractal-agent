@@ -122,6 +122,30 @@ def hypotheses() -> list[dict]:
 
 
 @mcp.tool()
+def review_queue(reviewer: str = "hermes", limit: int = 10) -> list[dict]:
+    """Settled paper trades (with their result) that `reviewer` has not reviewed yet, full detail:
+    engine data, chart read, HTF FVGs, sister pair, management plan, mechanical and
+    management-rules results, re-evaluation. Review them and POST /api/reviews."""
+    return [_row(r, full=True) for r in store.review_queue(reviewer, limit)]
+
+
+@mcp.tool()
+def reviews(limit: int = 30, entry_id: int | None = None) -> list[dict]:
+    """Reviews filed by outside reviewers (e.g. Hermes): verdict, what to do better, exit notes,
+    proposal."""
+    out = []
+    for r in store.reviews(limit, entry_id):
+        d = {k: r[k] for k in r.keys()}
+        d["at_et"] = store.to_et(d.pop("at"))
+        try:
+            d["raw"] = json.loads(d["raw"]) if d["raw"] else None
+        except ValueError:
+            pass
+        out.append(d)
+    return out
+
+
+@mcp.tool()
 def api_spend(days: float = 30) -> dict:
     """OpenRouter spend (USD) by purpose and model, plus a per-day series."""
     since = datetime.fromtimestamp(datetime.now(timezone.utc).timestamp() - days * 86400,
@@ -295,6 +319,9 @@ async def api_dashboard(request: Request):
         d["jev"] = json.loads(r["jev"]) if r["jev"] else None
         d["news"] = json.loads(r["news"]) if r["news"] else None
         d["reeval"] = json.loads(r["reeval"]) if r["reeval"] else None
+        d["reviews"] = [{"reviewer": v["reviewer"], "verdict": v["verdict"], "summary": v["summary"],
+                         "exit_notes": v["exit_notes"], "proposal": v["proposal"], "at_et": store.to_et(v["at"])}
+                        for v in store.reviews(5, r["entry_id"])]
         try:
             ctx = (json.loads(r["context"]) or {}) if r["context"] else {}
             d["plan"] = ctx.get("_plan")
@@ -384,6 +411,34 @@ async def propose_hypothesis(request: Request):
     return JSONResponse({"ok": True, "hypothesis_id": hid})
 
 
+async def review_queue_route(request: Request):
+    if not _authed(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    return JSONResponse(review_queue(request.query_params.get("reviewer", "hermes"),
+                                     int(request.query_params.get("limit", "10"))))
+
+
+async def post_review(request: Request):
+    """POST /api/reviews {entry_id, reviewer, verdict, summary, exit_notes, proposal?, proposal_title?}
+    (token). A proposal is also filed as a hypothesis so it gets shadow-tested."""
+    if not _authed(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    try:
+        body = await request.json()
+        entry_id = int(body["entry_id"])
+    except (ValueError, KeyError, TypeError):
+        return JSONResponse({"error": "entry_id required"}, status_code=400)
+    reviewer = re.sub(r"[^a-z0-9_-]", "", str(body.get("reviewer") or "hermes").lower())[:20] or "external"
+    verdict = str(body.get("verdict") or "")[:20]
+    store.add_review(entry_id, reviewer, verdict, str(body.get("summary") or "")[:2000],
+                     str(body.get("exit_notes") or "")[:2000], body.get("proposal"), body)
+    hid = None
+    if body.get("proposal"):
+        hid = learning.register_proposal({"proposal": body["proposal"], "proposal_title": body.get("proposal_title"),
+                                          "rule_ref": body.get("rule_ref")}, entry_id, source=reviewer)
+    return JSONResponse({"ok": True, "hypothesis_id": hid})
+
+
 async def shot_file(request: Request):
     if not _authed(request):
         return PlainTextResponse("unauthorized", status_code=401)
@@ -413,6 +468,8 @@ app.router.routes.extend([
     Route("/api/dashboard", api_dashboard),
     Route("/api/hypotheses/{hid:int}", api_hypothesis, methods=["POST"]),
     Route("/api/hypotheses/propose", propose_hypothesis, methods=["POST"]),
+    Route("/api/review_queue", review_queue_route),
+    Route("/api/reviews", post_review, methods=["POST"]),
     Route("/shot/{name}", shot_file),
 ])
 

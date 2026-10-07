@@ -109,6 +109,17 @@ CREATE TABLE IF NOT EXISTS scans (
   reasons     TEXT,     -- JSON
   engine_has_it INTEGER
 );
+CREATE TABLE IF NOT EXISTS reviews (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  entry_id    INTEGER,
+  reviewer    TEXT,     -- e.g. hermes
+  at          TEXT,
+  verdict     TEXT,     -- right_take | wrong_take | right_skip | wrong_skip
+  summary     TEXT,     -- what to do better next time (take/skip)
+  exit_notes  TEXT,     -- how the exit / partials should have been handled
+  proposal    TEXT,     -- IF ... THEN ... or null (also filed as a hypothesis)
+  raw         TEXT      -- the reviewer's full JSON
+);
 CREATE TABLE IF NOT EXISTS shadow (
   entry_id    INTEGER,
   hyp_id      INTEGER,
@@ -303,6 +314,36 @@ def reeval_try(entry_id):
     with _lock:
         db().execute("UPDATE decisions SET reeval_tries=COALESCE(reeval_tries,0)+1 WHERE entry_id=?", (entry_id,))
         db().commit()
+
+
+def add_review(entry_id, reviewer, verdict, summary, exit_notes, proposal, raw):
+    with _lock:
+        db().execute("INSERT INTO reviews(entry_id,reviewer,at,verdict,summary,exit_notes,proposal,raw) "
+                     "VALUES(?,?,?,?,?,?,?,?)",
+                     (entry_id, reviewer, now_utc(), verdict, summary, exit_notes, proposal, json.dumps(raw or {})))
+        db().commit()
+
+
+def reviews(limit=50, entry_id=None, reviewer=None):
+    q, args = "SELECT * FROM reviews", []
+    where = []
+    if entry_id is not None:
+        where.append("entry_id=?"); args.append(entry_id)
+    if reviewer:
+        where.append("reviewer=?"); args.append(reviewer)
+    if where:
+        q += " WHERE " + " AND ".join(where)
+    q += " ORDER BY id DESC LIMIT ?"
+    args.append(limit)
+    return db().execute(q, args).fetchall()
+
+
+def review_queue(reviewer: str, limit=20):
+    """Settled TAKE/SKIP rows (newest first) with no review by `reviewer` yet."""
+    return db().execute(
+        "SELECT d.* FROM decisions d WHERE d.r IS NOT NULL AND d.decision IN ('TAKE','SKIP') "
+        "AND NOT EXISTS (SELECT 1 FROM reviews v WHERE v.entry_id=d.entry_id AND v.reviewer=?) "
+        "ORDER BY d.entry_id DESC LIMIT ?", (reviewer, limit)).fetchall()
 
 
 def scans(limit=50):

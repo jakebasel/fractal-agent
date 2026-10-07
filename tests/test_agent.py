@@ -409,5 +409,19 @@ ok("reevaluated_skips" in rep3 and rep3["reevaluated_skips"]["re_evaluated"] >= 
 ok(llm.parse_json('<think>maybe {x}</think> Here: {"a": 1, "b": {"c": 2}} and then {broken')["b"]["c"] == 2, "parse_json survives think blocks and trailing junk")
 ok(llm.parse_json('```json\n{"a": [1,2]}\n```')["a"] == [1, 2], "parse_json reads fenced JSON")
 
+# 17. outside reviewer (Hermes) queue + reviews + proposals
+hc = TestClient(main.app)
+q = hc.get("/api/review_queue?token=tok&reviewer=hermes").json()
+ok(q and all(x["r"] is not None for x in q) and "context" in q[0], f"review queue lists settled trades with full detail ({len(q)})")
+rr = hc.post("/api/reviews?token=tok", json={"entry_id": q[0]["entry_id"], "reviewer": "hermes", "verdict": "wrong_take",
+                                             "summary": "sister pair had a DB against", "exit_notes": "partial at the blue zone",
+                                             "proposal": "IF the sister pair printed a 5m DB against within 30 min THEN SKIP",
+                                             "proposal_title": "Sister DB against"}).json()
+ok(rr["ok"] and rr["hypothesis_id"] and store.hypothesis(rr["hypothesis_id"])["source"] == "hermes", "review stored and proposal filed as a hypothesis")
+ok(len(hc.get("/api/review_queue?token=tok&reviewer=hermes").json()) == len(q) - 1, "reviewed trade leaves the queue")
+ok(main.reviews(5)[0]["verdict"] == "wrong_take" and hc.post("/api/reviews", json={"entry_id": 1}).status_code == 401, "reviews readable via MCP; POST needs the token")
+pr = hc.post("/api/hypotheses/propose?token=tok", json={"title": "Hermes idea", "rule": "IF x THEN SKIP", "source": "hermes"}).json()
+ok(pr["ok"] and store.hypothesis(pr["hypothesis_id"])["title"] == "Hermes idea", "direct proposal endpoint")
+
 print("all tests passed")
 server.should_exit = True
