@@ -134,6 +134,7 @@ pre { white-space: pre-wrap; word-break: break-word; background: var(--surface-2
     <button data-tab="breakdown">Breakdown</button>
     <button data-tab="spend">Spend</button>
     <button data-tab="rules">Rules</button>
+    <button data-tab="backtest">Backtest</button>
   </nav>
 </header>
 
@@ -162,6 +163,7 @@ pre { white-space: pre-wrap; word-break: break-word; background: var(--surface-2
   </section>
 
   <section data-panel="setups" class="hidden">
+    <div class="card" style="margin-bottom:12px"><h2>Spotted by the chart scanner <small>plays the engine does not arm; logged, never traded</small></h2><div id="scans"></div></div>
     <div class="filters" id="feed-filters">
       <button data-f="all" class="on">All</button><button data-f="TAKE">Taken</button>
       <button data-f="SKIP">Skipped</button><button data-f="textbook">Textbook (A+/A)</button>
@@ -186,6 +188,8 @@ pre { white-space: pre-wrap; word-break: break-word; background: var(--surface-2
       <div class="chart" id="spend-chart"></div></div>
     <div class="card"><h2>By purpose and model <small id="spend-sub"></small></h2><div class="scroll" id="spend-table"></div></div>
   </section>
+
+  <section data-panel="backtest" class="hidden"><div class="grid" id="backtest"></div></section>
 
   <section data-panel="rules" class="hidden">
     <div class="card" style="margin-bottom:12px"><h2>Results by rulebook version</h2><div class="scroll" id="by-version"></div></div>
@@ -391,6 +395,9 @@ function render() {
     `<span class="pill"><span class="dot" style="background:${ok ? "var(--good)" : "var(--bad)"}"></span>${ok ? "Running" : "Check agent"}${lastLoopAgo != null ? ` · <b>${fmtAgo(lastLoopAgo)}</b>` : ""}</span>`,
     `<span class="pill"><span class="dot" style="background:${shotAgo != null && shotAgo < 180 ? "var(--good)" : "var(--warn)"}"></span>Screen ${shotAgo != null ? `<b>${fmtAgo(shotAgo)}</b>` : "<b>none</b>"}</span>`,
     `<span class="pill">Jev <b>${esc(st.jev_mode)}</b></span>`,
+    `<span class="pill">Spend today <b>${usd(st.spend_today_usd || 0)}</b> / ${usd(st.daily_budget_usd || 0)}${st.over_budget ? ' <span style="color:var(--warn)">· optional calls paused</span>' : ""}</span>`,
+    st.capture_status ? `<span class="pill" style="color:var(--warn)">${esc({background_tab: "TradingView tab is in the background: drag it into its own Chrome window", not_open: "TradingView is not open on the Mac", capture_failed: "Capture failed: check Screen Recording permission"}[st.capture_status] || st.capture_status)}</span>` :
+    st.last_screenshot_kind === "fallback" ? `<span class="pill" style="color:var(--warn)">No TradingView window found: sending the whole screen</span>` : "",
     st.last_error ? `<span class="pill" style="color:var(--bad)">${esc(st.last_error)}</span>` : "",
   ].join("");
   const tiles = [
@@ -407,7 +414,21 @@ function render() {
     {name: "Agent", color: "var(--series-1)", values: d.curve.agent},
     {name: "Core", color: "var(--series-2)", values: d.curve.core}]);
   $("#live-shots").innerHTML = d.latest_shots.map(f => `<img src="/shot/${encodeURIComponent(f)}" alt="latest screen">`).join("") || `<div class="empty">No screenshots yet.</div>`;
-  $("#shot-age").textContent = shotAgo != null ? fmtAgo(shotAgo) + " ago" : "";
+  $("#shot-age").textContent = (shotAgo != null ? fmtAgo(shotAgo) + " ago" : "") + (st.last_screenshot_kind === "window" ? " · TradingView window" : st.last_screenshot_kind === "fallback" ? " · whole screen (no TradingView window)" : "");
+  $("#scans").innerHTML = (d.scans || []).map(x => `<div class="lesson"><span class="badge ${x.stage === "ready" ? "star" : ""}">${esc(x.stage)}</span>
+    <b>${esc(x.symbol)} ${x.direction === "bull" ? "▲" : "▼"} ${esc(x.play)}</b> <span class="muted">${esc(x.at_et)} · conf ${x.confidence != null ? Math.round(x.confidence * 100) + "%" : "–"}${x.engine_has_it ? " · engine has it" : ""}</span>
+    <div class="t2">${(x.reasons || []).map(esc).join(" · ")}${x.entry ? ` · entry ${x.entry} stop ${x.stop} target ${x.target}` : ""}</div></div>`).join("") ||
+    `<div class="empty">Nothing spotted yet. The scanner runs every ${st.scanner ? st.scanner.minutes : 5} min in ${esc(st.scanner ? st.scanner.windows_et : "")} ET when the screen changes.</div>`;
+  const bt = d.backtest;
+  $("#backtest").innerHTML = !bt ? `<div class="card"><div class="empty">No backtest report yet. Run tools/backtest.py and push it.</div></div>` : [
+    `<div class="card"><h2>fvg-mcp ledger backtest <small>${esc(bt.window)} · generated ${esc(bt.generated_et)}</small></h2>
+     <div class="t2" style="margin-bottom:8px">${esc(bt.note)}</div>
+     <div class="scroll"><table>${statHead("Book")}${Object.entries(bt.books).map(([k, v]) => `<tr><td>${esc(k.replace(/_/g, " "))}</td>${statCells(v)}</tr>`).join("")}</table></div></div>`,
+    groupTable("Hard rules: what they removed", bt.hard_rules.map(r => ({group: r.rule, ...r})), "Rule", "positive total R = the rule is throwing away winners"),
+    groupTable("Hypotheses on top of the code rules", bt.hypotheses_on_top_of_code_rules.map(h => ({group: `${h.hypothesis} (${h.trades_removed_or_resized} changed, ${fmtR(h.delta_total_r_vs_code_rules)} vs rules)`, ...h})), "Hypothesis", "sorted by improvement"),
+    ...["by_session", "by_signal", "by_signal_tf", "by_retrace", "by_day_of_week", "by_hour_et", "by_symbol", "by_week"].map(k => groupTable(k.replace(/_/g, " "), bt[k], k.replace("by_", ""), "after code rules")),
+  ].join("");
+  const vz = d.vision || {n: 0};
   const B = rep.books;
   $("#books-sub").textContent = rep.window;
   $("#books").innerHTML = `<table>${statHead("Book")}
@@ -435,6 +456,9 @@ function render() {
     groupTable("By AI grade", rep.core_by_grade, "Grade", "core strategy: does the grade predict R?"),
     groupTable("By booster present", rep.core_by_booster_present, "Booster", "core strategy"),
     groupTable("Hard rules: what the skips would have done", rep.hard_rules_skipped_counterfactual, "Rule", "negative = the rule saves money"),
+    `<div class="card"><h2>Vision read accuracy <small>price read vs engine entry, within 0.5%</small></h2>
+     <div class="t2">${vz.n ? `${vz.n} reads · ${vz.trusted_pct}% trusted · avg score ${vz.avg_score}` : "No reads yet."}</div>
+     ${vz.n ? `<ul style="margin:6px 0 0;padding-left:18px" class="muted">${vz.notes.map(n => `<li>${esc(n)}</li>`).join("")}</ul>` : ""}</div>`,
     `<div class="card"><h2>Jev <small>mode: ${esc(j.mode)}</small></h2><div class="t2">Scored ${j.scored} settled setups · agrees with the agent ${j.agreement_with_agent_pct ?? "–"}% of the time.</div>
      <div class="scroll"><table>${statHead("Book")}<tr><td>Jev P(take) ≥ 50%, full size</td>${statCells(j.jev_take_book_full_size)}</tr></table></div></div>`,
   ].join("");

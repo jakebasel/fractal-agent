@@ -1,0 +1,1221 @@
+{
+ "generated_et": "2026-10-07 01:46 ET",
+ "window": "2026-07-29 to 2026-10-05 ET; train < 2026-09-03 (1415), holdout >= 2026-09-03 (631)",
+ "symbols": [
+  "MNQ1!",
+  "MES1!"
+ ],
+ "protocol": "tools/backtest_protocol.md",
+ "cut_date": "2026-09-03",
+ "books": {
+  "core_all_entries": {
+   "n": 2046,
+   "win_pct": 45.9,
+   "avg_r": 0.244,
+   "total_r": 499.32,
+   "max_dd_r": -60.72
+  },
+  "after_code_hard_rules": {
+   "n": 286,
+   "win_pct": 32.9,
+   "avg_r": -0.123,
+   "total_r": -35.25,
+   "max_dd_r": -52.42
+  },
+  "removed_by_code_rules": {
+   "n": 1760,
+   "win_pct": 48.0,
+   "avg_r": 0.304,
+   "total_r": 534.57,
+   "max_dd_r": -42.36
+  }
+ },
+ "hard_rules": [
+  {
+   "rule": "\u00a72.1 ND",
+   "n": 898,
+   "win_pct": 58.6,
+   "avg_r": 0.547,
+   "total_r": 490.76,
+   "max_dd_r": -21.67
+  },
+  {
+   "rule": "\u00a72.3 outside window (engine)",
+   "n": 244,
+   "win_pct": 32.0,
+   "avg_r": -0.042,
+   "total_r": -10.17,
+   "max_dd_r": -42.5
+  },
+  {
+   "rule": "\u00a72.3 London after first 2h",
+   "n": 239,
+   "win_pct": 42.3,
+   "avg_r": 0.163,
+   "total_r": 38.91,
+   "max_dd_r": -21.93
+  },
+  {
+   "rule": "\u00a72.3 NY after 11:00",
+   "n": 108,
+   "win_pct": 31.5,
+   "avg_r": -0.089,
+   "total_r": -9.57,
+   "max_dd_r": -28.53
+  },
+  {
+   "rule": "\u00a72.6 DB retrace none",
+   "n": 103,
+   "win_pct": 35.0,
+   "avg_r": -0.05,
+   "total_r": -5.16,
+   "max_dd_r": -22.51
+  },
+  {
+   "rule": "\u00a72.3 Asia after 10 PM",
+   "n": 85,
+   "win_pct": 32.9,
+   "avg_r": -0.038,
+   "total_r": -3.25,
+   "max_dd_r": -22.36
+  },
+  {
+   "rule": "\u00a72.3 weekend",
+   "n": 39,
+   "win_pct": 43.6,
+   "avg_r": 0.223,
+   "total_r": 8.7,
+   "max_dd_r": -8.54
+  },
+  {
+   "rule": "\u00a72.4 2DB",
+   "n": 27,
+   "win_pct": 70.4,
+   "avg_r": 0.87,
+   "total_r": 23.5,
+   "max_dd_r": -3.1
+  },
+  {
+   "rule": "\u00a72.6 DB retrace shallow",
+   "n": 17,
+   "win_pct": 35.3,
+   "avg_r": 0.05,
+   "total_r": 0.85,
+   "max_dd_r": -7.65
+  }
+ ],
+ "by_session": [
+  {
+   "group": "nypm",
+   "n": 78,
+   "win_pct": 37.2,
+   "avg_r": -0.061,
+   "total_r": -4.79,
+   "max_dd_r": -19.44
+  },
+  {
+   "group": "None",
+   "n": 68,
+   "win_pct": 42.6,
+   "avg_r": 0.177,
+   "total_r": 12.06,
+   "max_dd_r": -7.12
+  },
+  {
+   "group": "asia",
+   "n": 59,
+   "win_pct": 27.1,
+   "avg_r": -0.27,
+   "total_r": -15.94,
+   "max_dd_r": -18.94
+  },
+  {
+   "group": "london",
+   "n": 56,
+   "win_pct": 21.4,
+   "avg_r": -0.411,
+   "total_r": -23.0,
+   "max_dd_r": -27.0
+  },
+  {
+   "group": "newyork",
+   "n": 25,
+   "win_pct": 32.0,
+   "avg_r": -0.143,
+   "total_r": -3.58,
+   "max_dd_r": -7.0
+  }
+ ],
+ "by_signal": [
+  {
+   "group": "DB",
+   "n": 171,
+   "win_pct": 31.0,
+   "avg_r": -0.163,
+   "total_r": -27.89,
+   "max_dd_r": -35.42
+  },
+  {
+   "group": "M",
+   "n": 107,
+   "win_pct": 38.3,
+   "avg_r": 0.006,
+   "total_r": 0.64,
+   "max_dd_r": -22.71
+  },
+  {
+   "group": "2M",
+   "n": 8,
+   "win_pct": 0.0,
+   "avg_r": -1.0,
+   "total_r": -8.0,
+   "max_dd_r": -8.0
+  }
+ ],
+ "by_signal_tf": [
+  {
+   "group": "1m",
+   "n": 244,
+   "win_pct": 32.4,
+   "avg_r": -0.123,
+   "total_r": -29.97,
+   "max_dd_r": -41.75
+  },
+  {
+   "group": "5m",
+   "n": 42,
+   "win_pct": 35.7,
+   "avg_r": -0.126,
+   "total_r": -5.28,
+   "max_dd_r": -12.47
+  }
+ ],
+ "by_retrace": [
+  {
+   "group": "None",
+   "n": 115,
+   "win_pct": 35.7,
+   "avg_r": -0.064,
+   "total_r": -7.36,
+   "max_dd_r": -22.8
+  },
+  {
+   "group": "deep",
+   "n": 76,
+   "win_pct": 22.4,
+   "avg_r": -0.381,
+   "total_r": -28.97,
+   "max_dd_r": -29.71
+  },
+  {
+   "group": "medium",
+   "n": 59,
+   "win_pct": 40.7,
+   "avg_r": 0.084,
+   "total_r": 4.93,
+   "max_dd_r": -10.44
+  },
+  {
+   "group": "leg-fvg",
+   "n": 36,
+   "win_pct": 33.3,
+   "avg_r": -0.107,
+   "total_r": -3.85,
+   "max_dd_r": -13.41
+  }
+ ],
+ "by_day_of_week": [
+  {
+   "group": "Thu",
+   "n": 77,
+   "win_pct": 36.4,
+   "avg_r": -0.054,
+   "total_r": -4.18,
+   "max_dd_r": -13.41
+  },
+  {
+   "group": "Mon",
+   "n": 69,
+   "win_pct": 33.3,
+   "avg_r": -0.095,
+   "total_r": -6.58,
+   "max_dd_r": -16.94
+  },
+  {
+   "group": "Wed",
+   "n": 61,
+   "win_pct": 26.2,
+   "avg_r": -0.344,
+   "total_r": -21.01,
+   "max_dd_r": -25.54
+  },
+  {
+   "group": "Tue",
+   "n": 50,
+   "win_pct": 38.0,
+   "avg_r": 0.055,
+   "total_r": 2.76,
+   "max_dd_r": -8.5
+  },
+  {
+   "group": "Fri",
+   "n": 29,
+   "win_pct": 27.6,
+   "avg_r": -0.215,
+   "total_r": -6.24,
+   "max_dd_r": -10.0
+  }
+ ],
+ "by_hour_et": [
+  {
+   "group": "00",
+   "n": 2,
+   "win_pct": 0.0,
+   "avg_r": -1.0,
+   "total_r": -2.0,
+   "max_dd_r": -2.0
+  },
+  {
+   "group": "01",
+   "n": 8,
+   "win_pct": 75.0,
+   "avg_r": 1.066,
+   "total_r": 8.53,
+   "max_dd_r": -2.0
+  },
+  {
+   "group": "02",
+   "n": 21,
+   "win_pct": 28.6,
+   "avg_r": -0.357,
+   "total_r": -7.5,
+   "max_dd_r": -11.0
+  },
+  {
+   "group": "03",
+   "n": 45,
+   "win_pct": 20.0,
+   "avg_r": -0.42,
+   "total_r": -18.91,
+   "max_dd_r": -19.41
+  },
+  {
+   "group": "07",
+   "n": 1,
+   "win_pct": 0.0,
+   "avg_r": -1.0,
+   "total_r": -1.0,
+   "max_dd_r": -1.0
+  },
+  {
+   "group": "08",
+   "n": 6,
+   "win_pct": 0.0,
+   "avg_r": -1.0,
+   "total_r": -6.0,
+   "max_dd_r": -6.0
+  },
+  {
+   "group": "09",
+   "n": 9,
+   "win_pct": 22.2,
+   "avg_r": -0.222,
+   "total_r": -2.0,
+   "max_dd_r": -3.0
+  },
+  {
+   "group": "10",
+   "n": 27,
+   "win_pct": 37.0,
+   "avg_r": -0.003,
+   "total_r": -0.08,
+   "max_dd_r": -6.97
+  },
+  {
+   "group": "11",
+   "n": 2,
+   "win_pct": 50.0,
+   "avg_r": 0.75,
+   "total_r": 1.5,
+   "max_dd_r": -1.0
+  },
+  {
+   "group": "12",
+   "n": 3,
+   "win_pct": 100.0,
+   "avg_r": 2.5,
+   "total_r": 7.5,
+   "max_dd_r": 0.0
+  },
+  {
+   "group": "13",
+   "n": 6,
+   "win_pct": 66.7,
+   "avg_r": 0.79,
+   "total_r": 4.74,
+   "max_dd_r": -1.0
+  },
+  {
+   "group": "14",
+   "n": 36,
+   "win_pct": 33.3,
+   "avg_r": -0.029,
+   "total_r": -1.06,
+   "max_dd_r": -9.1
+  },
+  {
+   "group": "15",
+   "n": 47,
+   "win_pct": 36.2,
+   "avg_r": -0.209,
+   "total_r": -9.81,
+   "max_dd_r": -16.72
+  },
+  {
+   "group": "16",
+   "n": 8,
+   "win_pct": 50.0,
+   "avg_r": 0.035,
+   "total_r": 0.28,
+   "max_dd_r": -4.0
+  },
+  {
+   "group": "18",
+   "n": 4,
+   "win_pct": 75.0,
+   "avg_r": 1.625,
+   "total_r": 6.5,
+   "max_dd_r": -1.0
+  },
+  {
+   "group": "19",
+   "n": 2,
+   "win_pct": 0.0,
+   "avg_r": -1.0,
+   "total_r": -2.0,
+   "max_dd_r": -2.0
+  },
+  {
+   "group": "20",
+   "n": 24,
+   "win_pct": 29.2,
+   "avg_r": -0.287,
+   "total_r": -6.88,
+   "max_dd_r": -7.88
+  },
+  {
+   "group": "21",
+   "n": 35,
+   "win_pct": 28.6,
+   "avg_r": -0.202,
+   "total_r": -7.06,
+   "max_dd_r": -11.06
+  }
+ ],
+ "by_symbol": [
+  {
+   "group": "MNQ1!",
+   "n": 157,
+   "win_pct": 31.2,
+   "avg_r": -0.176,
+   "total_r": -27.68,
+   "max_dd_r": -44.15
+  },
+  {
+   "group": "MES1!",
+   "n": 129,
+   "win_pct": 34.9,
+   "avg_r": -0.059,
+   "total_r": -7.57,
+   "max_dd_r": -20.57
+  }
+ ],
+ "by_week": [
+  {
+   "group": "2026-W34",
+   "n": 75,
+   "win_pct": 30.7,
+   "avg_r": -0.219,
+   "total_r": -16.42,
+   "max_dd_r": -24.62
+  },
+  {
+   "group": "2026-W35",
+   "n": 48,
+   "win_pct": 31.2,
+   "avg_r": -0.07,
+   "total_r": -3.37,
+   "max_dd_r": -12.68
+  },
+  {
+   "group": "2026-W36",
+   "n": 44,
+   "win_pct": 40.9,
+   "avg_r": 0.206,
+   "total_r": 9.08,
+   "max_dd_r": -7.63
+  },
+  {
+   "group": "2026-W37",
+   "n": 44,
+   "win_pct": 25.0,
+   "avg_r": -0.228,
+   "total_r": -10.03,
+   "max_dd_r": -15.03
+  },
+  {
+   "group": "2026-W38",
+   "n": 4,
+   "win_pct": 0.0,
+   "avg_r": -1.0,
+   "total_r": -4.0,
+   "max_dd_r": -4.0
+  },
+  {
+   "group": "2026-W39",
+   "n": 44,
+   "win_pct": 25.0,
+   "avg_r": -0.352,
+   "total_r": -15.48,
+   "max_dd_r": -15.98
+  },
+  {
+   "group": "2026-W40",
+   "n": 21,
+   "win_pct": 66.7,
+   "avg_r": 0.344,
+   "total_r": 7.23,
+   "max_dd_r": -4.0
+  },
+  {
+   "group": "2026-W41",
+   "n": 6,
+   "win_pct": 33.3,
+   "avg_r": -0.377,
+   "total_r": -2.26,
+   "max_dd_r": -2.26
+  }
+ ],
+ "tweaks": [
+  {
+   "name": "5m signals only",
+   "tweak": {
+    "name": "5m signals only",
+    "if": [
+     {
+      "col": "mt_tf",
+      "op": "!=",
+      "val": "5m"
+     }
+    ],
+    "then": "skip"
+   },
+   "affected_train": 116,
+   "affected_holdout": 128,
+   "train": {
+    "base": {
+     "n": 137,
+     "win_pct": 29.9,
+     "avg_r": -0.175,
+     "total_r": -23.92,
+     "max_dd_r": -33.12
+    },
+    "with_tweak": {
+     "n": 21,
+     "win_pct": 33.3,
+     "avg_r": -0.125,
+     "total_r": -2.62,
+     "max_dd_r": -6.71
+    },
+    "delta_total_r": 21.3
+   },
+   "holdout": {
+    "base": {
+     "n": 149,
+     "win_pct": 35.6,
+     "avg_r": -0.076,
+     "total_r": -11.33,
+     "max_dd_r": -37.51
+    },
+    "with_tweak": {
+     "n": 21,
+     "win_pct": 38.1,
+     "avg_r": -0.127,
+     "total_r": -2.66,
+     "max_dd_r": -9.5
+    },
+    "delta_total_r": 8.67
+   },
+   "affected_trades": {
+    "train": {
+     "n": 116,
+     "win_pct": 29.3,
+     "avg_r": -0.184,
+     "total_r": -21.3,
+     "max_dd_r": -29.8
+    },
+    "holdout": {
+     "n": 128,
+     "win_pct": 35.2,
+     "avg_r": -0.068,
+     "total_r": -8.67,
+     "max_dd_r": -32.51
+    }
+   },
+   "checks": {
+    "enough_affected_on_train": true,
+    "total_r_up_on_train": true,
+    "total_r_up_on_holdout": true,
+    "drawdown_not_deeper": true,
+    "removed_trades_negative_both_halves": true
+   },
+   "misses": [],
+   "verdict": "PASS"
+  },
+  {
+   "name": "allow ND entries (tests rule 2.1)",
+   "tweak": {
+    "name": "allow ND entries (tests rule 2.1)",
+    "if": [
+     {
+      "col": "nd",
+      "op": "==",
+      "val": true
+     }
+    ],
+    "then": "allow"
+   },
+   "affected_train": 898,
+   "affected_holdout": 0,
+   "train": {
+    "base": {
+     "n": 137,
+     "win_pct": 29.9,
+     "avg_r": -0.175,
+     "total_r": -23.92,
+     "max_dd_r": -33.12
+    },
+    "with_tweak": {
+     "n": 1035,
+     "win_pct": 54.8,
+     "avg_r": 0.451,
+     "total_r": 466.84,
+     "max_dd_r": -33.12
+    },
+    "delta_total_r": 490.76
+   },
+   "holdout": {
+    "base": {
+     "n": 149,
+     "win_pct": 35.6,
+     "avg_r": -0.076,
+     "total_r": -11.33,
+     "max_dd_r": -37.51
+    },
+    "with_tweak": {
+     "n": 149,
+     "win_pct": 35.6,
+     "avg_r": -0.076,
+     "total_r": -11.33,
+     "max_dd_r": -37.51
+    },
+    "delta_total_r": 0.0
+   },
+   "affected_trades": {
+    "train": {
+     "n": 898,
+     "win_pct": 58.6,
+     "avg_r": 0.547,
+     "total_r": 490.76,
+     "max_dd_r": -21.67
+    },
+    "holdout": {
+     "n": 0
+    }
+   },
+   "checks": {
+    "enough_affected_on_train": true,
+    "total_r_up_on_train": true,
+    "total_r_up_on_holdout": false,
+    "drawdown_not_deeper": true,
+    "added_trades_positive_both_halves": false
+   },
+   "misses": [
+    "total_r_up_on_holdout",
+    "added_trades_positive_both_halves"
+   ],
+   "verdict": "inconclusive"
+  },
+  {
+   "name": "allow engine out-of-window (tests 2.3 flag)",
+   "tweak": {
+    "name": "allow engine out-of-window (tests 2.3 flag)",
+    "if": [
+     {
+      "col": "in_window",
+      "op": "==",
+      "val": false
+     },
+     {
+      "col": "nd",
+      "op": "==",
+      "val": false
+     }
+    ],
+    "then": "allow"
+   },
+   "affected_train": 230,
+   "affected_holdout": 338,
+   "train": {
+    "base": {
+     "n": 137,
+     "win_pct": 29.9,
+     "avg_r": -0.175,
+     "total_r": -23.92,
+     "max_dd_r": -33.12
+    },
+    "with_tweak": {
+     "n": 367,
+     "win_pct": 31.1,
+     "avg_r": -0.078,
+     "total_r": -28.56,
+     "max_dd_r": -55.87
+    },
+    "delta_total_r": -4.64
+   },
+   "holdout": {
+    "base": {
+     "n": 149,
+     "win_pct": 35.6,
+     "avg_r": -0.076,
+     "total_r": -11.33,
+     "max_dd_r": -37.51
+    },
+    "with_tweak": {
+     "n": 487,
+     "win_pct": 37.4,
+     "avg_r": 0.033,
+     "total_r": 16.08,
+     "max_dd_r": -55.51
+    },
+    "delta_total_r": 27.41
+   },
+   "affected_trades": {
+    "train": {
+     "n": 230,
+     "win_pct": 31.7,
+     "avg_r": -0.02,
+     "total_r": -4.64,
+     "max_dd_r": -34.95
+    },
+    "holdout": {
+     "n": 338,
+     "win_pct": 38.2,
+     "avg_r": 0.081,
+     "total_r": 27.41,
+     "max_dd_r": -27.31
+    }
+   },
+   "checks": {
+    "enough_affected_on_train": true,
+    "total_r_up_on_train": false,
+    "total_r_up_on_holdout": true,
+    "drawdown_not_deeper": false,
+    "added_trades_positive_both_halves": false
+   },
+   "misses": [
+    "total_r_up_on_train",
+    "drawdown_not_deeper",
+    "added_trades_positive_both_halves"
+   ],
+   "verdict": "fail"
+  },
+  {
+   "name": "no gaps invalidated on the way",
+   "tweak": {
+    "name": "no gaps invalidated on the way",
+    "if": [
+     {
+      "col": "n_inv",
+      "op": ">",
+      "val": 0
+     }
+    ],
+    "then": "skip"
+   },
+   "affected_train": 67,
+   "affected_holdout": 83,
+   "train": {
+    "base": {
+     "n": 137,
+     "win_pct": 29.9,
+     "avg_r": -0.175,
+     "total_r": -23.92,
+     "max_dd_r": -33.12
+    },
+    "with_tweak": {
+     "n": 70,
+     "win_pct": 28.6,
+     "avg_r": -0.166,
+     "total_r": -11.63,
+     "max_dd_r": -20.29
+    },
+    "delta_total_r": 12.29
+   },
+   "holdout": {
+    "base": {
+     "n": 149,
+     "win_pct": 35.6,
+     "avg_r": -0.076,
+     "total_r": -11.33,
+     "max_dd_r": -37.51
+    },
+    "with_tweak": {
+     "n": 66,
+     "win_pct": 30.3,
+     "avg_r": -0.188,
+     "total_r": -12.38,
+     "max_dd_r": -22.44
+    },
+    "delta_total_r": -1.05
+   },
+   "affected_trades": {
+    "train": {
+     "n": 67,
+     "win_pct": 31.3,
+     "avg_r": -0.183,
+     "total_r": -12.29,
+     "max_dd_r": -22.52
+    },
+    "holdout": {
+     "n": 83,
+     "win_pct": 39.8,
+     "avg_r": 0.013,
+     "total_r": 1.05,
+     "max_dd_r": -18.43
+    }
+   },
+   "checks": {
+    "enough_affected_on_train": true,
+    "total_r_up_on_train": true,
+    "total_r_up_on_holdout": false,
+    "drawdown_not_deeper": true,
+    "removed_trades_negative_both_halves": false
+   },
+   "misses": [
+    "total_r_up_on_holdout",
+    "removed_trades_negative_both_halves"
+   ],
+   "verdict": "inconclusive"
+  },
+  {
+   "name": "DB only (no lone M)",
+   "tweak": {
+    "name": "DB only (no lone M)",
+    "if": [
+     {
+      "col": "sig",
+      "op": "in",
+      "val": [
+       "M",
+       "2M"
+      ]
+     }
+    ],
+    "then": "skip"
+   },
+   "affected_train": 61,
+   "affected_holdout": 54,
+   "train": {
+    "base": {
+     "n": 137,
+     "win_pct": 29.9,
+     "avg_r": -0.175,
+     "total_r": -23.92,
+     "max_dd_r": -33.12
+    },
+    "with_tweak": {
+     "n": 76,
+     "win_pct": 31.6,
+     "avg_r": -0.158,
+     "total_r": -11.97,
+     "max_dd_r": -20.97
+    },
+    "delta_total_r": 11.95
+   },
+   "holdout": {
+    "base": {
+     "n": 149,
+     "win_pct": 35.6,
+     "avg_r": -0.076,
+     "total_r": -11.33,
+     "max_dd_r": -37.51
+    },
+    "with_tweak": {
+     "n": 95,
+     "win_pct": 30.5,
+     "avg_r": -0.168,
+     "total_r": -15.92,
+     "max_dd_r": -30.01
+    },
+    "delta_total_r": -4.59
+   },
+   "affected_trades": {
+    "train": {
+     "n": 61,
+     "win_pct": 27.9,
+     "avg_r": -0.196,
+     "total_r": -11.95,
+     "max_dd_r": -22.71
+    },
+    "holdout": {
+     "n": 54,
+     "win_pct": 44.4,
+     "avg_r": 0.085,
+     "total_r": 4.59,
+     "max_dd_r": -12.0
+    }
+   },
+   "checks": {
+    "enough_affected_on_train": true,
+    "total_r_up_on_train": true,
+    "total_r_up_on_holdout": false,
+    "drawdown_not_deeper": true,
+    "removed_trades_negative_both_halves": false
+   },
+   "misses": [
+    "total_r_up_on_holdout",
+    "removed_trades_negative_both_halves"
+   ],
+   "verdict": "inconclusive"
+  },
+  {
+   "name": "no Friday",
+   "tweak": {
+    "name": "no Friday",
+    "if": [
+     {
+      "col": "dow",
+      "op": "==",
+      "val": "Fri"
+     }
+    ],
+    "then": "skip"
+   },
+   "affected_train": 6,
+   "affected_holdout": 23,
+   "train": {
+    "base": {
+     "n": 137,
+     "win_pct": 29.9,
+     "avg_r": -0.175,
+     "total_r": -23.92,
+     "max_dd_r": -33.12
+    },
+    "with_tweak": {
+     "n": 131,
+     "win_pct": 30.5,
+     "avg_r": -0.164,
+     "total_r": -21.42,
+     "max_dd_r": -30.62
+    },
+    "delta_total_r": 2.5
+   },
+   "holdout": {
+    "base": {
+     "n": 149,
+     "win_pct": 35.6,
+     "avg_r": -0.076,
+     "total_r": -11.33,
+     "max_dd_r": -37.51
+    },
+    "with_tweak": {
+     "n": 126,
+     "win_pct": 36.5,
+     "avg_r": -0.06,
+     "total_r": -7.59,
+     "max_dd_r": -29.53
+    },
+    "delta_total_r": 3.74
+   },
+   "affected_trades": {
+    "train": {
+     "n": 6,
+     "win_pct": 16.7,
+     "avg_r": -0.417,
+     "total_r": -2.5,
+     "max_dd_r": -4.0
+    },
+    "holdout": {
+     "n": 23,
+     "win_pct": 30.4,
+     "avg_r": -0.163,
+     "total_r": -3.74,
+     "max_dd_r": -8.5
+    }
+   },
+   "checks": {
+    "enough_affected_on_train": false,
+    "total_r_up_on_train": true,
+    "total_r_up_on_holdout": true,
+    "drawdown_not_deeper": true,
+    "removed_trades_negative_both_halves": true
+   },
+   "misses": [
+    "enough_affected_on_train"
+   ],
+   "verdict": "inconclusive"
+  },
+  {
+   "name": "skip NY PM",
+   "tweak": {
+    "name": "skip NY PM",
+    "if": [
+     {
+      "col": "session",
+      "op": "==",
+      "val": "nypm"
+     }
+    ],
+    "then": "skip"
+   },
+   "affected_train": 38,
+   "affected_holdout": 40,
+   "train": {
+    "base": {
+     "n": 137,
+     "win_pct": 29.9,
+     "avg_r": -0.175,
+     "total_r": -23.92,
+     "max_dd_r": -33.12
+    },
+    "with_tweak": {
+     "n": 99,
+     "win_pct": 29.3,
+     "avg_r": -0.191,
+     "total_r": -18.94,
+     "max_dd_r": -27.44
+    },
+    "delta_total_r": 4.98
+   },
+   "holdout": {
+    "base": {
+     "n": 149,
+     "win_pct": 35.6,
+     "avg_r": -0.076,
+     "total_r": -11.33,
+     "max_dd_r": -37.51
+    },
+    "with_tweak": {
+     "n": 109,
+     "win_pct": 33.0,
+     "avg_r": -0.106,
+     "total_r": -11.52,
+     "max_dd_r": -33.0
+    },
+    "delta_total_r": -0.19
+   },
+   "affected_trades": {
+    "train": {
+     "n": 38,
+     "win_pct": 31.6,
+     "avg_r": -0.131,
+     "total_r": -4.98,
+     "max_dd_r": -13.5
+    },
+    "holdout": {
+     "n": 40,
+     "win_pct": 42.5,
+     "avg_r": 0.005,
+     "total_r": 0.19,
+     "max_dd_r": -10.91
+    }
+   },
+   "checks": {
+    "enough_affected_on_train": true,
+    "total_r_up_on_train": true,
+    "total_r_up_on_holdout": false,
+    "drawdown_not_deeper": true,
+    "removed_trades_negative_both_halves": false
+   },
+   "misses": [
+    "total_r_up_on_holdout",
+    "removed_trades_negative_both_halves"
+   ],
+   "verdict": "inconclusive"
+  },
+  {
+   "name": "NY after 10:30 half size",
+   "tweak": {
+    "name": "NY after 10:30 half size",
+    "if": [
+     {
+      "col": "session",
+      "op": "==",
+      "val": "newyork"
+     },
+     {
+      "col": "hour",
+      "op": ">=",
+      "val": 10.5
+     }
+    ],
+    "then": "half"
+   },
+   "affected_train": 5,
+   "affected_holdout": 12,
+   "train": {
+    "base": {
+     "n": 137,
+     "win_pct": 29.9,
+     "avg_r": -0.175,
+     "total_r": -23.92,
+     "max_dd_r": -33.12
+    },
+    "with_tweak": {
+     "n": 137,
+     "win_pct": 29.9,
+     "avg_r": -0.156,
+     "total_r": -21.42,
+     "max_dd_r": -30.62
+    },
+    "delta_total_r": 2.5
+   },
+   "holdout": {
+    "base": {
+     "n": 149,
+     "win_pct": 35.6,
+     "avg_r": -0.076,
+     "total_r": -11.33,
+     "max_dd_r": -37.51
+    },
+    "with_tweak": {
+     "n": 149,
+     "win_pct": 35.6,
+     "avg_r": -0.096,
+     "total_r": -14.29,
+     "max_dd_r": -35.51
+    },
+    "delta_total_r": -2.96
+   },
+   "affected_trades": {
+    "train": {
+     "n": 5,
+     "win_pct": 0.0,
+     "avg_r": -1.0,
+     "total_r": -5.0,
+     "max_dd_r": -5.0
+    },
+    "holdout": {
+     "n": 12,
+     "win_pct": 58.3,
+     "avg_r": 0.493,
+     "total_r": 5.92,
+     "max_dd_r": -5.0
+    }
+   },
+   "checks": {
+    "enough_affected_on_train": false,
+    "total_r_up_on_train": true,
+    "total_r_up_on_holdout": false,
+    "drawdown_not_deeper": true,
+    "removed_trades_negative_both_halves": false
+   },
+   "misses": [
+    "enough_affected_on_train",
+    "total_r_up_on_holdout",
+    "removed_trades_negative_both_halves"
+   ],
+   "verdict": "fail"
+  },
+  {
+   "name": "deep retrace DBs only",
+   "tweak": {
+    "name": "deep retrace DBs only",
+    "if": [
+     {
+      "col": "sig",
+      "op": "==",
+      "val": "DB"
+     },
+     {
+      "col": "retrace",
+      "op": "not_in",
+      "val": [
+       "deep",
+       "deep+fvg"
+      ]
+     }
+    ],
+    "then": "skip"
+   },
+   "affected_train": 41,
+   "affected_holdout": 54,
+   "train": {
+    "base": {
+     "n": 137,
+     "win_pct": 29.9,
+     "avg_r": -0.175,
+     "total_r": -23.92,
+     "max_dd_r": -33.12
+    },
+    "with_tweak": {
+     "n": 96,
+     "win_pct": 21.9,
+     "avg_r": -0.408,
+     "total_r": -39.16,
+     "max_dd_r": -40.16
+    },
+    "delta_total_r": -15.24
+   },
+   "holdout": {
+    "base": {
+     "n": 149,
+     "win_pct": 35.6,
+     "avg_r": -0.076,
+     "total_r": -11.33,
+     "max_dd_r": -37.51
+    },
+    "with_tweak": {
+     "n": 95,
+     "win_pct": 38.9,
+     "avg_r": 0.03,
+     "total_r": 2.83,
+     "max_dd_r": -22.5
+    },
+    "delta_total_r": 14.16
+   },
+   "affected_trades": {
+    "train": {
+     "n": 41,
+     "win_pct": 48.8,
+     "avg_r": 0.372,
+     "total_r": 15.24,
+     "max_dd_r": -5.0
+    },
+    "holdout": {
+     "n": 54,
+     "win_pct": 29.6,
+     "avg_r": -0.262,
+     "total_r": -14.16,
+     "max_dd_r": -19.45
+    }
+   },
+   "checks": {
+    "enough_affected_on_train": true,
+    "total_r_up_on_train": false,
+    "total_r_up_on_holdout": true,
+    "drawdown_not_deeper": false,
+    "removed_trades_negative_both_halves": false
+   },
+   "misses": [
+    "total_r_up_on_train",
+    "drawdown_not_deeper",
+    "removed_trades_negative_both_halves"
+   ],
+   "verdict": "fail"
+  }
+ ],
+ "note": "r = fvg-mcp's scored result at full size (2R + runner to 3R). Books after code rules. A tweak PASSES only if it helps on train AND holdout, does not deepen drawdown, and the trades it changes have the expected sign on both halves (see protocol). Small n is noise.",
+ "tweaks_tried_total": 9
+}

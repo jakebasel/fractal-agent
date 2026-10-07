@@ -96,6 +96,19 @@ CREATE TABLE IF NOT EXISTS hypotheses (
   decided_at  TEXT,
   note        TEXT
 );
+CREATE TABLE IF NOT EXISTS scans (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  at          TEXT,
+  files       TEXT,
+  symbol      TEXT,
+  play        TEXT,
+  direction   TEXT,
+  stage       TEXT,     -- forming | ready | entered
+  entry       REAL, stop REAL, target REAL,
+  confidence  REAL,
+  reasons     TEXT,     -- JSON
+  engine_has_it INTEGER
+);
 CREATE TABLE IF NOT EXISTS shadow (
   entry_id    INTEGER,
   hyp_id      INTEGER,
@@ -111,8 +124,8 @@ CREATE TABLE IF NOT EXISTS shadow (
 # columns added after v1; ALTERed into an existing database at start-up
 MIGRATIONS = {
     "decisions": {"play": "TEXT", "rules_version": "TEXT", "jev": "TEXT", "jev_p_take": "REAL",
-                  "path": "TEXT", "news": "TEXT"},
-    "screenshots": {"batch": "TEXT", "part": "INTEGER"},
+                  "path": "TEXT", "news": "TEXT", "vision_score": "REAL", "vision_note": "TEXT"},
+    "screenshots": {"batch": "TEXT", "part": "INTEGER", "kind": "TEXT"},
 }
 
 SIZE_MULT = {"full": 1.0, "reduced": 0.5, "none": 0.0}
@@ -214,11 +227,25 @@ def recent_lessons(n: int):
     return db().execute("SELECT * FROM lessons ORDER BY id DESC LIMIT ?", (n,)).fetchall()
 
 
-def add_screenshot(file: str, nbytes: int, batch: str | None = None, part: int | None = None):
+def add_screenshot(file: str, nbytes: int, batch: str | None = None, part: int | None = None,
+                   kind: str | None = None):
     with _lock:
-        db().execute("INSERT INTO screenshots(received_at,file,bytes,batch,part) VALUES(?,?,?,?,?)",
-                     (now_utc(), file, nbytes, batch, part))
+        db().execute("INSERT INTO screenshots(received_at,file,bytes,batch,part,kind) VALUES(?,?,?,?,?,?)",
+                     (now_utc(), file, nbytes, batch, part, kind))
         db().commit()
+
+
+def add_scan(at, files, symbol, play, direction, stage, entry, stop, target, confidence, reasons, engine_has_it):
+    with _lock:
+        db().execute("INSERT INTO scans(at,files,symbol,play,direction,stage,entry,stop,target,confidence,reasons,engine_has_it) "
+                     "VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
+                     (at, files, symbol, play, direction, stage, entry, stop, target, confidence,
+                      json.dumps(reasons or []), 1 if engine_has_it else 0))
+        db().commit()
+
+
+def scans(limit=50):
+    return db().execute("SELECT * FROM scans ORDER BY id DESC LIMIT ?", (limit,)).fetchall()
 
 
 def latest_screenshot():
@@ -257,6 +284,18 @@ def spend(since_iso=None) -> dict:
             "errors": r["errors"]} for r in rows]
     return {"total_usd": round(sum(x["cost_usd"] for x in out), 6),
             "calls": sum(x["calls"] for x in out), "by_purpose": out}
+
+
+def spend_today() -> float:
+    since = datetime.now(config.ET).replace(hour=0, minute=0, second=0, microsecond=0) \
+        .astimezone(timezone.utc).isoformat()
+    row = db().execute("SELECT SUM(COALESCE(cost,0)) c FROM api_calls WHERE at>=?", (since,)).fetchone()
+    return float(row["c"] or 0)
+
+
+def over_budget() -> bool:
+    """True when today's spend passed DAILY_BUDGET_USD: optional calls pause, decisions continue."""
+    return config.DAILY_BUDGET_USD > 0 and spend_today() >= config.DAILY_BUDGET_USD
 
 
 def spend_by_day(days=30):

@@ -67,25 +67,46 @@ def _is_db(entry: dict, detail: dict) -> bool:
     return "DB" in cfg or "double break" in text
 
 
-def hard_rule(entry: dict, detail: dict, now: datetime) -> tuple[str | None, dict]:
-    """First hard rule that fires, plus the news check result (stored on the row)."""
+def _is_2db(entry: dict, detail: dict) -> bool:
+    cfg = (detail.get("mt_cfg") or "").upper()
+    text = (entry.get("mt_text") or "").upper()
+    return "2DB" in cfg or "2DB" in text or "(2DB)" in text
+
+
+def hard_rules(entry: dict, detail: dict, now: datetime) -> tuple[list[str], dict]:
+    """ALL hard rules that fire, most important first (the overarching reason is reported, not
+    whichever check happened to run first), plus the news check result (stored on the row).
+
+    Priority (Jake, 2026-10-07): a 2DB is never traded, ND is never traded, news, then
+    retracement, then the session window."""
+    fired = []
+    if _is_2db(entry, detail):
+        fired.append("§2.4 2DB: we don't trade 2DBs")
     if detail.get("trend_fallback"):
-        return "§2.1 no Market Translator signal (ND / trend-fallback)", {}
-    if detail.get("in_window") is False:
-        return "§2.3 outside the session window (engine flag)", {}
+        fired.append("§2.1 no Market Translator signal (ND / trend-fallback)")
     at = _iso_to_dt(entry["at"])
+    news_fired, info = news_rule(at)
+    if news_fired:
+        fired.append(news_fired)
+    if _is_db(entry, detail) and (detail.get("retrace") or "").lower() in ("none", "shallow"):
+        fired.append(f"§2.6 DB with {detail.get('retrace')} retracement (runaway / too shallow)")
     et = at.astimezone(config.ET)
     hm = (et.hour, et.minute)
     session = (detail.get("session") or "").lower()
     if et.weekday() >= 5:
-        return "§2.3 weekend", {}
+        fired.append("§2.3 weekend")
     if session == "newyork" and hm >= (11, 0):
-        return "§2.3 NY entry after 11:00 ET", {}
+        fired.append("§2.3 NY entry after 11:00 ET")
     if session == "london" and (4, 0) <= hm < (20, 0):
-        return "§2.3 London: only the first ~2 hours after 2 AM ET", {}
+        fired.append("§2.3 London: only the first ~2 hours after 2 AM ET")
     if session == "asia" and (22, 0) <= hm:
-        return "§2.3 Asia: done by 10 PM ET", {}
-    if _is_db(entry, detail) and (detail.get("retrace") or "").lower() in ("none", "shallow"):
-        return f"§2.6 DB with {detail.get('retrace')} retracement (runaway / too shallow)", {}
-    fired, info = news_rule(at)
+        fired.append("§2.3 Asia: done by 10 PM ET")
+    if detail.get("in_window") is False:
+        fired.append("§2.3 outside the session window (engine flag)")
     return fired, info
+
+
+def hard_rule(entry: dict, detail: dict, now: datetime) -> tuple[str | None, dict]:
+    """First (most important) hard rule that fires, plus the news info."""
+    fired, info = hard_rules(entry, detail, now)
+    return (fired[0] if fired else None), info

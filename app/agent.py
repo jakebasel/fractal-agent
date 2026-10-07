@@ -9,7 +9,7 @@ import threading
 import time
 from datetime import datetime, timezone
 
-from . import config, jev, knowledge, learning, llm, prompts, rules_code, store
+from . import config, jev, knowledge, learning, llm, prompts, rules_code, scanner, store
 from .mcp_client import FVG
 
 log = logging.getLogger("agent")
@@ -181,10 +181,11 @@ def review(fvg: FVG, entry: dict):
         return row
 
     row["rules_version"] = prompts.rules_version()
-    hard, news = rules_code.hard_rule(entry, detail, now)
+    fired, news = rules_code.hard_rules(entry, detail, now)
     row["news"] = news or None
-    if hard:
-        row.update(decision="SKIP", grade="C", size="none", hard_rule=hard, reasons=[hard],
+    if fired:
+        hard = fired[0]   # the overarching reason first; the others are kept in reasons
+        row.update(decision="SKIP", grade="C", size="none", hard_rule=hard, reasons=fired,
                    model_decision="code", path="code")
         store.insert_decision(row)
         return row
@@ -200,6 +201,7 @@ def review(fvg: FVG, entry: dict):
         _keep_shots(entry["id"], shot_file if shot_age is not None and shot_age <= config.SCREENSHOT_MAX_AGE_S else None)
     except OSError as e:
         log.warning("keep shots: %s", e)
+    row["vision_score"], row["vision_note"] = scanner.sanity_check(chart_read, entry)
     context = build_context(fvg, entry, detail, chart_read, shot_age)
     if news:
         context["news"] = news
@@ -293,6 +295,15 @@ def tick(fvg: FVG):
         scored = by_id.get(row["entry_id"])
         if scored and settle(row, scored):
             changed = True
+    try:   # the chart scanner: only inside its windows, only on a new screenshot set
+        if config.SCAN_MINUTES > 0:
+            shots = store.latest_screenshot_set()
+            files = ",".join(s["file"] for s in shots) if shots else None
+            if scanner.due(datetime.now(timezone.utc), files):
+                read, files, _ = chart_read_for_now()
+                scanner.scan(fvg, read, files)
+    except Exception as e:
+        log.warning("scanner failed: %s", e)
     learning.promote_queued()
     try:
         learning.run_shadow()
@@ -319,10 +330,17 @@ def run_forever(stop: threading.Event):
 
 def status() -> dict:
     shot = store.latest_screenshot()
-    return {"paper_only": True, "symbols": config.SYMBOLS,
+    cap = store.kv_get("capture_status") or {}
+    # a status ping newer than the last screenshot explains why the screen is stale
+    capture = cap.get("state") if cap and (not shot or cap.get("at", "") > shot["received_at"]) else None
+    return {"paper_only": True, "capture_status": capture, "symbols": config.SYMBOLS,
             "decision_model": config.DECISION_MODEL, "vision_model": config.VISION_MODEL,
             "jev_model": config.JEV_MODEL, "jev_mode": config.JEV_MODE,
             "key_set": bool(config.OPENROUTER_API_KEY),
             "last_loop_et": store.to_et(_state["last_loop"]), "loops": _state["loops"],
             "last_error": _state["last_error"],
-            "last_screenshot_et": store.to_et(shot["received_at"]) if shot else None}
+            "spend_today_usd": round(store.spend_today(), 4), "daily_budget_usd": config.DAILY_BUDGET_USD,
+            "over_budget": store.over_budget(),
+            "last_screenshot_et": store.to_et(shot["received_at"]) if shot else None,
+            "last_screenshot_kind": shot["kind"] if shot else None,
+            "scanner": {"minutes": config.SCAN_MINUTES, "windows_et": config.SCAN_WINDOWS}}

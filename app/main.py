@@ -177,12 +177,22 @@ async def screenshot(request: Request):
     part = int(request.query_params.get("part", "0") or 0) if batch else None
     name = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S") + (f"_{part}" if batch else "") + f".{ext}"
     (shots / name).write_bytes(body)
-    store.add_screenshot(name, len(body), batch, part)
+    kind = request.query_params.get("kind") or ("window" if batch else "screen")
+    store.add_screenshot(name, len(body), batch, part, kind[:20])
     # keep the folder small: only the newest 400 files (~3h at one every 30s)
     files = sorted(shots.iterdir())
     for old in files[:-400]:
         old.unlink(missing_ok=True)
     return JSONResponse({"ok": True, "file": name, "bytes": len(body)})
+
+
+async def capture_status(request: Request):
+    """The Mac reports why it sent nothing (TradingView tab hidden / not open / capture failed)."""
+    if not _authed(request):
+        return PlainTextResponse("unauthorized", status_code=401)
+    state = re.sub(r"[^a-z_]", "", request.query_params.get("state", ""))[:30]
+    store.kv_set("capture_status", {"state": state, "at": store.now_utc()})
+    return JSONResponse({"ok": True})
 
 
 async def log_csv(request: Request):
@@ -304,9 +314,33 @@ async def api_dashboard(request: Request):
         "hypotheses_other": [learning.hypothesis_result(h)
                              for h in store.hypotheses(["rejected", "retired"])],
         "lessons": lessons(40),
+        "scans": [{**{k: r[k] for k in r.keys()}, "at_et": store.to_et(r["at"]),
+                   "reasons": json.loads(r["reasons"] or "[]")} for r in store.scans(40)],
+        "backtest": _backtest(),
+        "vision": _vision_stats(since),
         "rule_versions": [{"version": v["version"], "first_seen_et": store.to_et(v["first_seen"]),
                            "amendments": v["amendments"]} for v in store.rule_versions()],
     }, headers={"Cache-Control": "no-store"})
+
+
+BACKTEST = Path(__file__).resolve().parent.parent / "reports" / "backtest_latest.json"
+
+
+def _backtest():
+    try:
+        return json.loads(BACKTEST.read_text()) if BACKTEST.exists() else None
+    except ValueError:
+        return None
+
+
+def _vision_stats(since_iso):
+    rows = [r for r in store.decisions(limit=100000, since_iso=since_iso) if r["vision_score"] is not None]
+    if not rows:
+        return {"n": 0}
+    good = sum(1 for r in rows if r["vision_score"] >= 0.7)
+    return {"n": len(rows), "trusted_pct": round(100 * good / len(rows), 1),
+            "avg_score": round(sum(r["vision_score"] for r in rows) / len(rows), 2),
+            "notes": [r["vision_note"] for r in rows[:8]]}
 
 
 async def api_hypothesis(request: Request):
@@ -338,6 +372,7 @@ app = mcp.streamable_http_app()
 app.router.routes.extend([
     Route("/health", health),
     Route("/screenshot", screenshot, methods=["POST"]),
+    Route("/capture_status", capture_status, methods=["POST"]),
     Route("/log.csv", log_csv),
     Route("/stats", stats_route),
     Route("/decisions", decisions_route),

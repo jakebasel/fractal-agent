@@ -55,6 +55,13 @@ NEWS_URL = _env("NEWS_URL", "https://nfs.faireconomy.media/ff_calendar_thisweek.
 # events that make the whole week demo-only (rule 2.2: CPI/PPI/FOMC week)
 NEWS_WEEK_WORDS = [w.strip().lower() for w in _env("NEWS_WEEK_WORDS", "CPI,PPI,FOMC").split(",") if w.strip()]
 
+# --- spend guard: optional work (shadow tests, scanner, Jev backfill) pauses when today's
+# OpenRouter spend passes this; live decisions always run ---------------------------------------
+DAILY_BUDGET_USD = float(_env("DAILY_BUDGET_USD", "1.50"))
+# the scanner: read the chart for setups the engine does not flag (reversal set ups, 1m plays)
+SCAN_MINUTES = int(_env("SCAN_MINUTES", "5"))          # 0 = off
+SCAN_WINDOWS = _env("SCAN_WINDOWS", "02:00-04:00,09:25-11:00,20:00-22:00")   # ET, per day
+
 # --- learning loop ------------------------------------------------------------------------------
 MAX_TESTING_HYPOTHESES = int(_env("MAX_TESTING_HYPOTHESES", "8"))
 SHADOW_PER_TICK = int(_env("SHADOW_PER_TICK", "3"))        # shadow re-decisions per loop

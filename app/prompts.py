@@ -189,6 +189,35 @@ def lesson_user(row, outcome: dict) -> str:
     return json.dumps(payload, indent=1, default=str)
 
 
+SCAN_SYSTEM = """You scan a live chart read for the Fractal Effects strategy and report any
+rulebook play that is FORMING or READY which the rules engine has not armed. The engine only
+finds M/DB-armed FVG cascades; you look for what it misses: the Reversal Set Up (§5: HTF level
+hit + body close through a white line + reversal zone printed), 1m plays, blue/purple zone
+plays, 2M returns, triangles. Be conservative: report only what the chart read supports, and
+say "forming" unless the trigger is in. Never report a setup the engine already has armed in
+the same direction (check `engine_armed`).
+
+Rulebook §5 and plays:
+{reversal}
+
+Reply with ONE JSON object: {{"setups": [{{"symbol": "MNQ1!"|"MES1!", "play": one of {plays},
+"direction": "bull"|"bear", "stage": "forming"|"ready"|"entered", "entry": number|null,
+"stop": number|null, "target": number|null, "confidence": 0.0-1.0,
+"reasons": ["2-4 short reasons citing what was read"], "engine_has_it": true|false}}]}}
+Empty list if nothing qualifies."""
+
+
+def scan_system() -> str:
+    rb = _read("rulebook.md")
+    i = rb.find("## 5.")
+    return SCAN_SYSTEM.format(reversal=rb[i:] if i >= 0 else rb[-3000:], plays=json.dumps(list(PLAYS)))
+
+
+def scan_user(chart_read, armed, now) -> str:
+    return json.dumps({"now_et": now.astimezone(config.ET).strftime("%a %Y-%m-%d %H:%M ET"),
+                       "engine_armed": armed, "chart_read": chart_read}, indent=1, default=str)
+
+
 MATCH_SYSTEM = """You file proposed rule changes for a trading strategy. Given a NEW proposal
 and the list of EXISTING hypotheses, decide whether the new one says the same thing as an
 existing one (same condition, same action; wording may differ).

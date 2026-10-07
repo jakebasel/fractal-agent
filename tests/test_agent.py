@@ -210,6 +210,10 @@ e = mk_entry(7)
 fired, info = rules_code.hard_rule(e, json.loads(e["detail"]), _dt.now(timezone.utc))
 ok(fired and "news today" in fired and info["today"], f"code rule: news day skipped ({fired})")
 NEWS["events"] = []
+e = mk_entry(9); d = json.loads(e["detail"]); d["in_window"] = False; d["mt_cfg"] = "2DB"; e["detail"] = json.dumps(d)
+e["mt_text"] = "Lower Double Break (2DB)"
+fired, _ = rules_code.hard_rules(e, d, _dt.now(timezone.utc))
+ok(fired[0].startswith("§2.4 2DB") and any("window" in f for f in fired), f"2DB reported before the window ({fired})")
 
 row2 = [r for r in store.decisions() if r["entry_id"] == 2][0]
 ok(row2["jev_p_take"] == 0.7 and json.loads(row2["jev"])["play"] == "DB continuation", "Jev shadow score stored on the row")
@@ -266,6 +270,39 @@ if True:
     ok(TestClient(main.app).get(f"/shot/{sset[0]['file']}").status_code == 401 and c.get(f"/shot/{sset[0]['file']}").status_code == 200, "screenshot file needs login")
     ok("core_by_play" in main.strategy_report(30) and main.hypotheses() and "by_day" in main.api_spend(7),
        "MCP tools strategy_report / hypotheses / api_spend work")
+
+# 10. scanner, vision sanity, screenshot kind, budget guard, backtest report
+from app import scanner  # noqa: E402
+cr = {"charts": [{"symbol": "MNQ", "timeframe": "5m", "last_price": 100.2, "white_lines": [{"label": "DB", "price": 99}]}]}
+sc, note = scanner.sanity_check(cr, {"symbol": "MNQ1!", "entry": 100.0})
+ok(sc == 1.0 and "within" in note, f"vision sanity: price matches ({note})")
+sc, note = scanner.sanity_check(cr, {"symbol": "MES1!", "entry": 50.0})
+ok(sc == 0.0, "vision sanity: symbol not on screen")
+from datetime import datetime as _dt2  # noqa: E402
+import zoneinfo  # noqa: E402
+ET = zoneinfo.ZoneInfo("America/New_York")
+ok(scanner.in_window(_dt2(2026, 10, 7, 9, 40, tzinfo=ET)) and not scanner.in_window(_dt2(2026, 10, 7, 12, 0, tzinfo=ET)),
+   "scanner windows (ET)")
+def fake_scan_post(model, messages, max_tokens=1500, temperature=0.1, purpose="other"):
+    if purpose == "scan":
+        PURPOSES.append(purpose)
+        return '{"setups":[{"symbol":"MES1!","play":"reversal set up","direction":"bear","stage":"forming","confidence":0.6,"reasons":["red reversal zone printed"],"engine_has_it":false}]}'
+    return fake_post(model, messages, max_tokens, temperature, purpose)
+llm._post = fake_scan_post
+scanner._last.update(at=0.0, files=None)
+found = scanner.scan(fvg, cr, "x.jpg", _dt2(2026, 10, 7, 9, 40, tzinfo=ET))
+ok(found and store.scans(1)[0]["play"] == "reversal set up", "scanner logs a spotted setup")
+ok(scanner.scan(fvg, cr, "x.jpg", _dt2(2026, 10, 7, 9, 41, tzinfo=ET)) is None, "scanner does not re-scan the same screenshot")
+config.DAILY_BUDGET_USD = 0.000001
+ok(store.over_budget() and learning.run_shadow() == 0, "budget guard pauses shadow tests")
+config.DAILY_BUDGET_USD = 1.5
+llm._post = fake_post
+r = c.post("/screenshot?token=tok&kind=fallback", content=b"\xff\xd8x")
+ok(r.json()["ok"] and store.latest_screenshot()["kind"] == "fallback", "screenshot kind stored")
+st = agent.status()
+ok(st["last_screenshot_kind"] == "fallback" and "spend_today_usd" in st, "status reports screenshot kind and spend")
+dash = c.get("/api/dashboard?days=30").json()
+ok("scans" in dash and "vision" in dash and "backtest" in dash, "dashboard API carries scans, vision, backtest")
 
 print("all tests passed")
 server.should_exit = True

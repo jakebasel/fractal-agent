@@ -86,6 +86,8 @@ def promote_queued():
 def run_shadow(limit: int | None = None) -> int:
     """Shadow-decide up to `limit` setups for the testing hypotheses (newest first, then
     backfill). One DeepSeek call per setup covers every hypothesis it is missing."""
+    if store.over_budget():
+        return 0
     testing = {h["id"]: h for h in store.hypotheses("testing")}
     todo = store.shadow_todo(list(testing), _since(config.SHADOW_BACKFILL_DAYS),
                              limit or config.SHADOW_PER_TICK)

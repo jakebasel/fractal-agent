@@ -1,0 +1,1169 @@
+{
+  "sessions": [
+    {
+      "file": "june_13_live_trading.txt",
+      "title": "June 13 — Live Trading",
+      "date": "2025-06-13",
+      "year_assumed": 2025,
+      "session_type": "newyork",
+      "instruments": [
+        "NAS",
+        "US500",
+        "Dow"
+      ],
+      "summary": "NAS is the weaker pair, sitting at the DSD low after sweeping liquidity; US500 gives a 5m double break so he hunts a long on NAS/US30 but NAS never leaves a 5m FVG open (no foothold entry). A sudden large drop (suspected Trump tweet) invalidates the long idea; he then refuses to short a reversal without a new 5m FVG. No trades are taken in the transcript; no day result stated. Date year inferred as 2025 (June 13 2026 is a Saturday; FOMC/news context fits 2025).",
+      "events": [
+        {
+          "seq": 1,
+          "clock_et": null,
+          "instrument": "NAS",
+          "timeframe": "5m",
+          "action": "OBSERVE",
+          "direction": null,
+          "setup": "NAS weaker pair; hit DSD low and swept liquidity, big push back up",
+          "signal": null,
+          "reasons": [
+            "NAS is the weaker pair",
+            "we've hit the DSD low and we've swept out this liquidity down here"
+          ],
+          "confluences": [
+            "DSD low",
+            "liquidity sweep"
+          ],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "So obviously NAS is the weaker pair. On the five minute, we've hit the DSD low and we've swept out this liquidity down here with this green line. And we're getting a big push back up.",
+          "discretionary": false
+        },
+        {
+          "seq": 2,
+          "clock_et": null,
+          "instrument": "US500",
+          "timeframe": "5m",
+          "action": "OBSERVE",
+          "direction": "long",
+          "setup": "US500 5m double break to the upside; look for a buy on NAS",
+          "signal": "DB",
+          "reasons": [
+            "We got a double break here on US 500",
+            "US 500 is the stronger pair, but we still need to see a retracement"
+          ],
+          "confluences": [
+            "divergence (US500 stronger / NAS weaker)"
+          ],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "We got a double break here on US 500. I'm going to look for a buy on NAS. There you go. So US 500 is the stronger pair, but we still need to see a retracement.",
+          "discretionary": false
+        },
+        {
+          "seq": 3,
+          "clock_et": null,
+          "instrument": "NAS",
+          "timeframe": "5m",
+          "action": "WAIT",
+          "direction": "long",
+          "setup": "wait for 5m FVG on NAS to stay open as the retracement entry; higher-timeframe fractal still only an M",
+          "signal": "M",
+          "reasons": [
+            "this still has a long way to go to get up to these highs, these equal relative highs from London",
+            "I want to see if this five minute fair value gap stays open",
+            "since NAS is the weaker pair, it will dictate when they're both ready to push back up",
+            "I still need to see a proper pullback though",
+            "on the higher timeframe, it's still just a single. It's still just an M. So the fractal has not completed itself"
+          ],
+          "confluences": [
+            "DSD low",
+            "5m FVG",
+            "blue zone",
+            "US500 double break",
+            "London equal highs as target"
+          ],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "So I want to see if this five minute fair value gap stays open. Then we have a lot of points of confluence here. We have the DSD low bouncing off of that. So the lower timeframe play could be done, gassed out. M, five minute fair value gap.",
+          "discretionary": false
+        },
+        {
+          "seq": 4,
+          "clock_et": null,
+          "instrument": "NAS",
+          "timeframe": "5m",
+          "action": "SKIP",
+          "direction": "long",
+          "setup": "NAS long at DSD low / blue zone - no foothold entry because NAS closed the 5m FVG and keeps candles tight",
+          "signal": "M",
+          "reasons": [
+            "NAS doesn't want us to get in",
+            "if it doesn't give us a foothole entry, and it keeps those candles tight, they're doing that for a reason",
+            "We hate those whipsaw entries. Because they can wick you out many times",
+            "US 500 already closed it"
+          ],
+          "confluences": [
+            "blue zone",
+            "DSD low"
+          ],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "I'm not saying NAS doesn't want to go up. I'm saying NAS doesn't want us to get in. It could still bounce off this blue zone, the DSD low, and keep going. But if it doesn't give us a foothole entry, and it keeps those candles tight, they're doing that for a reason.",
+          "discretionary": true
+        },
+        {
+          "seq": 5,
+          "clock_et": null,
+          "instrument": "Dow",
+          "timeframe": "5m",
+          "action": "WAIT",
+          "direction": "long",
+          "setup": "concentrate on US30 at its FVG, 4h FVG above as target",
+          "signal": null,
+          "reasons": [
+            "Then I'll just concentrate on US 30. Because that's the only one telling the most consistent story",
+            "US 30 back at that fair value gap that I'm looking at. Got a nice four hour fair value gap up here as well"
+          ],
+          "confluences": [
+            "5m FVG",
+            "4h FVG"
+          ],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "Then I'll just concentrate on US 30. Because that's the only one telling the most consistent story.",
+          "discretionary": true
+        },
+        {
+          "seq": 6,
+          "clock_et": null,
+          "instrument": "unknown",
+          "timeframe": "unknown",
+          "action": "RULE",
+          "direction": null,
+          "setup": "stay away from high impact news; this is a high impact news week even with no news today",
+          "signal": null,
+          "reasons": [
+            "Last week we only took one loss and it was on FOMC day",
+            "even though there's no news today, this is a high impact news week"
+          ],
+          "confluences": [],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "Remember the importance of high impact news guys. Last week we only took one loss and it was on FOMC day. FOMC meeting minutes. So even though there's no news today, this is a high impact news week.",
+          "discretionary": false
+        },
+        {
+          "seq": 7,
+          "clock_et": null,
+          "instrument": "NAS",
+          "timeframe": "1m",
+          "action": "SKIP",
+          "direction": null,
+          "setup": "lower-timeframe play while tracking NAS on the 1m during the big push down - not enough juice (1:1)",
+          "signal": null,
+          "reasons": [
+            "there's not enough juice here. One to one",
+            "That'd have to be in a safe trade by the time it clears here"
+          ],
+          "confluences": [],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "We'll track NAS here on the one for a second. Big, big push down here. ... Plus there's not enough juice here. One to one. That'd have to be in a safe trade by the time it clears here.",
+          "discretionary": false
+        },
+        {
+          "seq": 8,
+          "clock_et": null,
+          "instrument": "Dow",
+          "timeframe": "1m",
+          "action": "SKIP",
+          "direction": "long",
+          "setup": "the earlier long setup is invalidated after the big drop; needs a brand new 1m FVG",
+          "signal": null,
+          "reasons": [
+            "So obviously this is gone. I'm not looking at this anymore",
+            "I need a new one minute, especially after a move like that",
+            "No one minute left here on US 30 yet"
+          ],
+          "confluences": [],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "So obviously this is gone. I'm not looking at this anymore. I need a new one minute, especially after a move like that. No one minute left here on US 30 yet.",
+          "discretionary": false
+        },
+        {
+          "seq": 9,
+          "clock_et": null,
+          "instrument": "Dow",
+          "timeframe": "5m",
+          "action": "RULE",
+          "direction": null,
+          "setup": "sweep of the double-break leg leads into a 2DB, which he does not trade",
+          "signal": "2DB",
+          "reasons": [
+            "We've already swept up the double break leg. That's going to lead into a 2dB, which we're not interested in trading"
+          ],
+          "confluences": [],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "We've already swept up the double break leg. That's going to lead into a double break, sorry, a 2dB, which we're not interested in trading.",
+          "discretionary": false
+        },
+        {
+          "seq": 10,
+          "clock_et": null,
+          "instrument": "Dow",
+          "timeframe": "5m",
+          "action": "WAIT",
+          "direction": "short",
+          "setup": "no new bearish 5m FVG created by the drop; will not use the inverse of the Spotlight opening gap to short",
+          "signal": "Spotlight",
+          "reasons": [
+            "No new fair value gap was created here. So this is still the fair value gap. To go short. Still need to see something like that",
+            "If it created one here, that would have been a different story",
+            "I don't want to use the inverse of this opening gap from spotlight. I need more confluence, especially after a move like that"
+          ],
+          "confluences": [
+            "Spotlight opening gap (inverse, rejected)"
+          ],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "No new fair value gap was created here. So this is still the fair value gap. To go short. Still need to see something like that. If it created one here, that would have been a different story. We could have possibly used it. I don't want to use the inverse of this opening gap from spotlight. I need more confluence, especially after a move like that.",
+          "discretionary": false
+        },
+        {
+          "seq": 11,
+          "clock_et": null,
+          "instrument": "US500",
+          "timeframe": "5m",
+          "action": "WAIT",
+          "direction": "short",
+          "setup": "potential sell setup if the forming 5m FVG stays open - but reversal, so demo only at most",
+          "signal": null,
+          "reasons": [
+            "If this stays open, there could be a potential sell set up",
+            "as mentioned before, I don't like to trade reversals",
+            "If there is a sell set up, maybe I'll take it in a demo",
+            "after a move like that, guys, you got to protect yourself",
+            "there's now an 80% chance that there's a great white shark in those waters"
+          ],
+          "confluences": [
+            "5m FVG forming"
+          ],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "So the only point of confluence we have right now is still this five minute fair value gap that's forming. If this stays open, there could be a potential sell set up. But as mentioned before, I don't like to trade reversals.",
+          "discretionary": true
+        },
+        {
+          "seq": 12,
+          "clock_et": null,
+          "instrument": "US500",
+          "timeframe": "5m",
+          "action": "RULE",
+          "direction": null,
+          "setup": "whichever 5m FVG stays open on US500 dictates the next direction",
+          "signal": null,
+          "reasons": [
+            "Whichever fair value gap does stay open on US 500, that will most likely dictate where we're going next"
+          ],
+          "confluences": [],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "Whichever fair value gap does stay open on US 500, that will most likely dictate where we're going next.",
+          "discretionary": false
+        }
+      ],
+      "rules_stated": [
+        "since NAS is the weaker pair, it will dictate when they're both ready to push back up",
+        "US 500 is the stronger pair, but we still need to see a retracement",
+        "Because on the higher timeframe, it's still just a single. It's still just an M. ... So the fractal has not completed itself",
+        "if it doesn't give us a foothole entry, and it keeps those candles tight, they're doing that for a reason",
+        "We hate those whipsaw entries. Because they can wick you out many times",
+        "Remember the importance of high impact news guys. Last week we only took one loss and it was on FOMC day",
+        "there's not enough juice here. One to one. That'd have to be in a safe trade by the time it clears here",
+        "I need a new one minute, especially after a move like that",
+        "a 2dB, which we're not interested in trading",
+        "I don't want to use the inverse of this opening gap from spotlight. I need more confluence, especially after a move like that",
+        "as mentioned before, I don't like to trade reversals",
+        "after a move like that, guys, you got to protect yourself",
+        "Whichever fair value gap does stay open on US 500, that will most likely dictate where we're going next"
+      ]
+    },
+    {
+      "file": "june_23_live_session.txt",
+      "title": "June 23 — Live Session",
+      "date": "2025-06-23",
+      "year_assumed": 2025,
+      "session_type": "newyork",
+      "instruments": [
+        "NAS",
+        "US500",
+        "Dow"
+      ],
+      "summary": "NAS has a 2M and has already run all the way into the 4h FVG target before returning to the first FVG / deep blue zone; US500 sits at the midpoint of its own 4h FVG. He explains that because the 'low hanging fruit' target has already been hit he will only re-enter with full 5m/1m/30s confluence on both pairs and reduced lot size, and notes no bearish FVG has been left for a reversal. US30 gives a shallow reaction he does not take. No trades taken; stream ends early for a meeting. Date year inferred as 2025 ($69B 2-year note auction on Jun 23).",
+      "events": [
+        {
+          "seq": 1,
+          "clock_et": null,
+          "instrument": "unknown",
+          "timeframe": "unknown",
+          "action": "RULE",
+          "direction": null,
+          "setup": "check high-impact news drivers for the day (uses ChatGPT breakdown of the Treasury auction); safe today",
+          "signal": null,
+          "reasons": [
+            "if you ask chat tpt if there's any high impact news drivers for that specific day it gives you more information",
+            "we're actually safe today but it says avoid opening a fresh trade from 1255 p.m to 110 p.m eastern time"
+          ],
+          "confluences": [],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "and it tells you exact time so we're actually safe today but it says avoid opening a fresh trade from 1255 p.m to 110 p.m eastern time",
+          "discretionary": false
+        },
+        {
+          "seq": 2,
+          "clock_et": null,
+          "instrument": "NAS",
+          "timeframe": "5m",
+          "action": "OBSERVE",
+          "direction": null,
+          "setup": "NAS 2M - 70% chance it comes back to the first FVG; but it already did a full run into the 4h FVG",
+          "signal": "2M",
+          "reasons": [
+            "naz has a 2m setup right what happens when we have a 2m there's a 70 chance we'll come back to the first fair value gap",
+            "it's actually done a full run up into this four hour fair value gap so when it comes down now we got to see if it actually respects it or disrespects it and punches through"
+          ],
+          "confluences": [
+            "blue zone",
+            "4h FVG",
+            "first presented FVG"
+          ],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "naz is still dropping so naz has a 2m setup right what happens when we have a 2m there's a 70 chance we'll come back to the first fair value gap which was still the first fair value gap we were looking at originally",
+          "discretionary": false
+        },
+        {
+          "seq": 3,
+          "clock_et": null,
+          "instrument": "NAS",
+          "timeframe": "1m",
+          "action": "WAIT",
+          "direction": "long",
+          "setup": "if it sweeps the low (green line) and hits the FVG again, look for an FVG left in the down-leg as the long target; roll stops there",
+          "signal": null,
+          "reasons": [
+            "if we sweep out this low right here this green line and hit this fair value gap again i'm going to actually see if there is a fair value gap that's left in this leg",
+            "so if i do take a buy that's going to be my target of i want to at the very least roll my stops by the time i hit that target",
+            "if i leave no fair value gap in this leg as i drop but i still sweep this out i'm still going to reassess once we clear this low",
+            "the market usually likes to punish people who go in for a cell from here ... usually they'd like to come back and close off some of this position"
+          ],
+          "confluences": [
+            "liquidity sweep of low",
+            "4h FVG",
+            "blue zone"
+          ],
+          "result": "n/a",
+          "result_detail": "no FVG was left in the leg ('So no fair value gap in this leg')",
+          "quote": "so if i do take a buy that's going to be my target of i want to at the very least roll my stops by the time i hit that target",
+          "discretionary": false
+        },
+        {
+          "seq": 4,
+          "clock_et": null,
+          "instrument": "NAS",
+          "timeframe": "5m",
+          "action": "SKIP",
+          "direction": "long",
+          "setup": "long back at the first FVG / deep blue zone after the 4h target was already hit - juice already squeezed; only with full confluence and reduced lot",
+          "signal": "M",
+          "reasons": [
+            "If it's already squeezed the juice, drank my drink and now come back? No. I'm going to watch",
+            "I need to see more confluence. I need to see both of these giving me the same setup",
+            "Both of these giving me a proper 5 minute fair value gap a proper 1 minute and a 30 second and even then I'm going to go in with a reduced lot size",
+            "Why would I go in with a full lot? My juice just got drank guys",
+            "if we sweep out this low right here And this low right here I'll reassess Because remember this is the leg that has the M in it And this is the leg that has the double break in it"
+          ],
+          "confluences": [
+            "deep blue zone",
+            "DSD high reaction",
+            "4h FVG already hit"
+          ],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "If I'm looking to take a trade into these higher timeframe setups like this 4 hour fair value gap If that's supposed to be my target and I have a setup, right? I have an M I have my first presented fair value gap but it didn't hit it and it just ran away from me and hit that target So, now when it finally comes back Am I going to be inclined to take this trade? If it's already squeezed the juice, drank my drink and now come back? No",
+          "discretionary": false
+        },
+        {
+          "seq": 5,
+          "clock_et": null,
+          "instrument": "NAS",
+          "timeframe": "5m",
+          "action": "OBSERVE",
+          "direction": "short",
+          "setup": "possible reversal but no bearish FVG left to reverse off of; candles kept tight",
+          "signal": null,
+          "reasons": [
+            "If there is a reversal coming They haven't left a bearish fair value gap for it to reverse off of",
+            "Usually when a reversal is coming They'll sweep out that low And then they'll use whatever bearish fair value gap is left Bounce off that and then continue down",
+            "They're keeping these candles tight These wick to wick to wick to wick So there's nothing here"
+          ],
+          "confluences": [],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "Usually when a reversal is coming They'll sweep out that low And then they'll use whatever bearish fair value gap is left Bounce off that and then continue down They're keeping these candles tight These wick to wick to wick to wick So there's nothing here",
+          "discretionary": false
+        },
+        {
+          "seq": 6,
+          "clock_et": null,
+          "instrument": "Dow",
+          "timeframe": "1m",
+          "action": "WAIT",
+          "direction": "long",
+          "setup": "US30 reaction off a FVG, not deep enough; still needs a 5m FVG which could be much higher",
+          "signal": null,
+          "reasons": [
+            "Not really as deep as I would like",
+            "from here I could maybe eke out a 1 to 3",
+            "I still got to wait for a 5 minute for value gap That could be all the way up here",
+            "It might just continue to push that away from us"
+          ],
+          "confluences": [
+            "1m FVG"
+          ],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "US 30 is giving us some kind of a reaction Not necessarily It's off of this fair value gap Not really as deep as I would like Like from here I could maybe eke out a 1 to 3 Because I still got to wait for a 5 minute for value gap",
+          "discretionary": true
+        }
+      ],
+      "rules_stated": [
+        "if you ask chat tpt ... if there's any high impact news drivers for that specific day it gives you more information",
+        "naz has a 2m setup right what happens when we have a 2m there's a 70 chance we'll come back to the first fair value gap",
+        "the goal is always to catch a trade into these zones",
+        "if i do take a buy that's going to be my target of i want to at the very least roll my stops by the time i hit that target",
+        "the market usually likes to punish people who ... go in for a ... for anybody who took a cell ... usually they'd like to come back and close off some of this position",
+        "If it's already squeezed the juice, drank my drink and now come back? ... No ... I'm going to watch ... I need to see more confluence",
+        "Both of these giving me a proper 5 minute fair value gap a proper 1 minute and a 30 second and even then I'm going to go in with a reduced lot size",
+        "if we sweep out this low right here And this low right here I'll reassess Because remember this is the leg that has the M in it And this is the leg that has the double break in it",
+        "Usually when a reversal is coming They'll sweep out that low And then they'll use whatever bearish fair value gap is left Bounce off that and then continue down",
+        "I still got to wait for a 5 minute for value gap"
+      ]
+    },
+    {
+      "file": "june_24_live_session.txt",
+      "title": "June 24 — Live Session",
+      "date": "2025-06-24",
+      "year_assumed": 2025,
+      "session_type": "newyork",
+      "instruments": [
+        "NAS",
+        "US500",
+        "Dow"
+      ],
+      "summary": "Choppy, heavily manipulated open: a 2DB prints within 20 minutes of the open and US500 has a 2DB on the 15m, so he demotes the whole day to paper/demo trading and says he would normally walk away and come back for the PM session. NAS does an immediate rebalance at the DSD low and later a power-of-three up-move that takes out his low-hanging-fruit target; US30 gives a 1m DB into a 4h FVG and a shallow 1m FVG he refuses to take. No trades taken; no day result stated. Date year inferred as 2025 (Iran ceasefire deal discussed in chat).",
+      "events": [
+        {
+          "seq": 1,
+          "clock_et": null,
+          "instrument": "NAS",
+          "timeframe": "1m",
+          "action": "RULE",
+          "direction": null,
+          "setup": "1m already had DB, pullback and real push (immediate rebalance) - follow NAS on the 5m exclusively",
+          "signal": "DB",
+          "reasons": [
+            "we already had the double break pull back in a real push that's what created that double break so we're going to follow this on the five minute exclusively that's your immediate rebalance"
+          ],
+          "confluences": [],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "so on the one minute with Naz because we already had the double break pull back in a real push that's what created that double break so we're going to follow this on the five minute exclusively that's your immediate rebalance",
+          "discretionary": false
+        },
+        {
+          "seq": 2,
+          "clock_et": null,
+          "instrument": "Dow",
+          "timeframe": "5m",
+          "action": "WAIT",
+          "direction": "long",
+          "setup": "US30 hit the 4h FVG and the DSD high; London obligations met, double break fulfilled; wants a FVG here",
+          "signal": "DB",
+          "reasons": [
+            "we hit this four hour fair value gap and the DSD high so I really like like if we can get a fair value gap here this would be good",
+            "we're in really good area London obligations have been met there's your double break you already fulfilled that"
+          ],
+          "confluences": [
+            "4h FVG",
+            "DSD high"
+          ],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "so even with US 30 where we hit this four hour fair value gap and the DSD high so I really like like if we can get a fair value gap here this would be good so we're in really good area London obligations have been met there's your double break",
+          "discretionary": false
+        },
+        {
+          "seq": 3,
+          "clock_et": null,
+          "instrument": "NAS",
+          "timeframe": "1m",
+          "action": "OBSERVE",
+          "direction": "long",
+          "setup": "NAS immediate rebalance right at the DSD low; looking for a foothold",
+          "signal": null,
+          "reasons": [
+            "Naz did an immediate rebalance right at the DSD low just looking for a foot hole right now keeps dropping"
+          ],
+          "confluences": [
+            "DSD low"
+          ],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "yeah Naz did an immediate rebalance right at the DSD low just looking for a foot hole right now keeps dropping",
+          "discretionary": false
+        },
+        {
+          "seq": 4,
+          "clock_et": null,
+          "instrument": "Dow",
+          "timeframe": "1m",
+          "action": "WAIT",
+          "direction": "long",
+          "setup": "US30 1m double break to the upside into a 4h FVG (no 5m DB); must wait for a retracement and a setup",
+          "signal": "DB",
+          "reasons": [
+            "haven't got a five minute double break but we definitely got a one minute double break to the upside here on US 30 right into a four hour though",
+            "now we have a double break on the one minute as mentioned before we'd have to wait for a retracement and a setup to go long at least it's giving us a definitive"
+          ],
+          "confluences": [
+            "4h FVG"
+          ],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "now we have a double break on the one minute as mentioned before we'd have to wait for a retracement and a setup to go long at least it's giving us a definitive",
+          "discretionary": false
+        },
+        {
+          "seq": 5,
+          "clock_et": null,
+          "instrument": "unknown",
+          "timeframe": "unknown",
+          "action": "RULE",
+          "direction": null,
+          "setup": "Market Translator only valid on 15m/5m/1m (30s starts breaking down); not designed for 1h; Zeus is daily/4h/15m",
+          "signal": null,
+          "reasons": [
+            "the strategy specifically works on the 15 the 5 and the 1 it'll show you a setup on the 30 but again that's where it starts breaking down",
+            "it's not designed to work on the one hour so remember you'll get false readings if you look at it on any other time frame outside of the ones that was designed for"
+          ],
+          "confluences": [],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "remember the strategy specifically works on the 15 the 5 and the 1 it'll show you a setup on the 30 but again that's where it starts breaking down Zeus works on daily 4 hour ... it's not designed to work on the one hour so remember you'll get false readings if you look at it on any other time frame outside of the ones that was designed for",
+          "discretionary": false
+        },
+        {
+          "seq": 6,
+          "clock_et": null,
+          "instrument": "Dow",
+          "timeframe": "1m",
+          "action": "WAIT",
+          "direction": "long",
+          "setup": "US30 painted a new purple zone; wants a drop at least to it and a 1m setup - demo account only today",
+          "signal": null,
+          "reasons": [
+            "I want to see the market drop the very least down to here and see if it gives us a one minute setup and I'll take it in a demo account today",
+            "we already had a 2dB within 20 minutes of the market opening that that's a sign it means that there's going to be a lot more manipulation",
+            "trading is not everyday trading ... if you can't just visually look at and say oh these are bad conditions ... you're the same kind of person that just literally jumps into rapids"
+          ],
+          "confluences": [
+            "purple zone"
+          ],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "US 30 just painted out a new purple zone right here I want to see the market drop the very least down to here and see if it gives us a one minute setup and I'll take it in a demo account today guys",
+          "discretionary": false
+        },
+        {
+          "seq": 7,
+          "clock_et": null,
+          "instrument": "unknown",
+          "timeframe": "5m",
+          "action": "RULE",
+          "direction": null,
+          "setup": "a 2DB within 20 minutes of the open signals heavy manipulation before a directional bias is picked",
+          "signal": "2DB",
+          "reasons": [
+            "we already had a 2dB within 20 minutes of the market opening that that's a sign it means that there's going to be a lot more manipulation",
+            "doesn't mean that they're not going to eventually pick a directional bias it just means there's going to be a ridiculous amount of manipulation back and forth before they do"
+          ],
+          "confluences": [],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "does that look like when you get a 2dB that quickly we already had a 2dB within 20 minutes of the market opening that that's a sign it means that there's going to be a lot more manipulation",
+          "discretionary": false
+        },
+        {
+          "seq": 8,
+          "clock_et": null,
+          "instrument": "Dow",
+          "timeframe": "1m",
+          "action": "SKIP",
+          "direction": "long",
+          "setup": "US30 pullback to the midpoint - no good risk to reward; demoted to paper trade",
+          "signal": null,
+          "reasons": [
+            "there's no risk to reward here no good risk to reward here I should say",
+            "already I can tell that this is not the kind of condition where I would put in a full lot size or even a partial right now it's been demoted to a paper trade for me unless something happens"
+          ],
+          "confluences": [
+            "midpoint"
+          ],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "US 30 is giving us a pullback after here to here mid point there's no risk to reward here no good risk to reward here I should say ... right now it's been demoted to a paper trade for me unless something happens",
+          "discretionary": false
+        },
+        {
+          "seq": 9,
+          "clock_et": null,
+          "instrument": "NAS",
+          "timeframe": "5m",
+          "action": "SKIP",
+          "direction": "short",
+          "setup": "NAS power of three up-move (manipulation) against the 5m double-break-down bias; hoped for a short setup into the zone but it took out the low-hanging-fruit target; back-and-forth consolidation = immediate rebalance; wait for 5m FVG",
+          "signal": "DB",
+          "reasons": [
+            "we have a double break to the downside we were hoping it would give us a power of three to the upside ... and then a setup to go short to take out that low",
+            "we're not going to go against the directional bias we're right across the board here other than the daily time frame we have a 20 under 50 EMA crossover across all other time frames",
+            "am I interested anymore well no that's it just took out the low-hanging fruit that I was looking at",
+            "around the five-minute it was just a back-and-forth consolidation that's an immediate rebalance till I get a five-minute fair value gap I do not care"
+          ],
+          "confluences": [
+            "power of three",
+            "20/50 EMA crossover on all timeframes except daily",
+            "liquidity taken out"
+          ],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "we're not going to go against the directional bias ... we just tapped it but am I interested anymore well no that's it just took out the low-hanging fruit that I was looking at around the five-minute it was just a back-and-forth consolidation that's an immediate rebalance till I get a five-minute fair value gap I do not care",
+          "discretionary": false
+        },
+        {
+          "seq": 10,
+          "clock_et": null,
+          "instrument": "US500",
+          "timeframe": "15m",
+          "action": "SKIP",
+          "direction": null,
+          "setup": "US500 has a 2DB on the 15m plus single M - conditions where he would normally walk away and return for the PM session",
+          "signal": "2DB",
+          "reasons": [
+            "we have a 2db on the 15 as well from US500",
+            "this is already one of the conditions if I wasn't trading live with you guys I would have already walked away I would have just came back for the PM session"
+          ],
+          "confluences": [],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "even on the 15 we have a 2db on the 15 as well from US500 let's see what this looks like the single M hmm yeah this is already one of the conditions if I wasn't trading live with you guys I would have already walked away I would have just came back for the PM session",
+          "discretionary": false
+        },
+        {
+          "seq": 11,
+          "clock_et": null,
+          "instrument": "NAS",
+          "timeframe": "1m",
+          "action": "WAIT",
+          "direction": "short",
+          "setup": "NAS finally hit the 1m FVG but he is done with the 1m; a 5m FVG is forming - only if an immediate rebalance leaves a bearish 5m FVG will he look",
+          "signal": null,
+          "reasons": [
+            "finally hit that one minute fair value gap right there I'm already done looking at this on the one minute",
+            "right now we have a five minute fair value gap forming so if we get an immediate rebalance from this and get a five minute bearish fair value gap then I'll take a look",
+            "right now US500 looks like it's pushing up"
+          ],
+          "confluences": [
+            "5m FVG forming"
+          ],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "finally hit that one minute fair value gap right there I'm already done looking at this on the one minute that's because right now we have a five minute fair value gap forming so if we get an immediate rebalance from this and get a five minute bearish fair value gap then I'll take a look",
+          "discretionary": false
+        },
+        {
+          "seq": 12,
+          "clock_et": null,
+          "instrument": "Dow",
+          "timeframe": "1m",
+          "action": "SKIP",
+          "direction": "long",
+          "setup": "US30 first 1m FVG after a shallow retracement (consolidation at the purple zone then push up) - not taking it into / deeper into a 4h FVG",
+          "signal": null,
+          "reasons": [
+            "US30 gave us barely like that's a shallower retracement right consolidation right at the purple and push up",
+            "that's the first one minute fair value gap to be created but I'm not taking it",
+            "I'm not going to take this into or deeper into a four hour fair value gap this thing could reverse at any time"
+          ],
+          "confluences": [
+            "purple zone",
+            "4h FVG (overhead)"
+          ],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "that's the first one minute fair value gap to be created but I'm not taking it I'm not going to take this into or deeper into a four hour fair value gap this thing could reverse at any time",
+          "discretionary": true
+        }
+      ],
+      "rules_stated": [
+        "we already had the double break pull back in a real push that's what created that double break so we're going to follow this on the five minute exclusively that's your immediate rebalance",
+        "you don't only have to trade the times that we trade you have the algorithm 24-7",
+        "now we have a double break on the one minute as mentioned before we'd have to wait for a retracement and a setup to go long",
+        "the strategy specifically works on the 15 the 5 and the 1 it'll show you a setup on the 30 but again that's where it starts breaking down",
+        "you'll get false readings if you look at it on any other time frame outside of the ones that was designed for",
+        "trading is not everyday trading",
+        "when you get a 2dB that quickly ... that's a sign it means that there's going to be a lot more manipulation",
+        "we're not going to go against the directional bias",
+        "around the five-minute it was just a back-and-forth consolidation that's an immediate rebalance till I get a five-minute fair value gap I do not care",
+        "if I wasn't trading live with you guys I would have already walked away I would have just came back for the PM session",
+        "I'm not going to take this into or deeper into a four hour fair value gap this thing could reverse at any time",
+        "black swan events will not show up on that that's just going to be on your phone or through an alert"
+      ]
+    },
+    {
+      "file": "live_trading_night_7.txt",
+      "title": "Live Trading Night 7",
+      "date": null,
+      "year_assumed": 2025,
+      "session_type": "asia",
+      "instruments": [
+        "AUDNZD",
+        "US500",
+        "Dow",
+        "NAS"
+      ],
+      "summary": "Evening/overnight session the night before CPI and PPI, so he treats it as a practice day and trades AUD/NZD (double break down, looking for a retrace to the purple zone and a drop) alongside US500 and US30. He walks through a textbook US500 1m M play (sliver 1m FVG, first 30s FVG tapped, close over the series, run down to the purple zone / NDOG) that reads as a demonstration rather than a confirmed live fill, skips an AUD/NZD 30s entry that formed too low with poor R:R, and repeatedly refuses sells without a 5m FVG. US30 prints a Spotlight bearish confirmation. A member (Jake) reports a 3R NAS DB long on sim. No instructor trade result stated. AUD/NZD events are recorded with instrument 'unknown' because the schema enum has no forex slot.",
+      "events": [
+        {
+          "seq": 1,
+          "clock_et": null,
+          "instrument": "unknown",
+          "timeframe": "5m",
+          "action": "WAIT",
+          "direction": "short",
+          "setup": "AUD/NZD: double break to the downside, 4h FVG below; wants a retracement back to the purple zone and then a drop",
+          "signal": "DB",
+          "reasons": [
+            "Australia, New Zealand, that gave us a double break to the downside. There's a four-hour fair value gap under here",
+            "I'm looking for a retracement, potentially back to this purple, and then a drop",
+            "this is the only one I'm actually interested in, if it gives us anything"
+          ],
+          "confluences": [
+            "purple zone",
+            "4h FVG",
+            "blue zone (start lines up with midpoint of purple zone)"
+          ],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "Australia, New Zealand, that gave us a double break to the downside. There's a four-hour fair value gap under here. I'm looking for a retracement, potentially back to this purple, and then a drop. So this is the only one I'm actually interested in, if it gives us anything.",
+          "discretionary": false
+        },
+        {
+          "seq": 2,
+          "clock_et": null,
+          "instrument": "unknown",
+          "timeframe": "unknown",
+          "action": "RULE",
+          "direction": null,
+          "setup": "high-impact news (CPI/PPI tomorrow) rocks the markets - practice day",
+          "signal": null,
+          "reasons": [
+            "because of the high-impact news, guys, it shifts and it rocks the markets",
+            "these are good days to practice"
+          ],
+          "confluences": [],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "So these are good days to practice, but as mentioned before, because of the high-impact news, guys, it shifts and it rocks the markets.",
+          "discretionary": false
+        },
+        {
+          "seq": 3,
+          "clock_et": null,
+          "instrument": "US500",
+          "timeframe": "1m",
+          "action": "OBSERVE",
+          "direction": "short",
+          "setup": "US500 1m M play walkthrough: manipulation on the 1 M (no DB), sliver 1m FVG, first 30s FVG created and tapped, closed over the series = entry, acceleration, drop to purple zone / NDOG; stop rolled at the purple midpoint. Narrated partly in past/conditional tense ('That would have been the entry'), so not confirmed as a live fill",
+          "signal": "M",
+          "reasons": [
+            "There's your manipulation on the one M. Right? No double break. So we stick to the one M",
+            "That was the first 30 second created. Market came back, tapped it. We closed over the series. That would have been the entry",
+            "And right to the midpoint. So I'd have to roll my stop here",
+            "we had a purple zone ahead of us. So I wanted to make sure I was secure. And then drop all the way to the end dog",
+            "The second this closes, we're already under the 238. So it's going to be driven to the end dog right here, the new day opening gap"
+          ],
+          "confluences": [
+            "1m FVG",
+            "30s FVG",
+            "purple zone",
+            "NDOG",
+            "238 level",
+            "blue zone on higher timeframe"
+          ],
+          "result": "unknown",
+          "result_detail": "ran to the NDOG / deepest purple zone - 'That would be a full, full play. So that one's done.' Whether he was filled live is not stated",
+          "quote": "There's your sliver of a one minute fair value gap. I get rid of it. It's right there. Market came back, tapped it. That was the first 30 second created. Market came back, tapped it. We closed over the series. That would have been the entry.",
+          "discretionary": false
+        },
+        {
+          "seq": 4,
+          "clock_et": null,
+          "instrument": "unknown",
+          "timeframe": "unknown",
+          "action": "RULE",
+          "direction": null,
+          "setup": "purple/blue zones = take profit or roll stops; rolling the stop makes it a freebie",
+          "signal": null,
+          "reasons": [
+            "The purple and the blue zones are where you either take profit or protect yourself at least. Make sure you roll your stops",
+            "The second you roll your stop, you're in a freebie now",
+            "if it's under two R and you want to get into one of these freebie plays, roll your stop. You don't have to close off your position"
+          ],
+          "confluences": [
+            "purple zone",
+            "blue zone",
+            "NDOG"
+          ],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "The purple and the blue zones are where you either take profit or protect yourself at least. Make sure you roll your stops. You want to aim these up, right? You want to line it up and have a perfect one to two.",
+          "discretionary": false
+        },
+        {
+          "seq": 5,
+          "clock_et": null,
+          "instrument": "unknown",
+          "timeframe": "30s",
+          "action": "SKIP",
+          "direction": "short",
+          "setup": "AUD/NZD: 1m FVG tapped, consolidation, drop - but the 30s FVG formed too far down the leg and was not a proper 1:3",
+          "signal": null,
+          "reasons": [
+            "what I didn't like about this was how far that 30 second formed",
+            "I was almost hoping for a power of three ... One more push up to sweep out these highs. And then a 30 second forming up here. But it formed all the way down here",
+            "Just wasn't a proper one to three either"
+          ],
+          "confluences": [
+            "1m FVG",
+            "30s FVG",
+            "purple zone"
+          ],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "So as mentioned before, what I didn't like about this was how far that 30 second formed. There's your one minute. It tapped it. Consolidation. Drop. ... But it formed all the way down here. ... Just wasn't a proper one to three either.",
+          "discretionary": true
+        },
+        {
+          "seq": 6,
+          "clock_et": null,
+          "instrument": "Dow",
+          "timeframe": "5m",
+          "action": "WAIT",
+          "direction": "short",
+          "setup": "US30 5m Spotlight bearish confirmation; waiting for a retracement, possibly deep into the big 5m FVG",
+          "signal": "Spotlight",
+          "reasons": [
+            "US 30 also in the five minute just gave us our spotlight bearish confirmation",
+            "there's a big five minute fair value gap right here. That would be considered a deep retracement. It could just bounce right off of this one that it's forming now",
+            "So no retracement after this bearish confirmation from Spotlight"
+          ],
+          "confluences": [
+            "5m FVG",
+            "Spotlight bearish confirmation",
+            "blue zone"
+          ],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "So US 30 also in the five minute just gave us our spotlight bearish confirmation. So now if it does retrace, where could it retrace it? Well, there's a big five minute fair value gap right here. That would be considered a deep retracement.",
+          "discretionary": false
+        },
+        {
+          "seq": 7,
+          "clock_et": null,
+          "instrument": "unknown",
+          "timeframe": "30s",
+          "action": "RULE",
+          "direction": null,
+          "setup": "30s FVG: only the first two presented in the leg count; first presented FVG is 70%+ probable",
+          "signal": null,
+          "reasons": [
+            "when it comes to the 32nd fair value gap, I'll only take the first two",
+            "there's a high probability, 70% or higher, that the first presented fair value gap in that leg one that's going to be a good one",
+            "I don't care if there's a third and a fourth, because I know it's going to come back up and at the very least hit the midpoint of those first two",
+            "if I use this one ... that's a bigger drawdown for me if it comes all the way back up"
+          ],
+          "confluences": [],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "So remember, when it comes to the 32nd fair value gap, I'll only take the first two. ... there's a high probability, 70% or higher, that the first presented fair value gap in that leg one that's going to be a good one.",
+          "discretionary": false
+        },
+        {
+          "seq": 8,
+          "clock_et": null,
+          "instrument": "unknown",
+          "timeframe": "5m",
+          "action": "WAIT",
+          "direction": "short",
+          "setup": "AUD/NZD shallow retracement, wedged between two 4h FVGs at the midpoint; a sell needs a 5m FVG first",
+          "signal": null,
+          "reasons": [
+            "This is done now. Still need to see a five minute fair value",
+            "We're wedged between two fair value gaps ... And we're back at the midpoint",
+            "if I'm going to take a cell setup, it's imperative that I get a five minute fair value gap. Because that's giving me more information",
+            "If a five minute fair value gap can form, then there's a higher probability the entire setup will form"
+          ],
+          "confluences": [
+            "4h FVG x2",
+            "midpoint"
+          ],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "So if I'm going to take a cell setup, it's imperative that I get a five minute fair value gap. Because that's giving me more information. If a five minute fair value gap can form, then there's a higher probability the entire setup will form.",
+          "discretionary": false
+        },
+        {
+          "seq": 9,
+          "clock_et": null,
+          "instrument": "unknown",
+          "timeframe": "unknown",
+          "action": "RULE",
+          "direction": null,
+          "setup": "foreign currency indexes (e.g. NZD index) are hard to use as diverging pairs; the first pair in the cross drives the move",
+          "signal": null,
+          "reasons": [
+            "the foreign indexes are always hard to actually utilize as diverging pairs",
+            "it's the first pair that's dictating what we're actually seeing",
+            "for the most part, this isn't telling me much"
+          ],
+          "confluences": [],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "So the foreign indexes are always hard to actually utilize as diverging pairs. You should be able to. You know, that is what they're there for. But I usually I'll maybe keep an eye on it. But for the most part, this isn't telling me much.",
+          "discretionary": true
+        },
+        {
+          "seq": 10,
+          "clock_et": null,
+          "instrument": "unknown",
+          "timeframe": "1m",
+          "action": "SKIP",
+          "direction": "short",
+          "setup": "answering Rory about the 1m FVG on the leg up before the drop (US500 asked; US30 chart shown): first bearish 1m FVG never got tapped; the one that did was on a day with too much pullback - wants a 5m bearish FVG",
+          "signal": "Spotlight",
+          "reasons": [
+            "we're looking for a sell setup. So I was looking for the first bearish fair value gap to be created",
+            "we have a spotlight bearish confirmation already. And we've already swept up the leg. We've left a five minute fair value gaps. There's a lot of confluence points that that kind of switch my bias to bearish",
+            "this one minute never got tapped. This one did, but on a day like this, with that much of a pullback, I'd be more interested in seeing if that sticks. Or if there's no five minute fair value gap here to the downside"
+          ],
+          "confluences": [
+            "Spotlight bearish confirmation",
+            "leg swept",
+            "5m FVG"
+          ],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "But this one minute never got tapped. This one did, but on a day like this, with that much of a pullback, I'd be more interested in seeing if that sticks. Or if there's no five minute fair value gap here to the downside.",
+          "discretionary": true
+        },
+        {
+          "seq": 11,
+          "clock_et": null,
+          "instrument": "unknown",
+          "timeframe": "1m",
+          "action": "OBSERVE",
+          "direction": "short",
+          "setup": "AUD/NZD played tight and left no FVG in the drop; 1m and 5m midpoints lined up, so a push up to trap buyers off the tapped 30s before dropping would make sense; still 'never chase'",
+          "signal": null,
+          "reasons": [
+            "Aussie New Zealand just once again played it tight. Didn't leave a single fair value gap in here for us to even jump in",
+            "these midpoints are lined up. One minute in this five minute. This is also a great place for them to create that confusion",
+            "It almost makes sense for them to drive it up one more time. So those people jump in for a buy. And then if they want to, they can drop it from here",
+            "Never chase though, right? We want, we want it to come to us"
+          ],
+          "confluences": [
+            "1m/5m midpoints aligned",
+            "inverse 5m FVG",
+            "238 level",
+            "4h FVG midpoint"
+          ],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "And Aussie New Zealand just once again played it tight. Didn't leave a single fair value gap in here for us to even jump in. ... Never chase though, right? We want, we want it to come to us.",
+          "discretionary": true
+        },
+        {
+          "seq": 12,
+          "clock_et": null,
+          "instrument": "unknown",
+          "timeframe": "unknown",
+          "action": "RULE",
+          "direction": null,
+          "setup": "5m FVG is non-negotiable; always first presented FVG on 1m; 30s slightly more lenient",
+          "signal": null,
+          "reasons": [
+            "The five minute is the one that I'm not willing to waver on",
+            "I will always use the first presented fair value gap when it comes to the one minute and the 32nd. So 32nd, I'm a little bit more lenient. One minute, I try not to. Especially when it's this big",
+            "No five minute fair value gap created here. So I'm looking for every tiny bit of confluence that I can"
+          ],
+          "confluences": [],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "The five minute is the one that I'm not willing to waver on. I will always use the first presented fair value gap when it comes to the one minute and the 32nd. So 32nd, I'm a little bit more lenient. One minute, I try not to.",
+          "discretionary": false
+        },
+        {
+          "seq": 13,
+          "clock_et": null,
+          "instrument": "US500",
+          "timeframe": "1m",
+          "action": "WAIT",
+          "direction": "short",
+          "setup": "US500 consolidation took out the low; both sides being played (first 30s for longs, 1m for shorts); bias already decided short - look for a sell setup only if it comes back up",
+          "signal": "DB",
+          "reasons": [
+            "this is where they want to play both sides, right? They want people to go long off of this 32nd. That was the first presented. And we want people to go short off this one minute",
+            "We've already made up our mind which direction we want to go",
+            "If it does, then I'll look for a cell setup. If it punches through and keeps going, that's fine. Catch it next time"
+          ],
+          "confluences": [
+            "30s FVG",
+            "1m FVG"
+          ],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "We've already made up our mind which direction we want to go. So once again, we've heard to come up here. If it does, then I'll look for a cell setup. If it punches through and keeps going, that's fine. Catch it next time.",
+          "discretionary": false
+        },
+        {
+          "seq": 14,
+          "clock_et": null,
+          "instrument": "unknown",
+          "timeframe": "unknown",
+          "action": "RULE",
+          "direction": null,
+          "setup": "once definitive signals are in (double break, Spotlight confirmation) do not waver on the directional bias",
+          "signal": "Spotlight",
+          "reasons": [
+            "Once the definitive signals are in guys, like the spotlight confirmation, like the double break, once you've decided what your directional bias is, do not waver on that",
+            "double break, remember that's the dealer revealing its hand. The spotlight confirmation, that's 80% accurate",
+            "Our bias does change and it can flip literally like that. But the confluence has to be there"
+          ],
+          "confluences": [],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "If the signals are definitive, double break, remember that's the dealer revealing its hand. The spotlight confirmation, that's 80% accurate. I'm going to stick to that. I'm not going to fight it.",
+          "discretionary": false
+        },
+        {
+          "seq": 15,
+          "clock_et": null,
+          "instrument": "unknown",
+          "timeframe": "1m",
+          "action": "SKIP",
+          "direction": "short",
+          "setup": "AUD/NZD first 1m FVG that sticks sits too close to the midpoint; price ripped through the 5m twice - a third time is pure consolidation he does not want",
+          "signal": null,
+          "reasons": [
+            "Not really happy about where it's sitting. I would have liked to seen it up here and taken that trade to the midpoint, but we're already near the midpoint",
+            "it ripped through this five minute once, twice. If it wants to do it a third time, remember that's not even something I think I want to be a part of. That much back and forth",
+            "When you see that much back and forth wicking. And that's the kind of price action you can expect on days and or weeks like this",
+            "ideally, I would not like this one minute bullish fair value gap to stick"
+          ],
+          "confluences": [
+            "first presented FVG",
+            "midpoint",
+            "5m consolidation",
+            "15m consolidation"
+          ],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "Looks like this is the first fair value gap that's going to stick on Aussie New Zealand. Not really happy about where it's sitting. I would have liked to seen it up here and taken that trade to the midpoint, but we're already near the midpoint.",
+          "discretionary": true
+        },
+        {
+          "seq": 16,
+          "clock_et": null,
+          "instrument": "Dow",
+          "timeframe": "5m",
+          "action": "OBSERVE",
+          "direction": null,
+          "setup": "US30 back to the first presented FVG between two Ms; market drawn back to the 5m",
+          "signal": "2M",
+          "reasons": [
+            "Here comes us 30 back to that fair value gap. First presented fair value gap between two Ms. The market is drawn back to the five minute",
+            "Is it going to run through it again? Is it just going to keep disrespecting fair value gaps?"
+          ],
+          "confluences": [
+            "first presented FVG",
+            "5m FVG"
+          ],
+          "result": "n/a",
+          "result_detail": "",
+          "quote": "Here comes us 30 back to that fair value gap. First presented fair value gap between two Ms. The market is drawn back to the five minute.",
+          "discretionary": false
+        },
+        {
+          "seq": 17,
+          "clock_et": null,
+          "instrument": "NAS",
+          "timeframe": "1m",
+          "action": "OBSERVE",
+          "direction": "long",
+          "setup": "NAS (looked at late, member Jake reported a 3R DB long on sim): inside a 4h, M down then 2M, came back to the first presented FVG; DB to the upside, triangle, deep retracement, 1m tap - similar story to US500",
+          "signal": "2M",
+          "reasons": [
+            "if we were trading on a non news day, I would be looking at NAS because that's going to be giving me more information",
+            "as soon as we've got that second M, what did the market do? Come back to the first presented fair value gap",
+            "it's actually telling a similar story to US 500 with a double break to the upside. So triangle pattern, deep retracement, fair value gap"
+          ],
+          "confluences": [
+            "4h FVG",
+            "first presented FVG",
+            "triangle pattern",
+            "divergence (NAS/US500 same story)"
+          ],
+          "result": "n/a",
+          "result_detail": "member reported 3R on his own NAS DB long sim trade; instructor did not take it",
+          "quote": "Jake said, I just took a trade on NAS prop account sim. I got three R and DB long setup. ... So it's actually telling a similar story to US 500 with a double break to the upside. So triangle pattern, deep retracement, fair value gap.",
+          "discretionary": false
+        }
+      ],
+      "rules_stated": [
+        "because of the high-impact news, guys, it shifts and it rocks the markets",
+        "the market is drawn to and pushes from these magnetic zones",
+        "as soon as it hits one of these zones, you're going to get some kind of a reaction. Not always. But the fact that you can, that's why you want to roll your stops",
+        "The purple and the blue zones are where you either take profit or protect yourself at least. Make sure you roll your stops",
+        "You want to line it up and have a perfect one to two",
+        "the market likes to retrace to purple zones and the new day opening gap",
+        "The second you roll your stop, you're in a freebie now",
+        "if it's under two R and you want to get into one of these freebie plays, roll your stop. You don't have to close off your position",
+        "No double break. So we stick to the one M",
+        "when it comes to the 32nd fair value gap, I'll only take the first two",
+        "there's a high probability, 70% or higher, that the first presented fair value gap in that leg one that's going to be a good one",
+        "if I'm going to take a cell setup, it's imperative that I get a five minute fair value gap",
+        "If a five minute fair value gap can form, then there's a higher probability the entire setup will form",
+        "the foreign indexes are always hard to actually utilize as diverging pairs",
+        "The five minute is the one that I'm not willing to waver on",
+        "I will always use the first presented fair value gap when it comes to the one minute and the 32nd. So 32nd, I'm a little bit more lenient",
+        "Never chase though, right? ... We want, we want it to come to us",
+        "Once the definitive signals are in guys, like the spotlight confirmation, like the double break, once you've decided what your directional bias is, do not waver on that",
+        "double break, remember that's the dealer revealing its hand. The spotlight confirmation, that's 80% accurate",
+        "Our bias does change and it can flip literally like that. But the confluence has to be there",
+        "if we were trading on a non news day, I would be looking at NAS because that's going to be giving me more information",
+        "it ripped through this five minute once, twice. If it wants to do it a third time, remember that's not even something I think I want to be a part of"
+      ]
+    }
+  ]
+}
