@@ -29,5 +29,6 @@ except Exception as e: print(0)' 2>/dev/null)
       | tee -a "$DATA/trading-review/runs.log" | cut -c1-300
     echo "[hermes-loop] $(date -u +%FT%TZ) run finished (exit ${PIPESTATUS[0]})"
   fi
-  sleep $(( ${REVIEW_EVERY_MIN:-20} * 60 ))
+  # backlog: go again after a short pause; otherwise wait the normal interval
+  if [ "${n:-0}" -ge 2 ]; then sleep 60; else sleep $(( ${REVIEW_EVERY_MIN:-20} * 60 )); fi
 done

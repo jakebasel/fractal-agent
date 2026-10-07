@@ -325,6 +325,18 @@ def add_review(entry_id, reviewer, verdict, summary, exit_notes, proposal, raw, 
         db().commit()
 
 
+def supersede_reviews(reviewer: str, since_iso: str | None = None) -> int:
+    """Re-open trades for `reviewer`: its existing reviews are renamed <reviewer>-superseded
+    (kept for history, hidden from the cards) so the queue lists those trades again."""
+    with _lock:
+        q, args = "UPDATE reviews SET reviewer=? WHERE reviewer=?", [f"{reviewer}-superseded", reviewer]
+        if since_iso:
+            q += " AND at>=?"; args.append(since_iso)
+        cur = db().execute(q, args)
+        db().commit()
+        return cur.rowcount
+
+
 def scan_review_queue(reviewer: str, limit=10):
     """Scored scanner setups (ready, with a result on the tape) not yet reviewed by `reviewer`."""
     return db().execute(
@@ -351,7 +363,7 @@ def recent_reviews(n: int):
     """Latest outside reviews with the trade's symbol (for the decision prompt)."""
     return db().execute(
         "SELECT v.*, d.symbol FROM reviews v LEFT JOIN decisions d ON d.entry_id=v.entry_id "
-        "ORDER BY v.id DESC LIMIT ?", (n,)).fetchall()
+        "WHERE v.reviewer NOT LIKE '%-superseded' ORDER BY v.id DESC LIMIT ?", (n,)).fetchall()
 
 
 def review_queue(reviewer: str, limit=20):

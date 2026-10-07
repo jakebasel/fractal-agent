@@ -430,6 +430,10 @@ ok(sq and sq[0]["result"]["r_mechanical"] == 2.5, "scored scanner setups are in 
 ok(hc.post("/api/reviews?token=tok", json={"scan_id": sq[0]["scan_id"], "verdict": "right_take", "summary": "zone bounce worked"}).json()["ok"]
    and not [x for x in main.review_queue("hermes", 20) if x.get("scan_id") == sq[0]["scan_id"]], "scanner setup review filed by scan_id")
 ok(isinstance(main.instructor_calls(), list) and main.pending_setups() is not None, "instructor_calls and pending_setups tools")
+before = len(main.review_queue("hermes", 50))
+rr2 = hc.post("/api/reviews/reopen?token=tok&reviewer=hermes&days=3").json()
+ok(rr2["ok"] and rr2["reopened"] >= 2 and len(main.review_queue("hermes", 50)) > before
+   and all(not v["reviewer"].endswith("-superseded") for v in store.recent_reviews(10)), "re-open puts reviewed trades back in the queue; superseded reviews hidden")
 
 # 18. screenshots kept for code skips and at exit; chart_question tool
 d_shots = Path(TMP) / "decision_shots"

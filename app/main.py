@@ -484,7 +484,7 @@ async def api_dashboard(request: Request):
         d["reeval"] = json.loads(r["reeval"]) if r["reeval"] else None
         d["reviews"] = [{"reviewer": v["reviewer"], "verdict": v["verdict"], "summary": v["summary"],
                          "exit_notes": v["exit_notes"], "proposal": v["proposal"], "at_et": store.to_et(v["at"])}
-                        for v in store.reviews(5, r["entry_id"])]
+                        for v in store.reviews(5, r["entry_id"]) if not v["reviewer"].endswith("-superseded")]
         try:
             ctx = (json.loads(r["context"]) or {}) if r["context"] else {}
             d["plan"] = ctx.get("_plan")
@@ -606,6 +606,18 @@ async def post_review(request: Request):
     return JSONResponse({"ok": True, "hypothesis_id": hid})
 
 
+async def reopen_reviews(request: Request):
+    """POST /api/reviews/reopen?reviewer=hermes&days=3 (token): re-review recent trades with the
+    current data setup; old reviews are kept as <reviewer>-superseded."""
+    if not _authed(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    reviewer = re.sub(r"[^a-z0-9_-]", "", request.query_params.get("reviewer", "hermes").lower())[:20]
+    days = float(request.query_params.get("days", "3"))
+    since = datetime.fromtimestamp(datetime.now(timezone.utc).timestamp() - days * 86400, tz=timezone.utc).isoformat()
+    n = store.supersede_reviews(reviewer, since)
+    return JSONResponse({"ok": True, "reopened": n})
+
+
 async def shot_file(request: Request):
     if not _authed(request):
         return PlainTextResponse("unauthorized", status_code=401)
@@ -637,6 +649,7 @@ app.router.routes.extend([
     Route("/api/hypotheses/propose", propose_hypothesis, methods=["POST"]),
     Route("/api/review_queue", review_queue_route),
     Route("/api/reviews", post_review, methods=["POST"]),
+    Route("/api/reviews/reopen", reopen_reviews, methods=["POST"]),
     Route("/shot/{name}", shot_file),
 ])
 
