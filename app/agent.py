@@ -440,8 +440,10 @@ def reevaluate_skips(fvg: FVG, limit: int = 3) -> int:
             dec = normalise(llm.decide(prompts.decision_system(), prompts.decision_user(context), purpose="reeval"))
             rv.update(decision=dec["decision"], grade=dec["grade"], size=dec["size"], reasons=dec["reasons"][:6],
                       play=prompts.play_name(entry.get("mt_tf"), prompts.signal_of(entry, detail), dec["play"]))
-        except Exception as e:
-            rv["error"] = str(e)[:300]
+        except Exception as e:   # transient (rate limit etc.): leave it for the next tick, 3 tries
+            log.warning("reeval %s: %s", row["entry_id"], e)
+            store.reeval_try(row["entry_id"])
+            continue
         store.update_decision(row["entry_id"], reeval=rv)
         done += 1
     return done

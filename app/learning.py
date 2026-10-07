@@ -30,6 +30,10 @@ SEEDS = [
      "release, SKIP.", "rules-test",
      "2026-10-07: FOMC Minutes at 14:00 ET skipped the whole day (7 setups). Tests whether a release "
      "window beats the day-long skip."),
+    ("London: whole session", "IF the entry is in the London session after 04:00 ET and before the NY "
+     "pre-market (09:00 ET) THEN ignore the 'first 2 hours' window rule and decide normally.", "engine-data",
+     "Backtest: the London-after-2h rule removed 239 trades worth +39R; on 2026-10-07 it blocked three "
+     "winners (+5.4R). Tests whether the 2-hour limit costs more than it saves."),
     ("NY after 10:30 reduced", "IF a New York session entry is after 10:30 ET THEN reduce size "
      "(TAKE becomes reduced; never upgrade a SKIP).", "rules-test",
      "Live sessions: the sweet spot is in by ~10:30-10:40 ET; later setups get reassessed."),

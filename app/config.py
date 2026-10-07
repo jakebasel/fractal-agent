@@ -29,6 +29,9 @@ INCLUDE_GOLD = _env("INCLUDE_GOLD", "0") == "1"
 OPENROUTER_API_KEY = _env("OPENROUTER_API_KEY")
 OPENROUTER_URL = _env("OPENROUTER_URL", "https://openrouter.ai/api/v1/chat/completions")
 DECISION_MODEL = _env("DECISION_MODEL", "deepseek/deepseek-chat")   # take/skip + lessons
+# OpenRouter falls back to these, in order, when the decision model is rate-limited or down
+DECISION_FALLBACK_MODELS = [m.strip() for m in _env("DECISION_FALLBACK_MODELS",
+                                                    "deepseek/deepseek-v4-pro,deepseek/deepseek-v3.2").split(",") if m.strip()]
 VISION_MODEL = _env("VISION_MODEL", "google/gemini-2.5-flash")      # reads the screenshot
 LLM_TIMEOUT_S = int(_env("LLM_TIMEOUT_S", "60"))
 # Jev (TypeSafe "System One" model) via OpenRouter's /systemone endpoint: fast rule-by-rule

@@ -36,6 +36,8 @@ def _post(model: str, messages: list, max_tokens: int = 1500, temperature: float
         raise LLMError("OPENROUTER_API_KEY is not set")
     body = {"model": model, "messages": messages, "max_tokens": max_tokens,
             "temperature": temperature, "usage": {"include": True}}
+    if model == config.DECISION_MODEL and config.DECISION_FALLBACK_MODELS:
+        body["models"] = [model] + config.DECISION_FALLBACK_MODELS   # OpenRouter model routing
     t0 = time.time()
     try:
         r = httpx.post(config.OPENROUTER_URL, json=body, timeout=config.LLM_TIMEOUT_S,
@@ -48,7 +50,7 @@ def _post(model: str, messages: list, max_tokens: int = 1500, temperature: float
         _log(purpose, model, None, ms, False, f"HTTP {r.status_code}")
         raise LLMError(f"{model}: HTTP {r.status_code} {r.text[:300]}")
     data = r.json()
-    _log(purpose, model, data.get("usage"), ms, True)
+    _log(purpose, data.get("model") or model, data.get("usage"), ms, True)   # the model that answered
     try:
         return data["choices"][0]["message"]["content"] or ""
     except (KeyError, IndexError) as e:

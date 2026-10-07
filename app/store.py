@@ -127,7 +127,7 @@ MIGRATIONS = {
                   "path": "TEXT", "news": "TEXT", "vision_score": "REAL", "vision_note": "TEXT",
                   "kill_events": "TEXT", "managed_r": "REAL", "managed_outcome": "TEXT",
                   "managed_paper_r": "REAL", "managed_tries": "INTEGER", "shadow_tries": "INTEGER",
-                  "reeval": "TEXT"},
+                  "reeval": "TEXT", "reeval_tries": "INTEGER"},
     "screenshots": {"batch": "TEXT", "part": "INTEGER", "kind": "TEXT"},
     "scans": {"r": "REAL", "outcome": "TEXT", "scored_at": "TEXT", "score_tries": "INTEGER",
               "jev": "TEXT", "jev_p_take": "REAL"},
@@ -291,7 +291,14 @@ def reeval_todo(since_iso, limit=3):
     """Code-skipped rows not yet re-evaluated under the current rules."""
     return db().execute(
         "SELECT * FROM decisions WHERE path='code' AND decision='SKIP' AND reeval IS NULL "
-        "AND entry_at>=? ORDER BY entry_id DESC LIMIT ?", (since_iso, limit)).fetchall()
+        "AND COALESCE(reeval_tries,0)<3 AND entry_at>=? ORDER BY entry_id DESC LIMIT ?",
+        (since_iso, limit)).fetchall()
+
+
+def reeval_try(entry_id):
+    with _lock:
+        db().execute("UPDATE decisions SET reeval_tries=COALESCE(reeval_tries,0)+1 WHERE entry_id=?", (entry_id,))
+        db().commit()
 
 
 def scans(limit=50):
