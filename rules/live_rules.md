@@ -1,5 +1,9 @@
 # Live Trading Sessions: Rules, Nuances & Exceptions
 
+Distilled from the 7 live-session transcripts we have (June 13, 23, 24, Night 7, July 14, 16 x2,
+all 2025). Items marked (unverified) were not found in those transcripts on the 2026-10-07 audit
+and may come from sessions we do not have: treat them as weaker evidence.
+
 Pulled from the 12 live-session transcripts. Live sessions are newer than the course videos.
 
 ## 1. Session timing and trading windows
@@ -38,7 +42,7 @@ Pulled from the 12 live-session transcripts. Live sessions are newer than the co
 - Futures vs CFD can show different FVGs/signals; patterns usually sweep the same liquidity.
 
 ## 4. Timeframe selection (1m play vs 5m play)
-- Market Translator is valid on 15m, 5m, 1m; breaks down from 30m up.
+- Market Translator is designed for 15m, 5m, 1m. Signals print on the 30s but the fractal breaks down there; not designed for 1h or above (false readings).
 - Stick to the signal's timeframe: a 5m DB needs a 5m retracement and 5m FVG; a 1m DB needs 1m ones.
 - A 1m play can skip the 5m step: immediate rebalance, 1m FVG, 30s FVG, close.
 - On a 5m DB pulling back into a blue/purple zone or the NY 5m opening gap, he may drop to the 1m (price often won't pass the zone and the 5m may never print an FVG).
@@ -50,7 +54,7 @@ Pulled from the 12 live-session transcripts. Live sessions are newer than the co
 - 2M: about 70% chance price returns to the first presented 5m FVG between the Ms.
 - True triangle M, M, DB: returns to the FVG between the Ms, then heads in the DB direction.
 - False triangle M, DB, M: no information; stick with the DB; can quickly become a 2DB.
-- 2DB (older rule): voids the setup, shows an indecisive market. See the rulebook for the newer reversal-zone resolution.
+- 2DB voids the setup and that index for the rest of the session ("not interested in trading" it). Never traded (amendments). A 2DB within ~20 minutes of the open = heavy-manipulation day: paper only.
 - The DB is the "dealer revealing its hand": once a definitive DB or Spotlight confirmation is in, don't fight it. Bias flips only with full confluence.
 - After a DB he stops looking for reversal setups (older live rule; the Reversal Set Up video now gives a reduced-size reversal model).
 - A DB with no retracement is a runaway: no foothold, no trade.
@@ -106,14 +110,14 @@ Pulled from the 12 live-session transcripts. Live sessions are newer than the co
 - Under 2R you may roll to breakeven without closing anything ("freebie").
 - Aim for candle-body highs, not the DSD high itself.
 - Be safe before the next obstacle (DB high, prior leg high, zone).
-- Exit if it consolidates 10-15 minutes right after entry before it is safe.
+- If price reaches a 4H/daily FVG or HTF liquidity and consolidates there before the trade is safe, exit at breakeven. (The "10-15 minutes" version is unverified.)
 - Exit at breakeven if price breaks a protected low after power of three already happened.
 - All-time highs have no liquidity above: a DB there can simply drop; roll early.
 - Below the 238 EMA price tends toward the NDOG.
 - After a big drop the market often pulls back to sweep late sellers.
 
 ## 11. Consolidation
-- Normal consolidation is 5-7 candles; more = indecisive market, use that index for divergence only.
+- 5+ candles at the 30s FVG = power-of-three risk: wait one more candle to close outside the range, safer stop at candle 1 of the 30s FVG. Price ripping through the same FVG a third time: stay out. ("5-7 candles then divergence only" is unverified.)
 - Heavy back-and-forth at an FVG and a zone at once is a trap.
 - The higher probability is off the larger structure.
 

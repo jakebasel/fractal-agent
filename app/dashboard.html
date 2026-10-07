@@ -335,7 +335,8 @@ function setupCard(d, compact = false) {
     ${compact ? "" : `${shots ? `<div class="thumbs">${shots}</div>` : ""}
     <details><summary>Details${jev ? " · " + jev : ""}</summary>
       <div class="t2" style="margin:8px 0">Entry ${d.entry ?? "–"} · stop ${d.stop ?? "–"} · target ${d.target ?? "–"} · signal ${esc(d.mt_text)} (${esc(d.mt_tf)}) · retrace ${esc(d.retrace)} · rules ${esc(d.rules_version || "v1")} · path ${esc(d.path || "model")}</div>
-      ${d.outcome ? `<div class="t2">Outcome: ${esc(d.outcome)}</div>` : ""}
+      ${d.outcome ? `<div class="t2">Outcome: ${esc(d.outcome)}${d.managed_r != null ? ` · with management rules: <b class="${clsR(d.managed_r)}">${fmtR(d.managed_r)}</b> (${esc(d.managed_outcome)})` : ""}</div>` : ""}
+      ${d.plan ? `<div class="t2">Plan: be safe by ${esc(d.plan.be_safe_by || "–")} · partial at ${esc(d.plan.partial_at || "2R")} · kill: ${esc((d.plan.kill_conditions || []).join("; ") || "–")}</div>` : ""}
       ${d.news && d.news.checked ? `<div class="t2">News: ${esc((d.news.today || []).join(", ") || "none today")}${(d.news.week_flags || []).length ? " · week: " + esc(d.news.week_flags.join(", ")) : ""}</div>` : ""}
       ${cr ? `<div class="muted" style="margin-top:6px">What the vision model read</div><pre>${esc(JSON.stringify(cr, null, 1))}</pre>` : `<div class="muted">No chart read for this setup.</div>`}
       ${d.jev ? `<div class="muted">Jev rule probabilities</div><pre>${esc(JSON.stringify(d.jev.rules || d.jev, null, 1))}</pre>` : ""}
@@ -436,7 +437,11 @@ function render() {
     <tr><td>Agent paper book</td>${statCells(B.agent_paper_book)}</tr>
     <tr><td>Agent takes at full size</td>${statCells(B.agent_takes_full_size)}</tr>
     <tr><td>Agent skips (if taken)</td>${statCells(B.agent_skips_counterfactual)}</tr>
-    <tr><td>Core strategy (all entries)</td>${statCells(B.core_strategy_all_engine_entries)}</tr></table>
+    <tr><td>Core strategy (all entries)</td>${statCells(B.core_strategy_all_engine_entries)}</tr>
+    <tr><td>Agent with his management rules (5m DB against = out)</td>${statCells(B.agent_with_management_rules)}</tr>
+    <tr><td>Core with his management rules</td>${statCells(B.core_with_management_rules)}</tr>
+    <tr><td>Agent + walk away at −2R/day</td>${statCells(B.agent_with_daily_stop_minus2R)}</tr>
+    <tr><td>Core + walk away at −2R/day</td>${statCells(B.core_with_daily_stop_minus2R)}</tr></table>
     <p class="muted" style="font-size:12px">The agent adds value when its avg R beats the core strategy's and its skips are negative.</p>`;
   const hy = rep.hypotheses.filter(h => h.status === "testing").sort((a, b) => b.delta_total_r_vs_agent - a.delta_total_r_vs_agent);
   $("#hyp-mini").innerHTML = hy.slice(0, 5).map(h => `<div class="lesson"><b>H${h.id}</b> ${esc(h.title)}

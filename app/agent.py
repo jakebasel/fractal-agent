@@ -153,10 +153,13 @@ def normalise(dec: dict) -> dict:
         conf = None
     kind = dec.get("play_kind") or dec.get("play")
     play = kind if kind in prompts.PLAY_KINDS else "other"
+    plan = dec.get("management_plan") if isinstance(dec.get("management_plan"), dict) else {}
+    if dec.get("kill_conditions") and not plan.get("kill_conditions"):
+        plan["kill_conditions"] = dec.get("kill_conditions")
     return {"decision": d, "grade": grade, "size": size, "confidence": conf, "play": play,
             "hard_rule": dec.get("hard_rule"), "reasons": dec.get("reasons") or [],
-            "boosters": dec.get("boosters") or [],
-            "extra": {"unknowns": dec.get("unknowns"), "kill_conditions": dec.get("kill_conditions")}}
+            "boosters": dec.get("boosters") or [], "plan": plan,
+            "extra": {"unknowns": dec.get("unknowns"), "kill_conditions": plan.get("kill_conditions")}}
 
 
 def _keep_shots(entry_id, files):
@@ -233,6 +236,7 @@ def review(fvg: FVG, entry: dict):
         store.insert_decision(row)
         return row
 
+    context["_plan"] = dec["plan"]   # the management plan travels with the context snapshot
     row.update(decision=dec["decision"], grade=dec["grade"], size=dec["size"],
                play=prompts.play_name(entry.get("mt_tf"), signal, dec["play"]), path="model",
                confidence=dec["confidence"], hard_rule=dec["hard_rule"], reasons=dec["reasons"],
@@ -247,10 +251,68 @@ def review(fvg: FVG, entry: dict):
 
 # ---- outcomes + lessons ----------------------------------------------------------------------
 
-def settle(entry_row, scored: dict):
+def _kill_events(fvg: FVG, row) -> list:
+    """Times (ms) after entry when a 5m Double Break printed AGAINST the trade: the instructor
+    closes or rolls on that. Used to score the trade with his management rules."""
+    try:
+        evs = fvg.mt_events(row["symbol"], limit=60)
+    except Exception:
+        return []
+    out = []
+    start = _iso_to_dt(row["entry_at"]).timestamp() * 1000
+    against = "lower" if row["direction"] == "bull" else "upper"
+    for e in evs:
+        txt = (e.get("text") or "").lower()
+        if (e.get("tf") or "") != "5m" or "double break" not in txt or against not in txt:
+            continue
+        try:
+            ms = _iso_to_dt(e["received_at"]).timestamp() * 1000
+        except (KeyError, ValueError, TypeError):
+            continue
+        if ms > start:
+            out.append(int(ms))
+    return sorted(out)
+
+
+def manage_pending(fvg: FVG, limit: int = 3) -> int:
+    """Re-score settled TAKE/SKIP rows with the instructor's management rules on the price
+    tape (close on a 5m DB against the play). Needs the archived day: retried a few times."""
+    done = 0
+    for row in store.managed_todo(limit):
+        at = _iso_to_dt(row["entry_at"])
+        kills = json.loads(row["kill_events"] or "[]")
+        try:
+            ticks = fvg.call("archived_prices", symbol=row["symbol"], day=at.strftime("%Y-%m-%d")) or []
+            if at.hour >= 21:
+                nxt = datetime.fromtimestamp(at.timestamp() + 86400, tz=timezone.utc).strftime("%Y-%m-%d")
+                ticks = list(ticks) + list(fvg.call("archived_prices", symbol=row["symbol"], day=nxt) or [])
+        except Exception as e:
+            log.warning("archived_prices for %s: %s", row["entry_id"], e)
+            store.managed_try(row["entry_id"])
+            continue
+        if not ticks or not row["entry"] or not row["stop"] or not row["target"]:
+            store.managed_try(row["entry_id"])
+            continue
+        r, outcome = scanner.replay(ticks, row["direction"], row["entry"], row["stop"], row["target"],
+                                    int(at.timestamp() * 1000), kills=kills)
+        if r is None:
+            store.managed_try(row["entry_id"])
+            continue
+        mult = store.SIZE_MULT.get(row["size"] or "none", 0.0) if row["decision"] == "TAKE" else 0.0
+        store.update_decision(row["entry_id"], managed_r=r, managed_outcome=outcome,
+                              managed_paper_r=round(r * mult, 3))
+        done += 1
+    return done
+
+
+def settle(fvg: FVG, entry_row, scored: dict):
     r = scored.get("f_pnl_r")
     if r is None:
         return False
+    try:
+        store.update_decision(entry_row["entry_id"], kill_events=_kill_events(fvg, entry_row))
+    except Exception as e:
+        log.warning("kill events for %s: %s", entry_row["entry_id"], e)
     mult = store.SIZE_MULT.get(entry_row["size"] or "none", 0.0) if entry_row["decision"] == "TAKE" else 0.0
     store.update_decision(entry_row["entry_id"], r=float(r), outcome=scored.get("f_outcome"),
                           paper_r=round(float(r) * mult, 3),
@@ -297,8 +359,12 @@ def tick(fvg: FVG):
             changed = True
     for row in store.open_decisions():
         scored = by_id.get(row["entry_id"])
-        if scored and settle(row, scored):
+        if scored and settle(fvg, row, scored):
             changed = True
+    try:
+        manage_pending(fvg)
+    except Exception as e:
+        log.warning("managed scoring failed: %s", e)
     try:   # the chart scanner: only inside its windows, only on a new screenshot set
         if config.SCAN_MINUTES > 0:
             shots = store.latest_screenshot_set()

@@ -43,7 +43,8 @@ TWEAKS = [
     {"name": "deep retrace DBs only", "if": [{"col": "sig", "op": "==", "val": "DB"},
                                             {"col": "retrace", "op": "not_in", "val": ["deep", "deep+fvg"]}], "then": "skip"},
     {"name": "no gaps invalidated on the way", "if": [{"col": "n_inv", "op": ">", "val": 0}], "then": "skip"},
-    {"name": "allow ND entries (tests rule 2.1)", "if": [{"col": "nd", "op": "==", "val": True}], "then": "allow"},
+    {"name": "walk away after -2R in a day", "if": [], "then": "daily_stop", "stop_r": -2.0},
+    {"name": "walk away after -1R in a day", "if": [], "then": "daily_stop", "stop_r": -1.0},
     {"name": "allow engine out-of-window (tests 2.3 flag)", "if": [{"col": "in_window", "op": "==", "val": False},
                                                                    {"col": "nd", "op": "==", "val": False}], "then": "allow"},
 ]
@@ -64,8 +65,8 @@ def rows_of(d):
         x = dict(zip(cols, r))
         if x["symbol"] not in SYMBOLS or x["r"] is None or x["scoring"] in ("late", "unscored"):
             continue
-        if x["cascade"] == "Gold Strategy":
-            continue
+        if x["cascade"] == "Gold Strategy" or x["nd"]:
+            continue   # ND (trend-fallback) was retired by fvg-mcp on 2026-08-11; not part of the strategy
         et = datetime.fromtimestamp(x["entry_bar"] / 1000, tz=timezone.utc).astimezone(config.ET)
         x.update(et=et, date=et.strftime("%Y-%m-%d"), dow=et.strftime("%a"), hour=et.hour + et.minute / 60)
         x["rule"] = code_hard_rule(x)
@@ -125,6 +126,8 @@ def matches(x, tweak):
 
 def apply(rows, tweak):
     """(values of R after the tweak, number of trades affected) on the given rows. Base = code rules."""
+    if tweak["then"] == "daily_stop":
+        return daily_stop(rows, tweak.get("stop_r", -2.0))
     vals, affected = [], 0
     for x in rows:
         kept = x["rule"] is None
@@ -144,7 +147,51 @@ def apply(rows, tweak):
     return vals, affected
 
 
+def daily_stop(rows, stop_r=-2.0):
+    """Walk-away rule on the code-rules book: after a day (ET) is down stop_r, skip the rest."""
+    vals, affected, day, cum = [], 0, None, 0.0
+    for x in rows:
+        if x["rule"] is not None:
+            continue
+        if x["date"] != day:
+            day, cum = x["date"], 0.0
+        if cum <= stop_r:
+            affected += 1
+            continue
+        vals.append(x["r"]); cum += x["r"]
+    return vals, affected
+
+
+def _affected_values(rows, tweak):
+    """R of the trades the tweak changes (removed, halved, re-admitted or cut by a daily stop)."""
+    if tweak["then"] == "daily_stop":
+        day, cum, cut = None, 0.0, []
+        for x in rows:
+            if x["rule"] is not None:
+                continue
+            if x["date"] != day:
+                day, cum = x["date"], 0.0
+            if cum <= tweak.get("stop_r", -2.0):
+                cut.append(x["r"])
+            else:
+                cum += x["r"]
+        return cut
+    return [x["r"] for x in rows if (x["rule"] is None) == (tweak["then"] != "allow") and matches(x, tweak)]
+
+
 def removed_or_added(rows, tweak):
+    if tweak["then"] == "daily_stop":
+        day, cum, cut = None, 0.0, []
+        for x in rows:
+            if x["rule"] is not None:
+                continue
+            if x["date"] != day:
+                day, cum = x["date"], 0.0
+            if cum <= tweak.get("stop_r", -2.0):
+                cut.append(x["r"])
+            else:
+                cum += x["r"]
+        return store.summarize(cut)
     kept = [x for x in rows if (x["rule"] is None) == (tweak["then"] != "allow") and matches(x, tweak)]
     return store.summarize([x["r"] for x in kept])
 
@@ -204,7 +251,7 @@ def propose(report) -> list:
     res = llm.decide(system, user, purpose="backtest-propose")
     out = []
     for t in res.get("tweaks") or []:
-        if isinstance(t.get("if"), list) and t.get("then") in ("skip", "half", "allow") and t.get("name"):
+        if isinstance(t.get("if"), list) and t.get("then") in ("skip", "half", "allow", "daily_stop") and t.get("name"):
             out.append(t)
     return out[:5]
 
@@ -259,16 +306,27 @@ def main():
             f.write(json.dumps({"at": report["generated_et"], "cut": cut, **{k: ev[k] for k in ("name", "tweak", "verdict", "misses", "train", "holdout")}}, default=str) + "\n")
     report["tweaks"].sort(key=lambda e: (e["verdict"] != "PASS", -(e["train"]["delta_total_r"] + e["holdout"]["delta_total_r"])))
     report["tweaks_tried_total"] = len({json.loads(l)["name"] for l in log.open() if l.strip()})
-    # multiple testing: with k tweaks tried, a lone PASS needs a bigger holdout edge to count.
-    # Bonferroni-style: require holdout delta > (base holdout max DD / 4) * log2(k) R
+    # multiple testing: with k tweaks tried, a lone PASS needs a stronger holdout signal.
+    # t = mean R of the affected holdout trades / standard error; the bar rises with log2(k+1).
     import math
     k = max(1, report["tweaks_tried_total"])
-    bar = round(abs(report["books"]["after_code_hard_rules"].get("max_dd_r") or 0) / 4 * math.log2(k + 1), 2)
-    report["multiple_testing_bar_r"] = bar
+    bar = round(2.0 + 0.25 * math.log2(k + 1), 2)
+    report["multiple_testing_bar_t"] = bar
     for e in report["tweaks"]:
-        if e["verdict"] == "PASS" and e["holdout"]["delta_total_r"] < bar:
+        if e["verdict"] != "PASS":
+            continue
+        aff = e["affected_trades"]["holdout"]
+        n = aff.get("n") or 0
+        t = None
+        if n >= 5:
+            vals = _affected_values(hold, e["tweak"])
+            m = sum(vals) / n
+            sd = (sum((v - m) ** 2 for v in vals) / max(1, n - 1)) ** 0.5 or 1e-9
+            t = abs(m) / (sd / n ** 0.5)
+        e["holdout_t"] = round(t, 2) if t is not None else None
+        if t is None or t < bar:
             e["verdict"] = "PASS (below multiple-testing bar)"
-            e["misses"].append(f"holdout delta {e['holdout']['delta_total_r']} < bar {bar} after {k} tweaks tried")
+            e["misses"].append(f"holdout t {e['holdout_t']} < bar {bar} after {k} tweaks tried")
     (ROOT / "reports" / "backtest_latest.json").write_text(json.dumps(report, indent=1, default=str))
 
     print("window:", report["window"])

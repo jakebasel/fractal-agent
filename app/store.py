@@ -124,7 +124,9 @@ CREATE TABLE IF NOT EXISTS shadow (
 # columns added after v1; ALTERed into an existing database at start-up
 MIGRATIONS = {
     "decisions": {"play": "TEXT", "rules_version": "TEXT", "jev": "TEXT", "jev_p_take": "REAL",
-                  "path": "TEXT", "news": "TEXT", "vision_score": "REAL", "vision_note": "TEXT"},
+                  "path": "TEXT", "news": "TEXT", "vision_score": "REAL", "vision_note": "TEXT",
+                  "kill_events": "TEXT", "managed_r": "REAL", "managed_outcome": "TEXT",
+                  "managed_paper_r": "REAL", "managed_tries": "INTEGER"},
     "screenshots": {"batch": "TEXT", "part": "INTEGER", "kind": "TEXT"},
     "scans": {"r": "REAL", "outcome": "TEXT", "scored_at": "TEXT", "score_tries": "INTEGER"},
 }
@@ -205,6 +207,22 @@ def update_decision(entry_id: int, **fields):
     vals = [json.dumps(v) if isinstance(v, (list, dict)) else v for v in fields.values()]
     with _lock:
         db().execute(f"UPDATE decisions SET {sets} WHERE entry_id=?", (*vals, entry_id))
+        db().commit()
+
+
+def managed_todo(limit=3, max_tries=4):
+    """Settled rows (older than 2.5h) still without a management-rules score."""
+    cutoff = datetime.fromtimestamp(datetime.now(timezone.utc).timestamp() - 2.5 * 3600,
+                                    tz=timezone.utc).isoformat()
+    return db().execute(
+        "SELECT * FROM decisions WHERE r IS NOT NULL AND managed_r IS NULL AND decision IN ('TAKE','SKIP') "
+        "AND entry_at<=? AND COALESCE(managed_tries,0)<? ORDER BY entry_id DESC LIMIT ?",
+        (cutoff, max_tries, limit)).fetchall()
+
+
+def managed_try(entry_id):
+    with _lock:
+        db().execute("UPDATE decisions SET managed_tries=COALESCE(managed_tries,0)+1 WHERE entry_id=?", (entry_id,))
         db().commit()
 
 

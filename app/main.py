@@ -293,6 +293,10 @@ async def api_dashboard(request: Request):
         d["chart_read"] = json.loads(r["chart_read"]) if r["chart_read"] else None
         d["jev"] = json.loads(r["jev"]) if r["jev"] else None
         d["news"] = json.loads(r["news"]) if r["news"] else None
+        try:
+            d["plan"] = (json.loads(r["context"]) or {}).get("_plan") if r["context"] else None
+        except ValueError:
+            d["plan"] = None
         d["shots"] = sorted(p.name for p in (config.DATA_DIR / "decision_shots").glob(f"{r['entry_id']}_*"))
         feed.append(d)
     since_month = datetime.now(config.ET).replace(day=1, hour=0, minute=0, second=0).astimezone(timezone.utc).isoformat()

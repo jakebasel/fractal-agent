@@ -318,5 +318,39 @@ class FakeTape:
         return [[int((_dt2.now(timezone.utc).timestamp() - 5 * 3600) * 1000) + i * 1000, p] for i, p in enumerate([100, 99.8, 101, 102, 103.1])]
 ok(scanner.score_pending(FakeTape()) == 1 and store.scored_scans()[0]["r"] == 2.5, "spotted setup scored from the archive")
 
+# 12. management rules: a 5m DB against the play closes it on the tape
+tape2 = [(t0 + i * 1000, p) for i, p in enumerate([100, 99.8, 100.5, 100.9, 101.4, 102.5, 103])]
+r_m, o_m = scanner.replay(tape2, "bull", 100.0, 99.0, 103.0, t0, kills=[t0 + 3000])
+ok(r_m == 0.9 and "5m DB against" in o_m, f"replay closes at the opposing 5m DB ({r_m}, {o_m})")
+row_old = {"entry_id": 2, "symbol": "MNQ1!", "direction": "bull",
+           "entry_at": (_dt2.now(timezone.utc) - timedelta(hours=6)).isoformat()}
+class FakeEvents:
+    def mt_events(self, symbol, limit=12):
+        return [{"received_at": (_dt2.now(timezone.utc) - timedelta(hours=5)).isoformat(), "tf": "5m", "text": "Lower Double Break"},
+                {"received_at": (_dt2.now(timezone.utc) - timedelta(hours=7)).isoformat(), "tf": "5m", "text": "Lower Double Break"},
+                {"received_at": (_dt2.now(timezone.utc) - timedelta(hours=5)).isoformat(), "tf": "1m", "text": "Lower Double Break"}]
+    def call(self, name, **kw):
+        base = int((_dt2.now(timezone.utc) - timedelta(hours=6)).timestamp() * 1000)
+        return [[base + i * 60000, p] for i, p in enumerate([100, 99.9, 100.2, 100.6] + [101.0] * 100)]
+kills = agent._kill_events(FakeEvents(), row_old)
+ok(len(kills) == 1, f"kill events: only 5m DBs against the play after entry ({len(kills)})")
+store.update_decision(2, entry_at=row_old["entry_at"], kill_events=kills, managed_r=None)
+ok(agent.manage_pending(FakeEvents()) >= 1 and store.decisions(limit=100)[0] is not None, "managed scoring ran")
+mrow = [r for r in store.decisions() if r["entry_id"] == 2][0]
+ok(mrow["managed_r"] is not None and "5m DB against" in (mrow["managed_outcome"] or "") and mrow["managed_paper_r"] == round(mrow["managed_r"] * 0.5, 3),
+   f"trade re-scored with the management rules ({mrow['managed_r']} {mrow['managed_outcome']})")
+rep2 = learning.report(30)
+ok("agent_with_management_rules" in rep2["books"] and "agent_with_daily_stop_minus2R" in rep2["books"], "report carries management and walk-away books")
+
+# 13. two losses in the session -> code skip (§2.13)
+now_utc = _dt2.now(timezone.utc)
+for i, eid in enumerate((901, 902)):
+    store.insert_decision({"entry_id": eid, "symbol": "MES1!", "entry_at": (now_utc - timedelta(minutes=30 + i)).isoformat(),
+                           "decision": "TAKE", "size": "full", "r": -1.0, "paper_r": -1.0})
+e = mk_entry(903); d = json.loads(e["detail"])
+fired, _ = rules_code.hard_rules(e, d, now_utc)
+ok(any("§2.13" in f and "2 losses" in f for f in fired), f"two session losses stop trading ({fired})")
+ok(rules_code.session_losses(now_utc - timedelta(hours=9)) == 0, "losses are counted per session block only")
+
 print("all tests passed")
 server.should_exit = True

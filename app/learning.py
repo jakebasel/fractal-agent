@@ -150,6 +150,23 @@ def hypothesis_result(h) -> dict:
     }
 
 
+def daily_stop_book(rows, r_key, stop_r=-2.0):
+    """The same trades with the instructor's walk-away rule: once a session day (ET) is down
+    stop_r, nothing else that day is taken. Deterministic, no model call."""
+    vals, day, cum = [], None, 0.0
+    for r in rows:
+        d = store.to_et(r["entry_at"])[:10]
+        if d != day:
+            day, cum = d, 0.0
+        v = r[r_key] if r[r_key] is not None else 0.0
+        if cum <= stop_r:
+            vals.append(0.0)
+            continue
+        vals.append(v)
+        cum += v
+    return store.summarize(vals)
+
+
 def _group(rows, key, value="r"):
     groups = {}
     for r in rows:
@@ -194,6 +211,10 @@ def report(days: float = 30) -> dict:
             "agent_paper_book": store.summarize([r["paper_r"] for r in takes]),
             "agent_takes_full_size": store.summarize([r["r"] for r in takes]),
             "agent_skips_counterfactual": store.summarize([r["r"] for r in skips]),
+            "agent_with_management_rules": store.summarize([r["managed_paper_r"] for r in takes if r["managed_r"] is not None]),
+            "core_with_management_rules": store.summarize([r["managed_r"] for r in rows if r["managed_r"] is not None]),
+            "agent_with_daily_stop_minus2R": daily_stop_book(takes, "paper_r"),
+            "core_with_daily_stop_minus2R": daily_stop_book(rows, "r"),
         },
         "core_by_play": _group(rows, lambda r: r["play"]),
         "agent_by_play": _group(takes, lambda r: r["play"], "paper_r"),

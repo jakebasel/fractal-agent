@@ -5,7 +5,7 @@ Rulebook §2: 1 ND, 2 news, 3 window, 6 no/shallow retracement (DB setups).
 """
 import logging
 import time
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 import httpx
 
@@ -61,6 +61,28 @@ def news_rule(when: datetime) -> tuple[str | None, dict]:
     return None, info
 
 
+def session_losses(at: datetime) -> int:
+    """Settled paper TAKEs that lost in the same session block (ET) as `at`. Results settle
+    ~2h after entry, so this lags; it still catches the third and fourth loss of a session."""
+    from . import store
+    et = at.astimezone(config.ET)
+    h = et.hour
+    # session blocks: Asia 18-02, London 02-09:30, NY 09:30-13, NY PM 13-18
+    if h >= 18 or h < 2:
+        start = et.replace(hour=18, minute=0, second=0, microsecond=0)
+        if h < 2:
+            start = start - timedelta(days=1)
+    elif h < 9 or (h == 9 and et.minute < 30):
+        start = et.replace(hour=2, minute=0, second=0, microsecond=0)
+    elif h < 13:
+        start = et.replace(hour=9, minute=30, second=0, microsecond=0)
+    else:
+        start = et.replace(hour=13, minute=0, second=0, microsecond=0)
+    rows = store.decisions(limit=200, since_iso=start.astimezone(timezone.utc).isoformat())
+    return sum(1 for r in rows if r["decision"] == "TAKE" and r["r"] is not None and r["r"] < 0
+               and r["entry_at"] < at.isoformat())
+
+
 def _is_db(entry: dict, detail: dict) -> bool:
     cfg = (detail.get("mt_cfg") or "").upper()
     text = (entry.get("mt_text") or "").lower()
@@ -90,16 +112,19 @@ def hard_rules(entry: dict, detail: dict, now: datetime) -> tuple[list[str], dic
         fired.append(news_fired)
     if _is_db(entry, detail) and (detail.get("retrace") or "").lower() in ("none", "shallow"):
         fired.append(f"§2.6 DB with {detail.get('retrace')} retracement (runaway / too shallow)")
+    losses = session_losses(at)
+    if losses >= 2:
+        fired.append(f"§2.13 {losses} losses already this session (paper book): stop")
     et = at.astimezone(config.ET)
     hm = (et.hour, et.minute)
     session = (detail.get("session") or "").lower()
-    if et.weekday() >= 5:
-        fired.append("§2.3 weekend")
+    if et.weekday() == 5 or (et.weekday() == 6 and hm < (18, 0)):
+        fired.append("§2.3 weekend (futures reopen Sunday 6 PM ET)")
     if session == "newyork" and hm >= (11, 0):
-        fired.append("§2.3 NY entry after 11:00 ET")
+        fired.append("§2.3 NY AM entry after 11:00 ET (late setups are demo only)")
     if session == "london" and (4, 0) <= hm < (20, 0):
         fired.append("§2.3 London: only the first ~2 hours after 2 AM ET")
-    if session == "asia" and (22, 0) <= hm:
+    if session == "asia" and (hm >= (22, 0) or hm < (2, 0)):
         fired.append("§2.3 Asia: done by 10 PM ET")
     if detail.get("in_window") is False:
         fired.append("§2.3 outside the session window (engine flag)")

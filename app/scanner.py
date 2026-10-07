@@ -29,7 +29,7 @@ def _windows():
 
 def in_window(now: datetime) -> bool:
     et = now.astimezone(config.ET)
-    if et.weekday() == 5:
+    if et.weekday() == 5 or (et.weekday() == 6 and et.hour < 18):
         return False
     hm = (et.hour, et.minute)
     return any(a <= hm < b for a, b in _windows())
@@ -72,10 +72,13 @@ def scan(fvg: FVG, chart_read, files, now: datetime | None = None):
 # ---- scoring spotted setups from the price archive (no model calls) ---------------------------
 
 def replay(ticks, direction: str, entry: float, stop: float, target: float, start_ms: int,
-           max_h: float = 2.0):
+           max_h: float = 2.0, kills=None):
     """fvg-mcp's management on a price tape: at 2R take 50% and move the stop to breakeven,
-    runner to the 1:3 target. Returns (R, outcome) or (None, reason) if the tape can't decide."""
+    runner to the 1:3 target. `kills` = times (ms) of a 5m DB against the trade: the
+    instructor's rule is to close (or roll) there, so the trade is closed at that tick.
+    Returns (R, outcome) or (None, reason) if the tape can't decide."""
     bull = direction == "bull"
+    kills = sorted(kills or [])
     risk = (entry - stop) if bull else (stop - entry)
     if risk <= 0:
         return None, "bad levels"
@@ -96,6 +99,10 @@ def replay(ticks, direction: str, entry: float, stop: float, target: float, star
         hit_stop = (px <= stop) if bull else (px >= stop)
         hit_tgt = (px >= target) if bull else (px <= target)
         hit_2r = (px >= two_r) if bull else (px <= two_r)
+        if kills and ms >= kills[0]:
+            open_r = ((px - entry) if bull else (entry - px)) / risk
+            r = round(1.0 + 0.5 * open_r, 3) if half else round(open_r, 3)
+            return r, "closed: 5m DB against the play" + (" (after 2R)" if half else "")
         if not half:
             if hit_stop:
                 return -1.0, "stopped (-1R)"

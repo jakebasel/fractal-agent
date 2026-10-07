@@ -11,11 +11,12 @@ RULE_FILES = ("amendments.md", "rulebook.md", "live_rules.md")
 # "5m reversal set up". Timeframe and signal come from the engine (mt_tf, mt_cfg) in code; the
 # model only decides the kind. The kinds the strategy names (rulebook + live sessions + video):
 PLAY_KINDS = {
-    "continuation": "retracement into the signal's leg / zone, then the cascade in the signal direction",
+    "continuation": "the signal's own model: M = first 5m FVG opposite the fake move, tap, 1m, 30s, close; DB = retracement into the DB leg / zone, then 5m, 1m, 30s, close in the DB direction",
     "reversal set up": "HTF FVG / liquidity hit + body close through the signal's white line + reversal zone",
     "2M return": "two Ms; price returns to the first 5m FVG between them",
     "true triangle": "M, M, DB: return to the FVG between the Ms, then the DB direction",
-    "false triangle": "M, DB, M: stick with the DB",
+    "2M into the gap": "two Ms; trade INTO the untouched FVG in the second M's direction",
+    "Spotlight DR play": "5m body close outside the DR, retrace to FVG / 20 EMA / Fib 61-79%, 1m FVG, engulfing, 30s FVG, close",
     "zone play": "pullback into the NY blue zone or Asia purple zone, then the cascade",
     "M via reversal zone": "reversal zone after a close through the M line used to continue the M",
     "other": "none of the above",
@@ -50,7 +51,8 @@ PLAYS = {
     "M continuation": "single M signal, retracement and cascade in the M direction",
     "2M return": "two Ms; price returns to the first 5m FVG between them",
     "true triangle": "M, M, DB: return to the FVG between the Ms, then the DB direction",
-    "false triangle": "M, DB, M: stick with the DB",
+    "2M into the gap": "two Ms; trade INTO the untouched FVG in the second M's direction",
+    "Spotlight DR play": "5m body close outside the DR, retrace to FVG / 20 EMA / Fib 61-79%, 1m FVG, engulfing, 30s FVG, close",
     "2DB": "two Double Breaks; resolved by the reversal-zone rule",
     "reversal set up": "HTF FVG / liquidity hit + body close through a white line + reversal zone",
     "M via reversal zone": "reversal zone after a close through the M line used to continue the M",
@@ -147,7 +149,11 @@ Reply with ONE JSON object and nothing else:
   "boosters": ["each booster that is present"],
   "reasons": ["3-6 short reasons, each citing a rule section, e.g. '§2.6 retracement too shallow'"],
   "unknowns": ["things you could not verify that matter"],
-  "kill_conditions": ["what would invalidate the trade after entry"]
+  "management_plan": {{
+    "be_safe_by": "the level or event by which the trade must be at breakeven or partial (e.g. 'before the 5m FVG at 24510', 'before the purple zone'), or null",
+    "partial_at": "where to take 50% if not the plain 2R (zone ahead, liquidity level), or '2R'",
+    "kill_conditions": ["what closes the trade early: e.g. '5m DB against the 1m play', 'consolidation 10-15 min after entry', 'body close back through the 30s FVG'"]
+  }}
 }}
 SKIP must have size "none". TAKE with grade B must have size "reduced"."""
 
@@ -176,13 +182,16 @@ def decision_user(context: dict) -> str:
     return ("Setup to review (all times ET). The 'engine' block is fvg-mcp's own data; "
             "'chart_read' is a vision model's reading of the latest screenshot (may be null or "
             "partial); 'course_passages' are the most relevant excerpts from the instructor's "
-            "own course transcripts and lessons (quote them when they decide the call; the "
-            "rulebook still wins on conflicts unless the passage is from the Reversal Set Up "
-            "video).\n\n" + json.dumps(context, indent=1, default=str))
+            "own course transcripts and lessons (quote them when they decide the call; on a "
+            "conflict the amendments win, then the rulebook, then live rules, then a passage)."
+            "\n\n" + json.dumps(context, indent=1, default=str))
 
 
 LESSON_SYSTEM = """You review a finished PAPER trade for a Fractal Effects trader and write a
 short, specific lesson that would make the next decision better. Use the rulebook language.
+`result` is the engine's mechanical scoring (2R + runner); `result_with_management_rules`, when
+present, applies the instructor's in-trade rules (close on a 5m DB against the play, etc.) on
+the price tape. If the two differ, say which management rule made the difference.
 Do not overfit: one trade is weak evidence. Only propose a rule change if this trade clearly
 exposes a gap or a contradiction in the rules. Phrase a proposal as ONE testable rule another
 reviewer could apply to any setup, in the form "IF <condition visible in the data> THEN
@@ -220,6 +229,9 @@ def lesson_user(row, outcome: dict) -> str:
         "entry": row["entry"], "stop": row["stop"], "target": row["target"],
         "decision": row["decision"], "grade": row["grade"], "size": row["size"],
         "play": row["play"], "reasons": j(row["reasons"]), "hard_rule": row["hard_rule"],
+        "management_plan": (j(row["context"]) or {}).get("_plan") if row["context"] else None,
+        "result_with_management_rules": {"r": row["managed_r"], "outcome": row["managed_outcome"]}
+        if "managed_r" in row.keys() else None,
         "chart_read_at_entry": j(row["chart_read"]),
         "result": outcome,
     }
@@ -234,7 +246,7 @@ plays, 2M returns, triangles. Be conservative: report only what the chart read s
 say "forming" unless the trigger is in. Never report a setup the engine already has armed in
 the same direction (check `engine_armed`).
 
-Rulebook §5 and plays:
+Amendments (highest priority), rulebook §5 and plays:
 {reversal}
 
 Reply with ONE JSON object: {{"setups": [{{"symbol": "MNQ1!"|"MES1!",
@@ -248,7 +260,8 @@ Empty list if nothing qualifies."""
 def scan_system() -> str:
     rb = _read("rulebook.md")
     i = rb.find("## 5.")
-    return SCAN_SYSTEM.format(reversal=rb[i:] if i >= 0 else rb[-3000:], plays=json.dumps(list(PLAY_KINDS)))
+    return SCAN_SYSTEM.format(reversal=_read("amendments.md") + "\n" + (rb[i:] if i >= 0 else rb[-3000:]),
+                              plays=json.dumps(list(PLAY_KINDS)))
 
 
 def scan_user(chart_read, armed, now) -> str:
