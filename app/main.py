@@ -220,14 +220,55 @@ def _review_packet(r) -> dict:
     }
 
 
+def _scan_packet(s) -> dict:
+    d = {k: s[k] for k in s.keys()}
+    jev = json.loads(d.pop("jev") or "null") if d.get("jev") else None
+    files = (d.get("files") or "").split(",") if d.get("files") else []
+    return {"kind": "scanner_setup", "scan_id": d["id"], "symbol": d["symbol"], "at_et": store.to_et(d["at"]),
+            "play": d["play"], "direction": d["direction"], "stage": d["stage"],
+            "levels": {"entry": d["entry"], "stop": d["stop"], "target": d["target"]},
+            "confidence": d["confidence"], "reasons": json.loads(d["reasons"] or "[]"),
+            "engine_has_it": bool(d["engine_has_it"]),
+            "jev": {k: jev.get(k) for k in ("p_take", "grade", "must_haves_missing", "boosters_present")} if jev else None,
+            "result": {"r_mechanical": d["r"], "outcome": d["outcome"]},
+            "screenshots": {"at_scan": files, "url": "/shot/<name>?token=AGENT_TOKEN"},
+            "note": "spotted by the chart scanner (not an engine entry); scored on the price tape with the same 2R + runner management"}
+
+
 @mcp.tool()
 def review_queue(reviewer: str = "hermes", limit: int = 10) -> list[dict]:
-    """Settled paper trades (with their result) that `reviewer` has not reviewed yet, as compact
-    packets: engine data, decision + reasons, decider's spotlight/sister/targets read, management
-    plan, sister index, 4H/daily FVGs, news, chart read, Jev, mechanical and management-rules
-    results, screenshots. decision_detail(entry_id) has the full record. Review, then POST
-    /api/reviews (bin/post_review.sh)."""
-    return [_review_packet(r) for r in store.review_queue(reviewer, limit)]
+    """Everything settled that `reviewer` has not reviewed yet: engine trades (kind=engine_trade,
+    key entry_id) as compact packets (engine data, decision + reasons, decider's spotlight /
+    sister / targets read, management plan, sister index, 4H/daily FVGs, news, chart read, Jev,
+    mechanical and management-rules results, screenshots) and scored scanner setups
+    (kind=scanner_setup, key scan_id). decision_detail(entry_id) has the full record. Review,
+    then POST /api/reviews (bin/post_review.sh) with entry_id or scan_id."""
+    out = [{"kind": "engine_trade", **_review_packet(r)} for r in store.review_queue(reviewer, limit)]
+    rest = max(0, limit - len(out))
+    if rest:
+        out += [_scan_packet(s) for s in store.scan_review_queue(reviewer, rest)]
+    return out
+
+
+@mcp.tool()
+def pending_setups() -> dict:
+    """What the engine is working on right now (armed / forming / ready setups per symbol, with
+    the code rule that would skip each) and the engine feed health."""
+    return store.kv_get("setups_snapshot") or {}
+
+
+@mcp.tool()
+def instructor_calls() -> list[dict]:
+    """The instructor's own calls from the live-session transcripts (June/July 2025): every
+    explicit skip/wait/rule with his reasons and quotes (knowledge/labels/*.json)."""
+    out = []
+    folder = Path(__file__).resolve().parent.parent / "knowledge" / "labels"
+    for p in sorted(folder.glob("*.json")) if folder.exists() else []:
+        try:
+            out.append({"file": p.name, **json.loads(p.read_text())})
+        except ValueError:
+            continue
+    return out
 
 
 @mcp.tool()
@@ -548,17 +589,20 @@ async def post_review(request: Request):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
     try:
         body = await request.json()
-        entry_id = int(body["entry_id"])
-    except (ValueError, KeyError, TypeError):
-        return JSONResponse({"error": "entry_id required"}, status_code=400)
+        entry_id = int(body["entry_id"]) if body.get("entry_id") is not None else None
+        scan_id = int(body["scan_id"]) if body.get("scan_id") is not None else None
+    except (ValueError, TypeError):
+        return JSONResponse({"error": "bad body"}, status_code=400)
+    if entry_id is None and scan_id is None:
+        return JSONResponse({"error": "entry_id or scan_id required"}, status_code=400)
     reviewer = re.sub(r"[^a-z0-9_-]", "", str(body.get("reviewer") or "hermes").lower())[:20] or "external"
     verdict = str(body.get("verdict") or "")[:20]
     store.add_review(entry_id, reviewer, verdict, str(body.get("summary") or "")[:2000],
-                     str(body.get("exit_notes") or "")[:2000], body.get("proposal"), body)
+                     str(body.get("exit_notes") or "")[:2000], body.get("proposal"), body, scan_id=scan_id)
     hid = None
     if body.get("proposal"):
         hid = learning.register_proposal({"proposal": body["proposal"], "proposal_title": body.get("proposal_title"),
-                                          "rule_ref": body.get("rule_ref")}, entry_id, source=reviewer)
+                                          "rule_ref": body.get("rule_ref")}, entry_id or 0, source=reviewer)
     return JSONResponse({"ok": True, "hypothesis_id": hid})
 
 
@@ -568,7 +612,7 @@ async def shot_file(request: Request):
     name = request.path_params["name"]
     if not re.fullmatch(r"[0-9A-Za-z_.-]+", name) or ".." in name:
         return PlainTextResponse("bad name", status_code=400)
-    for folder in ("decision_shots", "shots"):
+    for folder in ("decision_shots", "scan_shots", "shots"):
         p = config.DATA_DIR / folder / name
         if p.exists():
             return FileResponse(p, headers={"Cache-Control": "private, max-age=86400"})

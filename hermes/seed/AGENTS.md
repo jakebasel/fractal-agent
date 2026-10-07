@@ -18,7 +18,13 @@
   from decision_detail / review_queue `screenshots.at_decision` and `.at_exit`; the left window
   is the 5-minute charts, the right the 1-minute; MNQ and MES both visible); then use the vision
   tool on the file. Or chart_question(entry_id, question, at) for a targeted read.
-- `review_queue(reviewer="hermes", limit=3)` gives settled trades you have not reviewed. Each has:
+- `review_queue(reviewer="hermes", limit=2)` gives everything settled you have not reviewed:
+  engine trades (kind engine_trade, key entry_id) and scored scanner setups (kind scanner_setup,
+  key scan_id: plays the engine never armed, scored on the tape; review them for whether the
+  strategy should have been looking there). Post a scanner review with "scan_id" instead of
+  "entry_id". Also: pending_setups (what the engine is arming right now), instructor_calls (the
+  instructor's own skips and rules from the live sessions, with quotes), spotted_setups.
+  Each engine trade packet has:
   engine data (entry/stop/target, signal, retracement), `chart_read` (what the vision model saw:
   white lines, reversal zones, blue/purple zones, Spotlight, EMAs, trend table), `htf_fvgs` (4H and
   daily gaps with the entry's position), `_read` (spotlight / sister pair / targets as judged at

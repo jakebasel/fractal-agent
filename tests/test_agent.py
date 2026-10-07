@@ -425,6 +425,11 @@ pr = hc.post("/api/hypotheses/propose?token=tok", json={"title": "Hermes idea", 
 ok(pr["ok"] and store.hypothesis(pr["hypothesis_id"])["title"] == "Hermes idea", "direct proposal endpoint")
 from app import prompts as _pr  # noqa: E402
 ok("(hermes)" in _pr._lessons_block() and "sister pair had a DB against" in _pr._lessons_block(), "Hermes reviews feed the decision prompt")
+sq = [x for x in main.review_queue("hermes", 20) if x.get("kind") == "scanner_setup"]
+ok(sq and sq[0]["result"]["r_mechanical"] == 2.5, "scored scanner setups are in the review queue")
+ok(hc.post("/api/reviews?token=tok", json={"scan_id": sq[0]["scan_id"], "verdict": "right_take", "summary": "zone bounce worked"}).json()["ok"]
+   and not [x for x in main.review_queue("hermes", 20) if x.get("scan_id") == sq[0]["scan_id"]], "scanner setup review filed by scan_id")
+ok(isinstance(main.instructor_calls(), list) and main.pending_setups() is not None, "instructor_calls and pending_setups tools")
 
 # 18. screenshots kept for code skips and at exit; chart_question tool
 d_shots = Path(TMP) / "decision_shots"

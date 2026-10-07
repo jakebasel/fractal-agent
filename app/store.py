@@ -111,7 +111,8 @@ CREATE TABLE IF NOT EXISTS scans (
 );
 CREATE TABLE IF NOT EXISTS reviews (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
-  entry_id    INTEGER,
+  entry_id    INTEGER,   -- engine entry, or NULL for a scanner setup (scan_id)
+  scan_id     INTEGER,
   reviewer    TEXT,     -- e.g. hermes
   at          TEXT,
   verdict     TEXT,     -- right_take | wrong_take | right_skip | wrong_skip
@@ -316,12 +317,20 @@ def reeval_try(entry_id):
         db().commit()
 
 
-def add_review(entry_id, reviewer, verdict, summary, exit_notes, proposal, raw):
+def add_review(entry_id, reviewer, verdict, summary, exit_notes, proposal, raw, scan_id=None):
     with _lock:
-        db().execute("INSERT INTO reviews(entry_id,reviewer,at,verdict,summary,exit_notes,proposal,raw) "
-                     "VALUES(?,?,?,?,?,?,?,?)",
-                     (entry_id, reviewer, now_utc(), verdict, summary, exit_notes, proposal, json.dumps(raw or {})))
+        db().execute("INSERT INTO reviews(entry_id,scan_id,reviewer,at,verdict,summary,exit_notes,proposal,raw) "
+                     "VALUES(?,?,?,?,?,?,?,?,?)",
+                     (entry_id, scan_id, reviewer, now_utc(), verdict, summary, exit_notes, proposal, json.dumps(raw or {})))
         db().commit()
+
+
+def scan_review_queue(reviewer: str, limit=10):
+    """Scored scanner setups (ready, with a result on the tape) not yet reviewed by `reviewer`."""
+    return db().execute(
+        "SELECT s.* FROM scans s WHERE s.r IS NOT NULL "
+        "AND NOT EXISTS (SELECT 1 FROM reviews v WHERE v.scan_id=s.id AND v.reviewer=?) "
+        "ORDER BY s.id DESC LIMIT ?", (reviewer, limit)).fetchall()
 
 
 def reviews(limit=50, entry_id=None, reviewer=None):
