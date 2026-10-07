@@ -126,6 +126,7 @@ MIGRATIONS = {
     "decisions": {"play": "TEXT", "rules_version": "TEXT", "jev": "TEXT", "jev_p_take": "REAL",
                   "path": "TEXT", "news": "TEXT", "vision_score": "REAL", "vision_note": "TEXT"},
     "screenshots": {"batch": "TEXT", "part": "INTEGER", "kind": "TEXT"},
+    "scans": {"r": "REAL", "outcome": "TEXT", "scored_at": "TEXT", "score_tries": "INTEGER"},
 }
 
 SIZE_MULT = {"full": 1.0, "reduced": 0.5, "none": 0.0}
@@ -246,6 +247,30 @@ def add_scan(at, files, symbol, play, direction, stage, entry, stop, target, con
 
 def scans(limit=50):
     return db().execute("SELECT * FROM scans ORDER BY id DESC LIMIT ?", (limit,)).fetchall()
+
+
+def scans_to_score(older_than_iso, max_tries=4):
+    return db().execute(
+        "SELECT * FROM scans WHERE stage='ready' AND entry IS NOT NULL AND stop IS NOT NULL "
+        "AND target IS NOT NULL AND r IS NULL AND at<=? AND COALESCE(score_tries,0)<? ORDER BY id",
+        (older_than_iso, max_tries)).fetchall()
+
+
+def score_scan(scan_id, r, outcome):
+    with _lock:
+        db().execute("UPDATE scans SET r=?, outcome=?, scored_at=?, score_tries=COALESCE(score_tries,0)+1 WHERE id=?",
+                     (r, outcome, now_utc(), scan_id))
+        db().commit()
+
+
+def scan_try(scan_id):
+    with _lock:
+        db().execute("UPDATE scans SET score_tries=COALESCE(score_tries,0)+1 WHERE id=?", (scan_id,))
+        db().commit()
+
+
+def scored_scans():
+    return db().execute("SELECT * FROM scans WHERE r IS NOT NULL ORDER BY id").fetchall()
 
 
 def latest_screenshot():

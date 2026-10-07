@@ -209,6 +209,8 @@ def report(days: float = 30) -> dict:
             {"rules_version": v, **store.summarize([x["paper_r"] for x in rs if x["decision"] == "TAKE"])}
             for v, rs in by_version.items()],
         "lesson_verdicts": verdicts,
+        "spotted_by_scanner_book": store.summarize([s["r"] for s in store.scored_scans() if s["at"] >= since]),
+        "spotted_by_play": _group([s for s in store.scored_scans() if s["at"] >= since], lambda s: s["play"]),
         "jev": {"mode": config.JEV_MODE, "scored": len(jev_rows),
                 "agreement_with_agent_pct": round(100 * agree / len(jev_rows), 1) if jev_rows else None,
                 "jev_take_book_full_size": store.summarize([r["r"] for r in jev_take])},

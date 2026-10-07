@@ -305,5 +305,18 @@ ok(st["last_screenshot_kind"] == "fallback" and "spend_today_usd" in st, "status
 dash = c.get("/api/dashboard?days=30").json()
 ok("scans" in dash and "vision" in dash and "backtest" in dash, "dashboard API carries scans, vision, backtest")
 
+# 11. scoring spotted setups on a price tape
+t0 = 1_800_000_000_000
+tape = [(t0 + i * 1000, p) for i, p in enumerate([101, 100, 99.5, 101, 102, 103, 102.5, 101, 100.2])]
+ok(scanner.replay(tape, "bull", 100.0, 99.0, 103.0, t0) == (2.5, "2R + runner to 3R"), "replay: 2R + runner to target")
+ok(scanner.replay(tape[:4], "bull", 100.0, 99.0, 103.0, t0)[1] == "auto-closed 2h", "replay: auto-close when the tape ends")
+ok(scanner.replay([(t0, 100.5), (t0 + 1, 100.2)], "bull", 100.0, 99.0, 103.0, t0) == (0.0, "never filled"), "replay: never filled")
+ok(scanner.replay([(t0, 100.0), (t0 + 1, 98.9)], "bull", 100.0, 99.0, 103.0, t0) == (-1.0, "stopped (-1R)"), "replay: stopped")
+store.add_scan((_dt2.now(timezone.utc) - timedelta(hours=5)).isoformat(), "y.jpg", "MNQ1!", "5m DB continuation", "bull", "ready", 100.0, 99.0, 103.0, 0.8, ["x"], False)
+class FakeTape:
+    def call(self, name, **kw):
+        return [[int((_dt2.now(timezone.utc).timestamp() - 5 * 3600) * 1000) + i * 1000, p] for i, p in enumerate([100, 99.8, 101, 102, 103.1])]
+ok(scanner.score_pending(FakeTape()) == 1 and store.scored_scans()[0]["r"] == 2.5, "spotted setup scored from the archive")
+
 print("all tests passed")
 server.should_exit = True

@@ -308,6 +308,10 @@ def tick(fvg: FVG):
                 scanner.scan(fvg, read, files)
     except Exception as e:
         log.warning("scanner failed: %s", e)
+    try:
+        scanner.score_pending(fvg)
+    except Exception as e:
+        log.warning("scan scoring failed: %s", e)
     learning.promote_queued()
     try:
         learning.run_shadow()

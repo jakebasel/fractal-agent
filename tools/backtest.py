@@ -167,6 +167,11 @@ def evaluate(tweak, train, hold):
             ((cut_t.get("avg_r") or 0) > 0 and (cut_h.get("avg_r") or 0) > 0) if adds else
             ((cut_t.get("avg_r") or 0) < 0 and (cut_h.get("avg_r") or 0) < 0),
     }
+    # out-of-sample degradation: the per-trade edge on holdout should keep at least half of
+    # the train edge (a >50% drop is the standard overfitting red flag)
+    edge_t = (bt.get("avg_r") or 0) - (base_t.get("avg_r") or 0)
+    edge_h = (bh.get("avg_r") or 0) - (base_h.get("avg_r") or 0)
+    checks["holdout_keeps_half_the_edge"] = edge_t > 0 and edge_h >= 0.5 * edge_t
     misses = [k for k, v in checks.items() if not v]
     verdict = "PASS" if not misses else ("inconclusive" if len(misses) <= 2 else "fail")
     return {"name": tweak["name"], "tweak": tweak, "affected_train": at, "affected_holdout": ah,
@@ -253,7 +258,17 @@ def main():
             report["tweaks"].append(ev)
             f.write(json.dumps({"at": report["generated_et"], "cut": cut, **{k: ev[k] for k in ("name", "tweak", "verdict", "misses", "train", "holdout")}}, default=str) + "\n")
     report["tweaks"].sort(key=lambda e: (e["verdict"] != "PASS", -(e["train"]["delta_total_r"] + e["holdout"]["delta_total_r"])))
-    report["tweaks_tried_total"] = sum(1 for _ in log.open())
+    report["tweaks_tried_total"] = len({json.loads(l)["name"] for l in log.open() if l.strip()})
+    # multiple testing: with k tweaks tried, a lone PASS needs a bigger holdout edge to count.
+    # Bonferroni-style: require holdout delta > (base holdout max DD / 4) * log2(k) R
+    import math
+    k = max(1, report["tweaks_tried_total"])
+    bar = round(abs(report["books"]["after_code_hard_rules"].get("max_dd_r") or 0) / 4 * math.log2(k + 1), 2)
+    report["multiple_testing_bar_r"] = bar
+    for e in report["tweaks"]:
+        if e["verdict"] == "PASS" and e["holdout"]["delta_total_r"] < bar:
+            e["verdict"] = "PASS (below multiple-testing bar)"
+            e["misses"].append(f"holdout delta {e['holdout']['delta_total_r']} < bar {bar} after {k} tweaks tried")
     (ROOT / "reports" / "backtest_latest.json").write_text(json.dumps(report, indent=1, default=str))
 
     print("window:", report["window"])

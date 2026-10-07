@@ -417,6 +417,7 @@ function render() {
   $("#shot-age").textContent = (shotAgo != null ? fmtAgo(shotAgo) + " ago" : "") + (st.last_screenshot_kind === "window" ? " · TradingView window" : st.last_screenshot_kind === "fallback" ? " · whole screen (no TradingView window)" : "");
   $("#scans").innerHTML = (d.scans || []).map(x => `<div class="lesson"><span class="badge ${x.stage === "ready" ? "star" : ""}">${esc(x.stage)}</span>
     <b>${esc(x.symbol)} ${x.direction === "bull" ? "▲" : "▼"} ${esc(x.play)}</b> <span class="muted">${esc(x.at_et)} · conf ${x.confidence != null ? Math.round(x.confidence * 100) + "%" : "–"}${x.engine_has_it ? " · engine has it" : ""}</span>
+    ${x.r != null ? `<span class="r ${clsR(x.r)}" style="float:right">${fmtR(x.r)} <span class="muted">${esc(x.outcome)}</span></span>` : ""}
     <div class="t2">${(x.reasons || []).map(esc).join(" · ")}${x.entry ? ` · entry ${x.entry} stop ${x.stop} target ${x.target}` : ""}</div></div>`).join("") ||
     `<div class="empty">Nothing spotted yet. The scanner runs every ${st.scanner ? st.scanner.minutes : 5} min in ${esc(st.scanner ? st.scanner.windows_et : "")} ET when the screen changes.</div>`;
   const bt = d.backtest;
@@ -452,6 +453,7 @@ function render() {
     groupTable("By play", rep.core_by_play, "Play", "core strategy (every entry, full size): timeframe · signal · kind"),
     groupTable("By timeframe × signal", rep.core_by_timeframe_signal, "TF signal", "core strategy: 1m vs 5m, M vs DB"),
     groupTable("By timeframe", rep.core_by_timeframe, "Timeframe", "core strategy"),
+    groupTable("Spotted by the chart scanner", [{group: "all spotted, ready, full size", ...rep.spotted_by_scanner_book}, ...rep.spotted_by_play], "Play", "scored on the price archive with the same 2R+runner management"),
     groupTable("Agent by play", rep.agent_by_play, "Play", "agent paper book"),
     groupTable("By session", rep.core_by_session, "Session", "core strategy"),
     groupTable("By signal config", rep.core_by_signal_config, "Config", "core strategy"),

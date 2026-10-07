@@ -15,13 +15,17 @@ tweak that looks good is actually good, not just lucky on the trades we happened
    identical trades (it can only remove or resize trades), scored the way fvg-mcp scores
    (2R + runner to 3R). Chart-dependent rules cannot be backtested here; they go through the
    live shadow test instead.
-4. **Pass = all of:** at least 30 trades affected on train; total R improves on train AND on
-   holdout; max drawdown not deeper on either; the trades it removes have negative average R on
-   both halves (it is cutting losers, not just cutting). One or two miss: "inconclusive", keep
-   collecting. Three or more miss: "fail".
+4. **Pass = all of:** at least 30 trades affected on train (the "30 trades per parameter" rule);
+   total R improves on train AND on holdout; the holdout keeps at least half of the train edge
+   per trade (a >50% in-sample→out-of-sample drop is the standard overfitting red flag); max
+   drawdown not deeper on either; the trades it removes have negative average R on both halves
+   (it is cutting losers, not just cutting). One or two miss: "inconclusive", keep collecting.
+   Three or more miss: "fail". A PASS also has to clear the multiple-testing bar (below).
 5. **Every run is logged** to `reports/backtest_log.jsonl` with the tweak text, the data cut and
    the numbers. The number of tweaks tried is part of the evidence: if 20 were tried and one
-   passed, that one is probably noise (Bonferroni: demand a bigger edge).
+   passed, that one is probably noise. The code applies a multiple-testing bar: with k tweaks
+   tried so far, a PASS must beat the base book on holdout by more than (max drawdown / 4) ×
+   log2(k+1) R, otherwise it is marked "PASS (below multiple-testing bar)".
 6. **One tweak at a time.** Tweaks are stacked only after each passed alone, and the stack is
    re-run as a whole.
 7. **Then the live shadow test.** A passed tweak becomes a hypothesis on the dashboard and runs

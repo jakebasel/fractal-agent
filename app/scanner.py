@@ -69,6 +69,80 @@ def scan(fvg: FVG, chart_read, files, now: datetime | None = None):
     return found
 
 
+# ---- scoring spotted setups from the price archive (no model calls) ---------------------------
+
+def replay(ticks, direction: str, entry: float, stop: float, target: float, start_ms: int,
+           max_h: float = 2.0):
+    """fvg-mcp's management on a price tape: at 2R take 50% and move the stop to breakeven,
+    runner to the 1:3 target. Returns (R, outcome) or (None, reason) if the tape can't decide."""
+    bull = direction == "bull"
+    risk = (entry - stop) if bull else (stop - entry)
+    if risk <= 0:
+        return None, "bad levels"
+    two_r = entry + 2 * risk if bull else entry - 2 * risk
+    filled, half, last = False, False, None
+    end_ms = start_ms + max_h * 3600_000
+    for ms, px in ticks:
+        if ms < start_ms:
+            continue
+        if ms > end_ms:
+            break
+        last = px
+        if not filled:
+            if (px <= entry) if bull else (px >= entry):
+                filled = True
+            else:
+                continue
+        hit_stop = (px <= stop) if bull else (px >= stop)
+        hit_tgt = (px >= target) if bull else (px <= target)
+        hit_2r = (px >= two_r) if bull else (px <= two_r)
+        if not half:
+            if hit_stop:
+                return -1.0, "stopped (-1R)"
+            if hit_2r:
+                half, stop = True, entry   # 50% off at 2R, stop to breakeven
+        if half:
+            if hit_tgt:
+                return 2.5, "2R + runner to 3R"
+            if (px <= stop) if bull else (px >= stop):
+                return 1.0, "2R, runner to BE"
+    if not filled:
+        return 0.0, "never filled"
+    if last is None:
+        return None, "no data"
+    open_r = ((last - entry) if bull else (entry - last)) / risk
+    r = round(1.0 + 0.5 * open_r, 3) if half else round(open_r, 3)
+    return r, f"auto-closed {max_h:g}h" + (" (2R + runner)" if half else "")
+
+
+def score_pending(fvg: FVG, now: datetime | None = None) -> int:
+    """Score 'ready' spotted setups older than 2.5h against fvg-mcp's archived price tape."""
+    now = now or datetime.now(timezone.utc)
+    cutoff = datetime.fromtimestamp(now.timestamp() - 2.5 * 3600, tz=timezone.utc).isoformat()
+    done = 0
+    for s in store.scans_to_score(cutoff):
+        at = datetime.fromisoformat(s["at"])
+        try:
+            ticks = fvg.call("archived_prices", symbol=s["symbol"], day=at.strftime("%Y-%m-%d")) or []
+            if at.hour >= 21:   # the 2h window may run into the next UTC day
+                ticks = list(ticks) + list(fvg.call("archived_prices", symbol=s["symbol"],
+                                                    day=(datetime.fromtimestamp(at.timestamp() + 86400, tz=timezone.utc)).strftime("%Y-%m-%d")) or [])
+        except Exception as e:
+            log.warning("archived_prices for scan %s: %s", s["id"], e)
+            store.scan_try(s["id"])
+            continue
+        if not ticks:
+            store.scan_try(s["id"])   # archive not there yet: try again later (max 4 tries)
+            continue
+        r, outcome = replay(ticks, s["direction"], s["entry"], s["stop"], s["target"], int(at.timestamp() * 1000))
+        if r is None:
+            store.scan_try(s["id"])
+            continue
+        store.score_scan(s["id"], r, outcome)
+        done += 1
+    return done
+
+
 def sanity_check(chart_read, entry: dict) -> tuple[float | None, str]:
     """How much to trust this chart read for this entry: does the vision model's last price
     for the entry's symbol sit within 0.5% of the engine's entry price, and did it read any
