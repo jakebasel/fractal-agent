@@ -1,0 +1,27 @@
+Signal Legend (text version of the official Fractal Effects Signal Legend PDF)
+
+Page 1: diagrams
+- M Bullish Signal: M label below price. Then the 5M FVG, 1M FVG and 30S FVG step up. Stop at the bottom of the 30S leg. Entry above the 30S FVG.
+- M Bearish Signal: M label above price. Mirror image: 5M, 1M and 30S FVGs step down, stop above, entry below.
+- DB Bullish Model: an M below, then a DB label over the high it broke. Price retraces under the DB, then 5M -> 1M -> 30S FVGs step up to the entry.
+- DB Bearish Model: an M above, then a DB label under the low it broke. Price retraces up, then 5M -> 1M -> 30S FVGs step down.
+- Triangle Model: an M below, then another M and a DB up top. Both point the same direction. The 5M -> 1M -> 30S cascade follows.
+- 2DB Void Setup: an M below, an M above, a DB above and a DB below. Double breaks both ways, so the setup is void.
+
+Page 2: Signal Definition (verbatim)
+M Signal
+- Step 1: Wait for the first 5M FVG to be created in the opposite direction and wait for market to tap this FVG.
+- Step 2: Wait for first 1M FVG to be created and tapped.
+- Step 3: Wait for first 30S FVG to be created and tapped.
+- Step 4: Wait for price to close over the candle bodies of the leg that tapped the 30S FVG. This is our entry, with a SL at the bottom of the 30S leg that contains the FVG.
+2M Signal
+- Expect the market to most likely retrace back the first 5M FVG left between the 2 M signals, before continuing in the direction of the first M signal.
+DB Signal
+- Step 1: Expect market to retrace back to either a FVG in the DB leg, or back beneath the DB candle if there is no FVG in the leg.
+- Step 2: Wait for the first 5M FVG to be created in the opposite direction and wait for market to tap this FVG.
+- Step 3: Wait for first 1M FVG to be created and tapped.
+- Step 4: Wait for first 30S FVG to be created and tapped.
+- Step 5: Wait for price to close over the candle bodies of the leg that tapped the 30S FVG. This is our entry, with a SL at the bottom of the 30S leg that contains the FVG.
+2DB
+- Void any previous set up and no other logic for a new set up should form after this point, until next session.
+(Note: the newer Reversal Set Up video refines 2DB; see that transcript.)

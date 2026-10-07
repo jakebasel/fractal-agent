@@ -104,7 +104,10 @@ def decision_system() -> str:
 def decision_user(context: dict) -> str:
     return ("Setup to review (all times ET). The 'engine' block is fvg-mcp's own data; "
             "'chart_read' is a vision model's reading of the latest screenshot (may be null or "
-            "partial).\n\n" + json.dumps(context, indent=1, default=str))
+            "partial); 'course_passages' are the most relevant excerpts from the instructor's "
+            "own course transcripts and lessons (quote them when they decide the call; the "
+            "rulebook still wins on conflicts unless the passage is from the Reversal Set Up "
+            "video).\n\n" + json.dumps(context, indent=1, default=str))
 
 
 LESSON_SYSTEM = """You review a finished PAPER trade for a Fractal Effects trader and write a

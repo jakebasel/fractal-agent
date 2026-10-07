@@ -8,7 +8,7 @@ import threading
 import time
 from datetime import datetime, timezone
 
-from . import config, llm, prompts, store
+from . import config, knowledge, llm, prompts, store
 from .mcp_client import FVG
 
 log = logging.getLogger("agent")
@@ -191,6 +191,10 @@ def review(fvg: FVG, entry: dict):
         row["error"] = f"vision: {e}"[:500]
 
     context = build_context(fvg, entry, detail, chart_read, shot_age)
+    try:
+        context["course_passages"] = knowledge.passages_for(context)
+    except Exception as e:  # search must never block a decision
+        log.warning("knowledge search failed: %s", e)
     try:
         dec = normalise(llm.decide(prompts.decision_system(), prompts.decision_user(context)))
     except Exception as e:

@@ -41,8 +41,12 @@ Mac screenshot ──► fractal-agent ──► OpenRouter: cheap vision model 
 
 There is no order-placement code in this repo. Keep it that way until Jake says otherwise.
 
-## Rules
+## Rules and course material
 
+- `knowledge/` — the full course: 9 course transcripts, the mini lessons, the Reversal Set Up
+  video, the SOP and strategy PDFs as text. `app/knowledge.py` searches it (BM25) and puts the
+  6 most relevant passages into every decision prompt, so DeepSeek can quote the instructor.
+  See `knowledge/README.md` for what's in it and how to add more.
 - `rules/rulebook.md` — compiled rulebook: definitions, 12 hard rules, grading, management,
   the Reversal Set Up model (newest video), what can't be seen.
 - `rules/live_rules.md` — rules from the 12 live sessions.
@@ -110,6 +114,8 @@ stats, token gate, screenshot upload, the agent's own MCP tool.
 1. Deploy + Mac uploader (above). Watch one session; check `decision_detail` rows to see what
    the vision model actually read off the screen. Tune `VISION_PROMPT` in `app/prompts.py`
    until it reliably reads white lines and reversal zones. This is the weakest link.
+   Reference chart images are in `knowledge/reference/images/`; sending one or two with each
+   vision call as examples of what the markers look like should improve the read.
 2. Confirm fvg-mcp's `entries` rows for MNQ1!/MES1! carry `f_pnl_r` within ~2h (they did on
    2026-10-05). `scoring_health` on fvg-mcp shows whether scoring is on time.
 3. News filter: rule §2.2 (news days) is not enforced by code yet. Add an economic-calendar

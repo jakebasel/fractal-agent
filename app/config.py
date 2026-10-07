@@ -46,6 +46,8 @@ TELEGRAM_BOT_TOKEN = _env("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = _env("TELEGRAM_CHAT_ID")
 NOTIFY_SKIPS = _env("NOTIFY_SKIPS", "1") == "1"   # also message skipped setups
 LESSONS_IN_PROMPT = int(_env("LESSONS_IN_PROMPT", "20"))
+# passages from knowledge/ (full course transcripts, mini lessons, PDFs) added per decision
+KNOWLEDGE_PASSAGES = int(_env("KNOWLEDGE_PASSAGES", "6"))
 
 # --- paper only ---------------------------------------------------------------------------------
 # There is deliberately no order-placement code in this service. PAPER is informational.

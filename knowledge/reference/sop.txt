@@ -1,0 +1,184 @@
+FRACTAL EFFECTS                                                                                            1:3 RRR        NO EMOTION          NO CHASE
+
+
+Trading SOP — Master Cheat Sheet
+
+
+01 — POWER OF 3 (Market Structure)
+
+ 1 ACCUMULATION                                         2 MANIPULATION                                     3 DISTRIBUTION
+ Smart money quietly builds position. Price             Large players create false                         True directional move begins. Institutional
+ consolidates with no significant movement.             breakouts/breakdowns. Stop hunts trap              activity drives price. This is the trade you
+ Wait here.                                             retail traders. This is your signal zone.          enter.
+
+
+02 — 4-HOUR SESSION MODEL (Daily Roadmap)
+
+ Time (EST)            Condition                Outcome                            Action
+
+ 6–10 PM               Manipulates              2 AM → Expansion                   Bias confirmed. Set up for 2 AM entry.
+
+                       Consolidates /
+ 6–10 PM                                        2 AM → Manipulation                2 AM becomes the manipulation candle.
+                       Retraces
+
+ 2–6 AM                Manipulates              6 AM → Expansion                   Bias confirmed. Set up for 6 AM entry.
+
+ 6–10 AM               Manipulates              10 AM → Expansion                  Bias confirmed. Set up for 10 AM entry.
+
+                                                ■ AVOID — HTF Reversal             No entry. Price may reverse off 4H FVGs/liquidity sweeps even with
+ 10–11 AM              Manipulates
+                                                Risk                               DB signal.
+
+
+03 — SIGNAL CONFIGURATIONS (5 Types)
+
+       M           Manipulation — Simple M move. Market intends opposite direction. Wait for reversal setup.
+
+
+       2M          Double Manipulation — M in both directions. Price retraces back to first untouched 5M fair-value gap between them.
+
+
+       ■           Triangle Pattern — M in one direction + DB in the other. Conflicting signals. Use extreme caution.
+
+
+       DB          Double Break — Continuation signal. Dealer reveals hand. Trade in DB direction ONLY, or sit out completely.
+
+
+   2DB             Double DB (both directions) — Voids setup entirely. DO NOT ENTER. Walk away.
+
+
+04 — ENTRY SEQUENCES (Drill-Down Process)
+
+ M Signal — 5-Minute TF Entry                                                    DB Signal — 5-Minute TF Entry
+
+   1        On 5M TF: wait for M signal to appear                                      DB signal appears on 5M TF — strong continuation bias
+                                                                                   1
+                                                                                       established
+   2        Wait for FVG to form in the opposite direction of the M signal
+                                                                                   2   Wait for price to retrace / pull back inside the dealing range
+            Market taps 5M FVG → switch to 1M TF, wait for 1M FVG to
+   3
+            form                                                                   3   Wait for 5M FVG to be created and tapped in DB direction
+
+            Market taps 1M FVG → switch to 30S TF, wait for 30S FVG to             4   Then wait for 1M FVG to be created and tapped
+   4
+            form and be tapped
+                                                                                   5   Then wait for 30S FVG to be created and tapped
+  ✓         ENTRY: Enter at 30S FVG close. SL = below 30S FVG low
+                                                                                   ✓   ENTRY: Enter at 30S FVG close. SL = below 30S FVG
+ M Signal — 1-Minute TF Entry (Early)                                             DB Signal — 1-Minute TF Entry (Early)
+
+  1     M signal appears on 1M TF (fractal mirror of 5M pattern)                   1     DB signal appears on 1M TF
+
+  2     Wait for 1M FVG in the opposite direction of M signal                      2     Retracement / pull back inside dealing range
+
+  3     Market taps 1M FVG → switch to 30S, wait for 30S FVG                       3     Wait for 1M FVG to be created and tapped
+
+        Market taps 30S FVG → wait for closure over candles that                   4     Then wait for 30S FVG to be created and tapped
+  4
+        tapped 30S FVG
+                                                                                         ENTRY: Closure over candle series tapping 30S FVG. SL =
+                                                                                   ✓
+  ✓     ENTRY: Enter on closure confirmation. SL = below 30S FVG                         below 30S FVG
+
+
+05 — BLUE & PURPLE ZONES + DIVERGENCE
+
+ Blue & Purple Zones                                                              Divergence
+      › High-algorithmic levels identified by Market Translator                   Two correlated assets fail to move in sync. Smart money manipulates
+                                                                                  one while the other reveals true direction.
+      › Frame the 3 sessions — mark continuation OR reversal point
+
+      › Attract price like magnets → key liquidity zones                               › One asset has M signal, other does not → divergence
+      › Darker shade = stronger zone                                                   › One has DB, other does not → divergence
+
+                                                                                       › One makes lower low, other does not → Bullish divergence
+ TRADING FROM: Enter/exit from these zones during sessions
+                                                                                       › One makes higher high, other does not → Bearish divergence
+ TRADING TO: If manipulation is away from zone and zone aligns
+ with daily bias → enter using 5M FVG entry toward the zone
+                                                                                  ■ If either asset hits TP threshold first → close your position on the
+                                                                                  asset you're trading.
+
+
+06 — RISK MANAGEMENT & MONEY MANAGEMENT
+
+ 1:3 Risk-to-Reward Rule                                                          Money Management System
+                                                                                       › Risk Management — Fixed % per trade. Never deviate.
+ RISK (1x) ■■■■ ■■■■■■■■■■■■ REWARD (3x+)
+                                                                                       › Risk-to-Reward — Minimum 1:3. No exceptions.
+
+      › SL placed below 30S FVG (long) or above 30S FVG (short)                        › Profit & Loss — Track every session. Review weekly.
+
+      › Only take trades where TP is at least 3× the SL distance                       › Review & Adjust — Refine on market feedback, not emotion.
+
+      › Avoid trades with poor or unclear risk-to-reward                               › Psychological Discipline — Paper trade to build consistency.
+
+      › At 50% TP hit → move SL to breakeven, let remainder run
+                                                                                    Trail stop after 50% TP: Once price hits your 50% target you are in a
+                                                                                    "free" trade. Trail stop to breakeven minimum. Let the trade breathe to
+                                                                                    full 3x target.
+
+
+07 — DR STRATEGY (Confirmation Framework)
+
+ TIMEFRAME USE                                        RETRACEMENT TARGET                                    CONFIRMATION SIGNAL
+
+      › Setup: 5-minute TF                                 › After confirmation, price retraces into            › Green arrow up = Bullish signal
+                                                           dealing range
+      › Confirmation: 1-minute TF                                                                               › Red arrow down = Bearish signal
+                                                           › Look for price to tap FVG + 20 EMA
+      › Entry: 30-second TF                                                                                     › Signal must align with 4H session
+                                                           (red line)
+                                                                                                                model before entry
+                                                           › Fibonacci: match 61–79% zone to
+                                                           nearby FVG + 20 EMA for highest
+                                                           probability entry
+
+
+08 — HARD STOPS (Do Not Trade)
+ ■ High-Impact News — Avoid All Entries                                      ■ Immediate Stop Conditions
+                                                                                   › 2DB signal appears → setup voided, do not enter
+                                     FOM
+                                                                                   › 10–11 AM session manipulates → avoid (HTF reversal risk)
+   CPI         PPI        NFP         C             Fed Chair Speech
+                                                                                   › No clear M or DB signal → flat is a position, no trade
+ Check the economic calendar every morning before each session.                    › RRR below 1:3 → skip trade, wait for next setup
+
+                                                                                   › Already overtraded the session → stop. Review tomorrow.
+
+
+09 — PRE-TRADE CHECKLIST (Run Before Every Entry)
+
+ Before the Session                                                          Before Pulling the Trigger
+
+       Check economic calendar — CPI/PPI/NFP/FOMC today? If yes                1     M or DB signal confirmed on correct TF?
+   1
+       → DO NOT TRADE
+                                                                               2     Signal type — is it voided by 2DB?
+   2   Identify daily bias (bullish or bearish) using higher TF context
+                                                                               3     5M FVG tapped → 1M FVG tapped → 30S FVG tapped?
+       Check 4H model — which session block? What is the expected
+   3
+       move?                                                                   4     Fib 61–79% aligns with FVG + 20 EMA?
+
+
+   4   Note Blue & Purple Zone levels on your chart                            5     RRR ≥ 1:3 achievable to nearest Blue/Purple Zone?
+
+                                                                              ✓      All checked → ENTER. Set SL. Set TP. Walk away.
+
+
+10 — DISCIPLINE RULES (Non-Negotiable)
+
+ Emotion Control                                     Patience                                           Process Over Outcome
+ Fear and greed are account killers. The             We do not chase the market. The market             A losing trade that followed the SOP is a
+ setup either meets all criteria or it doesn't.      comes to us. One perfect trade is worth            good trade. A winning trade that broke the
+ Your feelings are irrelevant. If it fails the       more than ten forced ones. Overtrading             rules is a bad trade. Judge execution — not
+ checklist — skip it.                                increases risk and degrades every decision.        just PnL. Review weekly.
+
+
+                                                                                   — Wait for the setup — Let the market come to you — 1:3 or
+FRACTAL EFFECTS — WHERE KNOWLEDGE MEETS MARKETS
+                                                                                                                                      nothing
+

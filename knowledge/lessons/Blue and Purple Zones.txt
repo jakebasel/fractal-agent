@@ -1,0 +1,15 @@
+Blue and Purple Zones (mini lesson)
+
+The purple zones and the blue zones are highly algorithmic zones that the market is drawn to and pushes from. Blue zones are mostly used for the New York session but are not exclusive. Purple zones are mostly used for Asia and London, but they can spread past London into New York as well. The darker the colour, the stronger the zone (the darker purple can show up as maroon; there is also a darker blue).
+
+How we use them: we pair them with the strategy. When the market hits them (drawn to and pushes from) there's a chance the market might not pass that area. If we're already in a position and heading towards a blue or purple zone, we want to be in a safe trade by the time we hit it, or take profit from it.
+
+Example: Asia opened, shot up, hit the purple zone and couldn't get past it: wick, wick, wick. And we already have an M signal, so the market wants to go down. We know we hit a strong area, so now we can start looking for our entry to go short.
+
+Because the market could gas out when it hits these zones, that also gives us an opportunity to take one of the fractals off: even if you're looking at the five minute, if you hit the zone you can start looking for a one minute entry. We already have the bias, so we can look for a five-minute hit here and a one-minute entry to go short to take out the M reversal zone right here, the low.
+
+Then the market dropped and we had a double break to the downside, and then we had a reversal: we took out the DB reversal zone, painted out a fair value gap, tapped the fair value gap right from the midpoint and shot up, right back to the darker purple zone and the regular purple zone. You could have taken partials and your TP there, and eventually it went into a 2DB.
+
+Next example: double break to the downside, a blue zone, the first presented fair value gap. The market came back and tapped it. You could have looked for a one minute entry here because there's a blue zone. If we come back and hit a blue zone on a retracement, you can start looking on a one minute, because the market might not get past this zone, so there's a higher probability it bounces off and drops; to not miss that drop we look for a quick entry on the one minute. The market couldn't get past here: wick, wick, one last wick for a stop hunt (you can't control that), even that closed down, and eventually the market dropped.
+
+Use these in conjunction with the rest of the strategy. The blue and purple zones on their own don't mean anything, but if you hit them, or if you have one above, that's where you aim for, and if you hit it you roll your stop, take a partial and/or use them as your TP.

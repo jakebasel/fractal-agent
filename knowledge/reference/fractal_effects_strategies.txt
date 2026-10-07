@@ -1,0 +1,163 @@
+            MARKET TRANSLATOR ENTRY MODEL
+The Market Translator strategy is built around two simple signals: M and DB. M tells us to look
+for a move in the opposite direction, while DB tells us to look for the same direction after a
+retracement. Once the direction is clear, we follow the charts step-by-step — 5-minute, 1-minute,
+then 30-second — waiting for each Fair Value Gap (FVG) to be created and tapped before
+moving to the next timeframe. The final candle closure gives us the entry.
+
+Here’s how it works:
+
+                              STEP 1 — FIND THE SIGNAL
+                              M                            DB
+                               ↓                            ↓
+                         TURN AROUND                   KEEP GOING
+                             OPPOSITE                         SAME
+                               │                            │
+                                                RETRACEMENT FIRST
+                                │                           ↓
+                                                  THEN CONTINUE
+                                │                           │
+                                └────────────┬────────────┘
+                                              ↓
+                                       NOW WE LOOK FOR
+                                      THE 3 STEP ENTRY
+
+STEP 2 — 5-MINUTE FVG
+
+Once we know the direction:
+
+Wait for the first 5-minute FVG to be created in that direction.
+
+But…
+
+THE 5M FVG MUST BE TAPPED.
+
+No tap = no trade.
+
+STEP 3 — 1-MINUTE FVG
+
+After the 5M FVG is tapped:
+
+Immediately drop to the 1-minute chart.
+
+Wait for the first 1-minute FVG to be created in the expected direction.
+
+Then:
+It must be tapped.
+
+STEP 4 — 30-SECOND FVG
+
+Now drop to 30 seconds.
+
+Wait for the first 30-second FVG to be created in the expected direction.
+
+Again:
+
+STEP 5 — THE ENTRY
+
+After the 30-second FVG is tapped:
+
+Wait for the candle sequence to close in the expected direction.
+
+Then:
+
+                                           ENTER.
+                                             5M FVG
+                                                ↓
+                                             TAPPED
+                                                ↓
+                                             1M FVG
+                                                ↓
+                                             TAPPED
+                                                ↓
+                                            30S FVG
+                                                ↓
+                                             TAPPED
+                                                ↓
+                                            CLOSURE
+                                                ↓
+                                               ENTRY
+
+STOP LOSS: BEGINNING OF THE LEG THAT CREATED THE 30-SECOND FVG.
+That is typically the same leg that created/tapped the 1-minute FVG and then created the 30-
+second FVG.
+
+Mental checklist:
+
+M: M → OPPOSITE → 5M → TAP → 1M → TAP → 30S → TAP → CLOSE → ENTER
+
+DB: DB → RETRACE → SAME → 5M → TAP → 1M → TAP → 30S → TAP → CLOSE →
+ENTER
+
+And the golden rule: If ANY step doesn't happen, there is NO entry.
+  MARKET TRANSLATOR — REVERSAL STRATEGY
+                                 REVERSAL ZONE APPEARS
+                                               ↓
+                          Market Translator paints the zone
+                                               ↓
+                                             WAIT
+                                               ↓
+                                 Price comes back into
+                                    the REVERSAL ZONE
+                                               ↓
+                                   Look for a 1-MINUTE
+                                       FAIR VALUE GAP
+                                               ↓
+                                    WAIT FOR THE FIRST
+                                        30-SECOND FVG
+                                               ↓
+                                  30-SECOND FVG CLOSES
+                               OVER A SERIES OF CANDLES
+                                               ↓
+                                      ENTER THE TRADE
+                                               ↓
+                                         TRADE IN THE
+                                    REVERSAL DIRECTION
+
+Super simple explanation
+
+   •   The Market Translator paints a Reversal Zone.
+   •   This tells us the market could be getting ready to turn around.
+   •   We don’t jump in right away.
+   •   We wait for price to come back into the zone.
+   •   Once price is there, we look for a 1-minute Fair Value Gap.
+   •   From that 1-minute FVG, we wait for the first 30-second FVG.
+   •   When the 30-second FVG closes over a series of candles, we have our entry.
+   •   Then we trade in the direction of the reversal.
+
+Reversal Zone → Price Returns → 1-Min FVG → 30-Sec FVG Closure → Entry →
+Reversal
+                         SPOTLIGHT STRATEGY
+                                    SPOTLIGHT SIGNAL
+                                            ↓
+                                  Bullish or Bearish?
+                                            ↓
+                                          WAIT
+                                            ↓
+                               Price pulls back into the
+                                DEALING RANGE (the Box)
+                                            ↓
+                                Wait for price to reach
+                                    a FAIR VALUE GAP
+                                            ↓
+                               Get ready to trade in the
+                             same direction as the signal
+                                            ↓
+                                  PRICE STARTS MOVING
+                                            ↓
+                          Aim for 1 SD (standard deviation)
+
+
+
+Super simple explanation
+
+  •   Spotlight says: “BUY” or “SELL.”
+  •   Don’t chase it.
+  •   Wait for price to come back.
+  •   Price comes into the dealing range.
+  •   Look for a Fair Value Gap.
+  •   When price is ready to move again, enter in the same direction as the Spotlight signal.
+  •   We want the move to reach about 0.5 to 1 standard deviation.
+
+Signal → Pullback → FVG → Entry → Move → 0.5–1 SD
+
