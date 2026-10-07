@@ -1,7 +1,14 @@
 # Trading review: how to work
-- Tools: the `paper` MCP server (review_queue, decision_detail, chart_question, rules_text,
-  knowledge_search, strategy_report, lessons, hypotheses, reviews, paper_stats) and the `fvg`
-  MCP server (entries, setups, recent_events, archived_prices, confluence). Both are read-only.
+- Tools: the `paper` MCP server (review_queue = compact per-trade packets; decision_detail = the
+  full record; chart_question; rules_text; knowledge_search = course + live-session passages;
+  strategy_report; backtest_report; spotted_setups = the chart scanner's finds; lessons;
+  hypotheses; reviews; paper_stats) and the `fvg` MCP server (entries, setups, recent_events =
+  the Market Translator alert stream from TradingView, archived_prices = the price tape,
+  confluence = active FVGs + latest signals). Both are read-only.
+- Cost discipline: the review_queue packet is enough for most reviews; call decision_detail,
+  recent_events or archived_prices only when a specific question needs them, and never paste
+  raw tick tapes or long event lists into your reasoning: summarise them to the few numbers you
+  need. Download a screenshot only when a chart detail decides the call.
 - Evidence priority on a conflict: amendments > rulebook > live-session rules > course
   passages > the decider's notes. rules_text(section) returns the rule files; knowledge_search
   (query) returns the most relevant course / live-session passages.

@@ -3,6 +3,9 @@
 # (the persistent volume) on first run, then reviews settled trades every REVIEW_EVERY_MIN.
 FROM nousresearch/hermes-agent:latest
 COPY seed/ /opt/seed/
-ENV HERMES_MAX_ITERATIONS=40 HERMES_API_TIMEOUT=300 HERMES_QUIET=true REVIEW_EVERY_MIN=20
+# HERMES_OPENROUTER_CACHE: OpenRouter prompt/response caching (DeepSeek and Gemini both cache
+# repeated prefixes, so the system prompt + skill + memory are paid once, not per turn)
+ENV HERMES_MAX_ITERATIONS=30 HERMES_API_TIMEOUT=300 HERMES_QUIET=true REVIEW_EVERY_MIN=20 \
+    HERMES_OPENROUTER_CACHE=1 HERMES_OPENROUTER_CACHE_TTL=3600
 # bare-executable pass-through: the image dispatcher runs this instead of the gateway
 CMD ["bash", "/opt/seed/loop.sh"]

@@ -181,12 +181,74 @@ def knowledge_search(query: str, k: int = 6) -> list[dict]:
     return knowledge.index().search(query[:400], k=max(1, min(int(k), 12)))
 
 
+def _review_packet(r) -> dict:
+    """A compact per-trade packet for a reviewer: everything that decides take/skip and the
+    exit, without the raw context blob (course passages, stop option lists, long event lists).
+    decision_detail(entry_id) still has the full record."""
+    d = _row(r, full=True)
+    ctx = d.get("context") if isinstance(d.get("context"), dict) else {}
+    eng = ctx.get("engine") or {}
+    htf = ctx.get("htf_fvgs") or {}
+    cr = d.get("chart_read") if isinstance(d.get("chart_read"), dict) else None
+    charts = []
+    for c in (cr or {}).get("charts") or []:
+        charts.append({k: c.get(k) for k in ("symbol", "timeframe", "last_price", "signals", "white_lines",
+                                               "reversal_zones", "zones", "spotlight", "ema", "trend_table",
+                                               "structure", "consolidation_candles", "notes")})
+    jev = d.get("jev") if isinstance(d.get("jev"), dict) else {}
+    return {
+        "entry_id": d["entry_id"], "symbol": d["symbol"], "entry_at_et": d["entry_at_et"], "session": d["session"],
+        "play": d["play"], "direction": d["direction"], "signal": {"text": d["mt_text"], "tf": d["mt_tf"], "config": d["mt_cfg"]},
+        "levels": {"entry": d["entry"], "stop": d["stop"], "target": d["target"]},
+        "engine": {k: eng.get(k) for k in ("signal_sequence", "two_m", "retrace_quality", "tap_depth", "fvg_gaps_in_chain",
+                                           "gaps_invalidated_on_the_way", "session", "in_window", "arming_signal")},
+        "decision": {"decision": d["decision"], "grade": d["grade"], "size": d["size"], "path": d.get("path"),
+                     "hard_rule": d["hard_rule"], "reasons": d["reasons"], "boosters": d["boosters"],
+                     "rules_version": d.get("rules_version")},
+        "decider_read": ctx.get("_read"), "management_plan": ctx.get("_plan"),
+        "sister_index": {"symbol": ctx.get("pair_symbol"), "setups": (ctx.get("pair_setups") or [])[:4],
+                         "recent_signals": (ctx.get("pair_mt_recent") or [])[:5]},
+        "this_index_recent_signals": (ctx.get("this_symbol_mt_recent") or [])[:5],
+        "htf_fvgs": {"4h": htf.get("4h"), "1d": htf.get("1d"), "age_h": htf.get("age_h")},
+        "news": d.get("news"), "chart_read": {"readability": (cr or {}).get("readability"), "charts": charts} if cr else None,
+        "vision_trust": {"score": d.get("vision_score"), "note": d.get("vision_note")},
+        "jev": {k: jev.get(k) for k in ("p_take", "grade", "play", "must_haves_missing", "boosters_present", "gate_rule")} if jev else None,
+        "result": {"r_mechanical": d["r"], "paper_r": d["paper_r"], "outcome": d["outcome"], "closed_at_et": d["closed_at_et"],
+                   "r_with_management_rules": d.get("managed_r"), "managed_outcome": d.get("managed_outcome"),
+                   "kill_events_ms": d.get("kill_events")},
+        "lesson": d.get("lesson"), "reeval": d.get("reeval"), "screenshots": d.get("screenshots"),
+    }
+
+
 @mcp.tool()
 def review_queue(reviewer: str = "hermes", limit: int = 10) -> list[dict]:
-    """Settled paper trades (with their result) that `reviewer` has not reviewed yet, full detail:
-    engine data, chart read, HTF FVGs, sister pair, management plan, mechanical and
-    management-rules results, re-evaluation. Review them and POST /api/reviews."""
-    return [_row(r, full=True) for r in store.review_queue(reviewer, limit)]
+    """Settled paper trades (with their result) that `reviewer` has not reviewed yet, as compact
+    packets: engine data, decision + reasons, decider's spotlight/sister/targets read, management
+    plan, sister index, 4H/daily FVGs, news, chart read, Jev, mechanical and management-rules
+    results, screenshots. decision_detail(entry_id) has the full record. Review, then POST
+    /api/reviews (bin/post_review.sh)."""
+    return [_review_packet(r) for r in store.review_queue(reviewer, limit)]
+
+
+@mcp.tool()
+def spotted_setups(limit: int = 30) -> list[dict]:
+    """Setups the chart scanner spotted (plays the engine does not arm: reversal set ups, 1m and
+    zone plays), with Jev's P(take) and, when scored, the result on the price tape."""
+    out = []
+    for r in store.scans(limit):
+        d = {k: r[k] for k in r.keys()}
+        d["at_et"] = store.to_et(d.pop("at"))
+        d["reasons"] = json.loads(d["reasons"] or "[]")
+        d.pop("jev", None)
+        out.append(d)
+    return out
+
+
+@mcp.tool()
+def backtest_report() -> dict:
+    """The latest ledger backtest under the protocol (tools/backtest_protocol.md): books, hard
+    rules' effect, every tweak tried with train/holdout verdicts, breakdowns."""
+    return _backtest() or {"error": "no backtest report"}
 
 
 @mcp.tool()

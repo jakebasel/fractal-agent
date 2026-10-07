@@ -412,7 +412,8 @@ ok(llm.parse_json('```json\n{"a": [1,2]}\n```')["a"] == [1, 2], "parse_json read
 # 17. outside reviewer (Hermes) queue + reviews + proposals
 hc = TestClient(main.app)
 q = hc.get("/api/review_queue?token=tok&reviewer=hermes").json()
-ok(q and all(x["r"] is not None for x in q) and "context" in q[0], f"review queue lists settled trades with full detail ({len(q)})")
+ok(q and all(x["result"]["r_mechanical"] is not None for x in q) and "decision" in q[0] and "screenshots" in q[0],
+   f"review queue lists settled trades as compact packets ({len(q)})")
 rr = hc.post("/api/reviews?token=tok", json={"entry_id": q[0]["entry_id"], "reviewer": "hermes", "verdict": "wrong_take",
                                              "summary": "sister pair had a DB against", "exit_notes": "partial at the blue zone",
                                              "proposal": "IF the sister pair printed a 5m DB against within 30 min THEN SKIP",
