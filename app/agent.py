@@ -384,6 +384,8 @@ def settle(fvg: FVG, entry_row, scored: dict):
         log.warning("keep exit shots: %s", e)
     if entry_row["decision"] not in ("TAKE", "SKIP"):
         return True   # ERROR / MISSED rows are settled for the core book; nothing to learn from
+    if not config.BUILTIN_LESSONS:
+        return True   # Hermes reviews this trade (review_queue); no second DeepSeek pass
     outcome = {"r_if_taken_full": r, "outcome": scored.get("f_outcome"),
                "exit": scored.get("f_exit")}
     try:

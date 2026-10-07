@@ -338,6 +338,13 @@ def reviews(limit=50, entry_id=None, reviewer=None):
     return db().execute(q, args).fetchall()
 
 
+def recent_reviews(n: int):
+    """Latest outside reviews with the trade's symbol (for the decision prompt)."""
+    return db().execute(
+        "SELECT v.*, d.symbol FROM reviews v LEFT JOIN decisions d ON d.entry_id=v.entry_id "
+        "ORDER BY v.id DESC LIMIT ?", (n,)).fetchall()
+
+
 def review_queue(reviewer: str, limit=20):
     """Settled TAKE/SKIP rows (newest first) with no review by `reviewer` yet."""
     return db().execute(

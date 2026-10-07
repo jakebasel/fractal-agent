@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 TMP = tempfile.mkdtemp()
 os.environ.update(DATA_DIR=TMP, RUN_LOOP="0", OPENROUTER_API_KEY="test", AGENT_TOKEN="tok",
-                  SYMBOLS="MNQ1!,MES1!", MAX_ENTRY_AGE_S="300", DASHBOARD_PASSWORD="pw")
+                  SYMBOLS="MNQ1!,MES1!", MAX_ENTRY_AGE_S="300", DASHBOARD_PASSWORD="pw", BUILTIN_LESSONS="1")
 
 import uvicorn  # noqa: E402
 from mcp.server.fastmcp import FastMCP  # noqa: E402
@@ -423,6 +423,8 @@ ok(len(hc.get("/api/review_queue?token=tok&reviewer=hermes").json()) == len(q) -
 ok(main.reviews(5)[0]["verdict"] == "wrong_take" and hc.post("/api/reviews", json={"entry_id": 1}).status_code == 401, "reviews readable via MCP; POST needs the token")
 pr = hc.post("/api/hypotheses/propose?token=tok", json={"title": "Hermes idea", "rule": "IF x THEN SKIP", "source": "hermes"}).json()
 ok(pr["ok"] and store.hypothesis(pr["hypothesis_id"])["title"] == "Hermes idea", "direct proposal endpoint")
+from app import prompts as _pr  # noqa: E402
+ok("(hermes)" in _pr._lessons_block() and "sister pair had a DB against" in _pr._lessons_block(), "Hermes reviews feed the decision prompt")
 
 # 18. screenshots kept for code skips and at exit; chart_question tool
 d_shots = Path(TMP) / "decision_shots"

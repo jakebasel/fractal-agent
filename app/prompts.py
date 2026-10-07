@@ -172,16 +172,22 @@ SKIP must have size "none". TAKE with grade B must have size "reduced"."""
 
 
 def _lessons_block() -> str:
-    rows = store.recent_lessons(config.LESSONS_IN_PROMPT)
-    if not rows:
-        return "(none yet)"
-    out = []
-    for r in rows:
+    """Hermes's reviews (and any built-in lessons), newest first."""
+    items = []
+    for r in store.recent_reviews(config.LESSONS_IN_PROMPT):
+        text = (r["summary"] or "").strip()
+        if r["exit_notes"]:
+            text += f" Exit: {r['exit_notes'].strip()}"
+        items.append((r["at"], f"- [{r['verdict']}] {r['symbol'] or ''} ({r['reviewer']}): {text}"))
+    for r in store.recent_lessons(config.LESSONS_IN_PROMPT):
         line = f"- [{r['verdict']}] {r['symbol']}: {r['lesson']}"
         if r["rule_ref"]:
             line += f" ({r['rule_ref']})"
-        out.append(line)
-    return "\n".join(out)
+        items.append((r["created_at"], line))
+    if not items:
+        return "(none yet)"
+    items.sort(key=lambda x: x[0] or "", reverse=True)
+    return "\n".join(line for _, line in items[:config.LESSONS_IN_PROMPT])
 
 
 def decision_system() -> str:
