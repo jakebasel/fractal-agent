@@ -373,6 +373,22 @@ async def screenshot(request: Request):
     return JSONResponse({"ok": True, "file": name, "bytes": len(body)})
 
 
+async def capture_control(request: Request):
+    """GET: the Mac asks whether capture is paused (token). POST (dashboard login or token):
+    {"paused": true|false} toggles it. Paused = the Mac captures and sends nothing."""
+    if request.method == "POST":
+        if not _authed(request):
+            return JSONResponse({"error": "unauthorized"}, status_code=401)
+        try:
+            body = await request.json()
+        except ValueError:
+            return JSONResponse({"error": "bad json"}, status_code=400)
+        store.kv_set("capture_paused", bool(body.get("paused")))
+    elif not _authed(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    return JSONResponse({"paused": bool(store.kv_get("capture_paused"))})
+
+
 async def capture_status(request: Request):
     """The Mac reports why it sent nothing (TradingView tab hidden / not open / capture failed)."""
     if not _authed(request):
@@ -636,6 +652,7 @@ app.router.routes.extend([
     Route("/health", health),
     Route("/screenshot", screenshot, methods=["POST"]),
     Route("/capture_status", capture_status, methods=["POST"]),
+    Route("/api/capture", capture_control, methods=["GET", "POST"]),
     Route("/log.csv", log_csv),
     Route("/stats", stats_route),
     Route("/decisions", decisions_route),

@@ -613,7 +613,8 @@ def status() -> dict:
     snap = store.kv_get("setups_snapshot") or {}
     stale = [f"{sym}: {v['health'].get('why')}" for sym, v in (snap.get("symbols") or {}).items()
              if isinstance(v.get("health"), dict) and v["health"].get("stale")]
-    return {"paper_only": True, "capture_status": capture, "engine_feed_stale": stale or None, "symbols": config.SYMBOLS,
+    return {"paper_only": True, "capture_status": capture, "engine_feed_stale": stale or None,
+            "capture_paused": bool(store.kv_get("capture_paused")), "symbols": config.SYMBOLS,
             "decision_model": config.DECISION_MODEL, "vision_model": config.VISION_MODEL,
             "jev_model": config.JEV_MODEL, "jev_mode": config.JEV_MODE,
             "rules_version": prompts.rules_version(),

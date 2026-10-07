@@ -19,8 +19,10 @@ source "$ENV_FILE"
 SCREEN="${SCREEN:-1}"
 ACTIVE_HOURS="${ACTIVE_HOURS:-0-23}"
 
-# paused? nothing is captured or sent while ~/.fractal-agent.pause exists
-if [ -f "$HOME/.fractal-agent.pause" ]; then
+# paused? (the dashboard's Pause button, or the local file from `bash mac/install.sh pause`)
+# nothing is captured or sent while paused
+PAUSED=$(/usr/bin/curl -sS -m 10 -H "X-Agent-Token: $AGENT_TOKEN" "$AGENT_URL/api/capture" 2>/dev/null | grep -c '"paused": *true')
+if [ -f "$HOME/.fractal-agent.pause" ] || [ "${PAUSED:-0}" != "0" ]; then
   /usr/bin/curl -sS -m 10 -X POST -H "X-Agent-Token: $AGENT_TOKEN" "$AGENT_URL/capture_status?state=paused" >/dev/null 2>&1
   exit 0
 fi

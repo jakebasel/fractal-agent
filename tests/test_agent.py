@@ -430,6 +430,9 @@ ok(sq and sq[0]["result"]["r_mechanical"] == 2.5, "scored scanner setups are in 
 ok(hc.post("/api/reviews?token=tok", json={"scan_id": sq[0]["scan_id"], "verdict": "right_take", "summary": "zone bounce worked"}).json()["ok"]
    and not [x for x in main.review_queue("hermes", 20) if x.get("scan_id") == sq[0]["scan_id"]], "scanner setup review filed by scan_id")
 ok(isinstance(main.instructor_calls(), list) and main.pending_setups() is not None, "instructor_calls and pending_setups tools")
+ok(hc.get("/api/capture?token=tok").json()["paused"] is False and hc.post("/api/capture?token=tok", json={"paused": True}).json()["paused"] is True
+   and agent.status()["capture_paused"] is True and TestClient(main.app).get("/api/capture").status_code == 401, "capture pause flag via API")
+hc.post("/api/capture?token=tok", json={"paused": False})
 before = len(main.review_queue("hermes", 50))
 rr2 = hc.post("/api/reviews/reopen?token=tok&reviewer=hermes&days=3").json()
 ok(rr2["ok"] and rr2["reopened"] >= 2 and len(main.review_queue("hermes", 50)) > before
