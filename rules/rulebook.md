@@ -67,9 +67,11 @@ Spotlight
 The models, step by step (the golden rule: if ANY step doesn't happen, there is NO entry)
 - M: M prints -> first 5m FVG opposite the fake move, tapped -> first 1m FVG, tapped -> first
   30s FVG, tapped -> body close over the series -> enter. Target: liquidity / zone / the M line.
-- DB: DB prints -> retracement back into the range (an FVG in the DB leg, or at least the
-  midpoint of the DB candle; immediate rebalance; a 5m FVG in the DB direction) -> 5m -> 1m ->
-  30s -> close -> enter, in the DB direction only.
+- DB: DB prints -> retracement back into the range (an FVG in the DB leg, or, when the leg is a
+  single candle with no FVG, the midpoint of that candle = "order block", counted as the 5m
+  step; immediate rebalance; a 5m FVG in the DB direction) -> 5m -> 1m -> 30s -> close ->
+  enter, in the DB direction only. A fresh 5m DB = 70-80% chance of a retracement back into
+  the range: never enter against it; if in a trade, be out.
 - 1m play: 1m signal, immediate rebalance, 1m FVG, 30s FVG, close. Target: the DB top on the
   5m (the move that makes the 5m DB). Stick to the signal's timeframe.
 - Spotlight (DR) play, standalone: 5m body close outside the DR (confirmation) -> retrace into
@@ -120,6 +122,10 @@ defined zone; first presented 5m FVG, no exceptions; one compromise allowed on t
 (the second of a string, never a third); 1:3 fits; a real foothold (an FVG at the entry).
 Power of three: 5+ candles at the 30s FVG = wait one more candle to close outside the range
 after the closure over the series, and use the safer stop (candle 1 of the 30s FVG pattern).
+30s FVG discipline: after the tap, the first 30s FVG printed is the one used; an immediate
+rebalance (close over the series) is the entry and that line is never moved afterwards. If
+price runs the 30s again without closing, take a NEW 30s FVG off the new leg (tap + close),
+or keep the old one and demand a closure over the same old line.
 Never pair a signal against power of three (a signal on the breakout of a 5+ candle
 consolidation is suspect).
 
@@ -154,7 +160,8 @@ Live-session plays and targets to look for (the instructor's habits, not extra r
   directional filter for that index; true/false day; opening FVG as a blue-zone-strength
   level; the DR box edges as liquidity. If the read has no Spotlight, say so.
 
-Downgrades (reduce size): late in the session; setup starts outside the range; only
+Downgrades (reduce size): red-folder news day, outside the skip bracket (erratic price
+action before the release: reduced lot or stay out); late in the session; setup starts outside the range; only
 confluence is the inverse of the opening FVG; 1m and 5m signals conflict; reversal setup (always
 reduced, see section 5); Friday ("Trap Friday": expect a 20-30% retrace of the weekly candle
 after an HTF level is hit); all-time highs (no liquidity above, a DB can simply drop: roll early).
@@ -171,6 +178,10 @@ EITHER index crosses your take-profit level first, close the one you are in (a d
 both). If a second M prints while you are in a trade: secure profits, roll the stop.
 Kill condition from the course: a candle BODY closing through the consequence encroachment
 (midpoint) of the FVG you are trading against your direction.
+Spotlight confirmation ahead: when price crosses the DR edge (past the implied dealing
+range) a confirmation can print on the close and often brings a retracement: take 50% (or
+reduce to a 10% flyer) before it prints; on the confirmation, be out or flyer only. Be in a
+safe trade by the time price reaches the next gap, zone or 4H FVG.
 
 ## 5. Reversal setup (Reversal Set Up video, newest)
 

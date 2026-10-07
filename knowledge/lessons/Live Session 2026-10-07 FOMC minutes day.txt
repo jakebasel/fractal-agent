@@ -1,0 +1,39 @@
+# Live session — FOMC meeting minutes day (transcript, 2026-10-07; instructor lines only)
+
+Morning, everybody. So we have FOMC meeting minutes at 11:00 [his Pacific clock = 14:00 ET]. On days like this, you're going to get erratic price action before 11:00.
+So we do have a sliver of a reversal gap right here. There's an opening gap up there on 1 minute. Literally a sliver.
+US 30 is the only one that's given us a double break to the downside, so I'd need to see either a bearish confirmation from Spotlight or a proper reversal setup. Retracement. Five-minute fair value gap.
+Every time you take a trade, you want to journal at the end of it, win or loss. You want to learn from it.
+Now there's the stronger pair just by a little bit. No pullback even to the 1-minute gap here. This is the area I was targeting: the opening gap from Spotlight. So if it keeps pumping up, we'll just try to catch it on the 5, see if a 5-minute fair value gap forms here.
+Then, with US 500, we did tap it. I want to see if it respects it or if it actually punches through. So this is the weaker pair for now. And we haven't even taken out the highs here. So maybe they just needed to run this up, get more liquidity.
+It's a weird rebalance right at the DB line. We are on the other side of that reversal gap now.
+Once again, this kind of price action on an FOMC day. As expected.
+It's wise to get a tap here, and then whichever 30-second fair value gap is printed first will most likely be used. I need that tap. Otherwise it's just printing zones.
+Once again, guys, on a day like this, where we have FOMC meeting minutes, always proceed with caution. Or stay out completely. So anything that we do would be a reduced lot size.
+So we don't have a 5-minute fair value gap either, so it is a false M model. This would be the perfect place to drop it. There's not much room here.
+I need a fair value gap. Even if it's a 30-second fair value gap, I need something from this.
+We just hit this 1-minute fair value gap. Let's see if it respects it or if it wants to go up higher. Same thing with US 500.
+We'd have to be in a safe trade by the time we hit here. That's why up here at least maybe it made sense. This closure down here doesn't make any sense at all.
+That loss is going to give us a double break on the 5. We have a DB now. Let's see what NAS does. Still nothing from US 30 as far as a 5-minute fair value gap. So all looking pretty ugly.
+Reduced lot size, looking at NAS for a potential setup, but I'd have to roll as soon as we hit this. But the room, at least.
+NAS for the sell. Once again, I get a closure here, I'm going to roll. Because that'll most likely drop US 500 into the 4-hour.
+I don't like how high this has climbed. Might even move this up, just to be in a safe trade. I'd like to see it close under here, because this is eeking too close to that 4-hour.
+Created a sliver of a 30-second there. So if I don't get a drop on this next candle, I might just get out at break-even. Oh, it just wicked me out.
+Anybody who's new: Forex Factory, or any other economic calendar, favorited. You should know exactly when the news drops are happening. You've got to check it every morning.
+So US 500, the weaker pair, is still under the DB reversal area. That can be a displacement candle as well. Both of these logics could be correct, or they could drop this without a 5-minute fair value gap into the 4-hour, and then that's reversal territory while this hits the 5, and then they could both go up.
+Right now, US 30 is telling the most consistent story, though. Just no fair value gaps. The only thing is, we're in Spotlight territory as well right now, so any drop on NAS would give us a bearish confirmation signal, which could lead to a retracement.
+This would be the first 1-minute gap after hitting that 5.
+I'm looking at US 30 for a potential setup short here. I'd have to roll when we cross here. Oh, sorry, just closed back in, literally at the last second. That's why we had to wait.
+I'm only going to give this one chance. If this runs this high, I'm going to look at NAS. There's a 30-second fair value gap.
+I'll do US 30 sell. I've got to roll here, though. NAS never came back. US 500 stuck in consolidation.
+The red dotted line: that's when we're past the implied dealing range. Get ready to roll. Full stop. You should be in a safe trade.
+Now, the second we cross here, we're in Spotlight bearish confirmation territory. It has to close. This would be the end target. But once again, that bearish Spotlight could hit at any time. Feel free to take 50 off the table. Secure yourself. We only got 56 seconds before that Spotlight sets, so you've got to take profit anyway, or at least reduce your position down to 10%. Let the 10% ride. Because there could be a retracement coming.
+That's the Spotlight confirmation. That could cause a retracement. I would leave a 10% flyer and/or just close off your position here fully.
+Roll stop literally after 2R, or after we've hit a zone, we roll our stops. That means our stop loss to break even. And we take partials: we close off 50% of our position.
+So we've hit this 4-hour, and we have a bearish confirmation from US 500. You should be out. You should have secured yourself.
+So this is where the double break happened. At the same time, I was trying to see if I could secure a position and get under here, just in case this double break was going to drop. Should have known better. It's not a question of securing yourself. Shouldn't have entered. Once that double break happened, we knew a retracement was coming, and obviously the stronger pair was going to retrace deeper.
+That was a good example: the second double break happens, 70 to 80% chance you're going to get a retracement back into the range.
+This never actually gave us a 5-minute fair value gap until now. So we couldn't really even use US 500 for anything. It was wedged. That's why I was trying to squeeze some juice out of here. But clearly that backfired.
+On the higher timeframe, we had the double break. This is the first fair value gap that's actually being created after that double break. So instead, I took the order block here, since there was no fair value gap in the double break leg. But the double break leg came back and it tapped the Spotlight opening gap.
+Some people have a different interpretation of the word order block; they count the entire area, usually three candles. I only count the candle. I took that candle's entire measurement to see if we came back into the midpoint, and then built logic off of that on the 1 minute and 30 seconds. So I used that as a 5-minute fair value gap. Because there was no fair value gap in the double break leg: it was a single candle. So as long as we came back to the midpoint of this candle (the entire leg is one candle), the midpoint is good enough; it can be counted as, or similar to, a fair value gap. It's called an order block.
+Yesterday's trade (US 30, Asia): we kept getting the stop hunts before it finally dropped. There was a way to avoid this. That was the first 30-second fair value gap that was created. When we tapped it, usually we look for an immediate rebalance. If you get an immediate rebalance, that's where we were supposed to enter: closure of a series of candles. If you get an immediate rebalance, you can't move that. Instead, since we did technically close, even though it was an immediate rebalance, I could have just looked for the next 30-second fair value gap. We didn't close under here, but we ran it one more time. I can't move this, but I can now take a new 30-second off of this to see if it comes back and taps that and closes. If it had tapped and closed under, then you could have used that new 30-second. But if I'm still using this old 30-second, then I need a closure over the same line. Nothing changed.

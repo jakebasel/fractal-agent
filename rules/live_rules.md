@@ -141,6 +141,18 @@ Pulled from the 12 live-session transcripts. Live sessions are newer than the co
 - Pre-news nights are practice only.
 - A DB straight into a 4H FVG: expect a retracement or reversal; drop the index if it closes back below.
 
+## 16. 2026-10-07 live session (FOMC minutes day)
+- Red-folder news day: erratic price action BEFORE the release. "Proceed with caution, or stay out completely. Anything we do would be a reduced lot size." Check the economic calendar every morning.
+- Target the Spotlight opening gap; be in a safe trade (stop rolled) by the time price reaches the next 1m/5m gap, zone or 4H FVG. "I'd have to roll as soon as we hit this."
+- Spotlight confirmation territory: when price crosses the DR edge (red dotted line = past the implied dealing range), a confirmation can print on the close and "could cause a retracement". Take profit / 50% off before it prints, or reduce to a 10% flyer; on the confirmation, be out or leave the flyer only.
+- A second 5m double break = 70-80% chance of a retracement back into the range. "Once that double break happened, we knew a retracement was coming. Shouldn't have entered." The stronger pair retraces deeper. Do not enter against a fresh DB; if in a trade, be out.
+- No 5m FVG after the M = "false M model": no setup. "I need a fair value gap, even a 30-second one."
+- After the tap, "whichever 30-second fair value gap is printed first will most likely be used." A tap is required; "otherwise it's just printing zones."
+- Order block substitute: when the DB leg has no FVG (the leg is a single candle), take that candle's full measurement; a return to its MIDPOINT counts as the 5m FVG step, and the 1m/30s logic is built off it.
+- 30s FVG and stop hunts: an immediate rebalance (closure over the series) IS the entry and that line cannot be moved afterwards. If price runs the 30s again without closing, take a NEW 30s FVG off the new leg and wait for its tap and close; if you keep the old one, you need a closure over the same old line, nothing changed.
+- Journal every trade, win or loss.
+- "Don't take any trades in this room until you have watched all the videos."
+
 ## 15. Mindset
 - Built on human psychology: they play both sides.
 - A directional bias is only one part; entry, R:R and risk management matter as much.
