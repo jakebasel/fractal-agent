@@ -23,7 +23,8 @@ Review the settled paper trades waiting for you (there is no human in the loop; 
    EXIT/PROTECTION: compare r (mechanical 2R + runner) with managed_r (instructor's management
    rules) and the _plan the decider wrote; use chart_question(..., at="exit") to see the chart
    at the result; say where the partial, the breakeven roll and the exit should have been.
-3. Post each review with bin/post_review.sh '<json>' (shape in AGENTS.md). Verdict rules: a
+3. Post each review: write the JSON to ./reviews/<entry_id>.json with the file tool, then run
+   bin/post_review.sh ./reviews/<entry_id>.json and check for "HTTP 200" (shape in AGENTS.md). Verdict rules: a
    rule-following loss is right_take; a skip that avoided a loss is right_skip; wrong_* only
    when the evidence to decide otherwise was available at the time.
 4. Propose at most one IF/THEN rule per trade, only if this trade exposes a gap the rulebook
