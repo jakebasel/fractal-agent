@@ -423,5 +423,14 @@ ok(main.reviews(5)[0]["verdict"] == "wrong_take" and hc.post("/api/reviews", jso
 pr = hc.post("/api/hypotheses/propose?token=tok", json={"title": "Hermes idea", "rule": "IF x THEN SKIP", "source": "hermes"}).json()
 ok(pr["ok"] and store.hypothesis(pr["hypothesis_id"])["title"] == "Hermes idea", "direct proposal endpoint")
 
+# 18. screenshots kept for code skips and at exit; chart_question tool
+d_shots = Path(TMP) / "decision_shots"
+ok(any(p.name.startswith("10_") for p in d_shots.iterdir()), "screenshot kept for a code-skipped entry")
+ok(any("_exit_" in p.name for p in d_shots.iterdir()), "screenshot kept at settle (exit)")
+ok(main.decision_detail(2)["screenshots"]["at_decision"], "decision_detail lists the saved screenshots")
+cq = main.chart_question(2, "Is there a blue zone below price on the 5m?")
+ok("answer" in cq or "readability" in cq or "charts" in cq, f"chart_question answers from the saved screenshot ({list(cq)[:3]})")
+ok(main.chart_question(999999, "x").get("error"), "chart_question says when no screenshot exists")
+
 print("all tests passed")
 server.should_exit = True

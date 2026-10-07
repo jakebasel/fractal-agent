@@ -47,11 +47,38 @@ def mark(now: datetime, files):
     _last.update(at=now.timestamp(), files=files)
 
 
+def archive_shots(files, now: datetime, keep_days: int | None = None):
+    """Keep the screenshot set of every scan (one every SCAN_MINUTES inside the windows) for
+    `keep_days`, so a reviewer can look back at the chart around any setup."""
+    import shutil
+    keep_days = keep_days if keep_days is not None else config.SCAN_SHOTS_KEEP_DAYS
+    if not files or keep_days <= 0:
+        return
+    dst = config.DATA_DIR / "scan_shots"
+    dst.mkdir(parents=True, exist_ok=True)
+    stamp = now.strftime("%Y%m%dT%H%M%S")
+    for i, f in enumerate(files.split(",")):
+        src = config.DATA_DIR / "shots" / f
+        if src.exists():
+            shutil.copyfile(src, dst / f"{stamp}_{i}{src.suffix}")
+    cutoff = (now.timestamp() - keep_days * 86400)
+    for p in dst.iterdir():
+        try:
+            if p.stat().st_mtime < cutoff:
+                p.unlink()
+        except OSError:
+            pass
+
+
 def scan(fvg: FVG, chart_read, files, now: datetime | None = None, force: bool = False):
     now = now or datetime.now(timezone.utc)
     if not chart_read or store.over_budget() or (not force and not due(now, files)):
         return None
     mark(now, files)
+    try:
+        archive_shots(files, now)
+    except OSError as e:
+        log.warning("archive shots: %s", e)
     armed = {}
     for sym in config.SYMBOLS:
         try:

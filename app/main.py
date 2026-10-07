@@ -55,6 +55,8 @@ def _row(r, full=False) -> dict:
                 pass
     d["entry_at_et"] = store.to_et(d.get("entry_at"))
     d["closed_at_et"] = store.to_et(d.get("closed_at"))
+    if full:
+        d["screenshots"] = _shots_for(d["entry_id"])
     if not full:
         d.pop("context", None)
         d.pop("chart_read", None)
@@ -119,6 +121,43 @@ def hypotheses() -> list[dict]:
     strategy on the same settled trades. Only Jake approves; approved ones go into
     rules/amendments.md."""
     return [learning.hypothesis_result(h) for h in store.hypotheses()]
+
+
+def _shots_for(entry_id: int) -> dict:
+    folder = config.DATA_DIR / "decision_shots"
+    if not folder.exists():
+        return {"at_decision": [], "at_exit": []}
+    names = sorted(p.name for p in folder.glob(f"{entry_id}_*"))
+    return {"at_decision": [n for n in names if "_exit_" not in n],
+            "at_exit": [n for n in names if "_exit_" in n],
+            "url": "/shot/<name>?token=AGENT_TOKEN (left window first; 5m charts left, 1m right)"}
+
+
+@mcp.tool()
+def chart_question(entry_id: int, question: str, at: str = "decision") -> dict:
+    """Ask the vision model a specific question about the saved screenshot(s) of a trade
+    (`at` = decision | exit): the lines, zones, gaps, Spotlight, colours as they were on the
+    chart. Costs one vision call; paused when over the daily budget. For a text-only reviewer
+    that cannot look at images itself."""
+    if store.over_budget():
+        return {"error": "over the daily budget; try later"}
+    names = _shots_for(entry_id)["at_exit" if at == "exit" else "at_decision"]
+    if not names:
+        return {"error": "no screenshot saved for this trade at that moment"}
+    folder = config.DATA_DIR / "decision_shots"
+    images = [(folder / n).read_bytes() for n in names[:4]]
+    prompt = ("You are reading TradingView screenshots (left window first; 5-minute charts on the left "
+              "window, 1-minute on the right) for a futures trader using the Fractal Effects Market "
+              "Translator and Spotlight indicators. Answer the question from what is VISIBLE only; say "
+              "'not visible' when it is not. Reply with ONE JSON object: {\"answer\": \"...\", "
+              "\"evidence\": [\"what on the chart supports it\"], \"confidence\": 0.0-1.0}\n\nQuestion: "
+              + question[:800])
+    try:
+        from . import llm
+        res = llm.read_chart(images, prompt)
+    except Exception as e:
+        return {"error": str(e)[:300]}
+    return {"entry_id": entry_id, "at": at, "screenshots": names, **res}
 
 
 @mcp.tool()

@@ -183,8 +183,9 @@ def normalise(dec: dict) -> dict:
                       "targets": dec.get("targets")}}
 
 
-def _keep_shots(entry_id, files):
-    """Copy the screenshots a decision used (the rolling folder only keeps ~3 hours)."""
+def _keep_shots(entry_id, files, tag: str = ""):
+    """Copy the screenshots a decision used (the rolling folder only keeps ~3 hours) so a
+    reviewer can see the chart as it was: colours, lines, zones, gaps. tag="exit" = at settle."""
     if not files:
         return
     dst = config.DATA_DIR / "decision_shots"
@@ -192,7 +193,12 @@ def _keep_shots(entry_id, files):
     for i, f in enumerate(files.split(",")):
         src = config.DATA_DIR / "shots" / f
         if src.exists():
-            shutil.copyfile(src, dst / f"{entry_id}_{i}{src.suffix}")
+            shutil.copyfile(src, dst / f"{entry_id}_{tag + '_' if tag else ''}{i}{src.suffix}")
+
+
+def _latest_files():
+    shots = store.latest_screenshot_set()
+    return ",".join(s["file"] for s in shots) if shots else None
 
 
 def review(fvg: FVG, entry: dict):
@@ -214,6 +220,12 @@ def review(fvg: FVG, entry: dict):
         hard = fired[0]   # the overarching reason first; the others are kept in reasons
         row.update(decision="SKIP", grade="C", size="none", hard_rule=hard, reasons=fired,
                    model_decision="code", path="code")
+        try:   # keep the chart for code skips too: a reviewer must be able to see what was skipped
+            files = _latest_files()
+            row["screenshot"] = files
+            _keep_shots(entry["id"], files)
+        except OSError as e:
+            log.warning("keep shots: %s", e)
         store.insert_decision(row)
         return row
 
@@ -350,6 +362,10 @@ def settle(fvg: FVG, entry_row, scored: dict):
     store.update_decision(entry_row["entry_id"], r=float(r), outcome=scored.get("f_outcome"),
                           paper_r=round(float(r) * mult, 3),
                           closed_at=_ms_to_iso(scored.get("f_close_bar")))
+    try:   # the chart at the time of the result, for exit / take-profit review
+        _keep_shots(entry_row["entry_id"], _latest_files(), tag="exit")
+    except OSError as e:
+        log.warning("keep exit shots: %s", e)
     if entry_row["decision"] not in ("TAKE", "SKIP"):
         return True   # ERROR / MISSED rows are settled for the core book; nothing to learn from
     outcome = {"r_if_taken_full": r, "outcome": scored.get("f_outcome"),
