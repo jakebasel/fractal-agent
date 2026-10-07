@@ -118,7 +118,8 @@ rules_code.news_events = lambda: NEWS["events"]
 
 def mk_entry(i, sym="MNQ1!", age_s=10, trend_fallback=False, cascade="2-stage", r=None):
     at = (datetime.now(timezone.utc) - timedelta(seconds=age_s)).isoformat()
-    detail = {"session": "london", "in_window": True, "mt_cfg": "DB", "retrace": "deep",
+    # "nypm" has no clock rule, so the fixture decides the same at any time of day
+    detail = {"session": "nypm", "in_window": True, "mt_cfg": "DB", "retrace": "deep",
               "trend_fallback": trend_fallback, "signal_at": at,
               "mt_seq": [{"text": "Upper Double Break"}], "stages": [], "stops": []}
     return {"id": i, "at": at, "symbol": sym, "cascade": cascade, "direction": "bull",

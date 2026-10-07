@@ -139,6 +139,7 @@ pre { white-space: pre-wrap; word-break: break-word; background: var(--surface-2
 </header>
 
 <main>
+  <div id="errbar" class="hidden" style="background:color-mix(in srgb,var(--bad) 18%,transparent);color:var(--bad);padding:8px 12px;border-radius:8px;margin-bottom:12px;font-size:12px"></div>
   <section data-panel="overview">
     <div class="grid tiles" id="tiles"></div>
     <div class="grid two">
@@ -336,6 +337,7 @@ function setupCard(d, compact = false) {
     <details><summary>Details${jev ? " · " + jev : ""}</summary>
       <div class="t2" style="margin:8px 0">Entry ${d.entry ?? "–"} · stop ${d.stop ?? "–"} · target ${d.target ?? "–"} · signal ${esc(d.mt_text)} (${esc(d.mt_tf)}) · retrace ${esc(d.retrace)} · rules ${esc(d.rules_version || "v1")} · path ${esc(d.path || "model")}</div>
       ${d.outcome ? `<div class="t2">Outcome: ${esc(d.outcome)}${d.managed_r != null ? ` · with management rules: <b class="${clsR(d.managed_r)}">${fmtR(d.managed_r)}</b> (${esc(d.managed_outcome)})` : ""}</div>` : ""}
+      ${d.read ? `<div class="t2">Spotlight: ${esc(d.read.spotlight || "–")}<br>Sister pair: ${esc(d.read.sister_pair || "–")}<br>Targets: ${esc(d.read.targets ? [d.read.targets.first, d.read.targets.htf_liquidity, d.read.targets.zone_bounce].filter(Boolean).join(" · ") : "–")}</div>` : ""}
       ${d.plan ? `<div class="t2">Plan: be safe by ${esc(d.plan.be_safe_by || "–")} · partial at ${esc(d.plan.partial_at || "2R")} · kill: ${esc((d.plan.kill_conditions || []).join("; ") || "–")}</div>` : ""}
       ${d.news && d.news.checked ? `<div class="t2">News: ${esc((d.news.today || []).join(", ") || "none today")}${(d.news.week_flags || []).length ? " · week: " + esc(d.news.week_flags.join(", ")) : ""}</div>` : ""}
       ${cr ? `<div class="muted" style="margin-top:6px">What the vision model read</div><pre>${esc(JSON.stringify(cr, null, 1))}</pre>` : `<div class="muted">No chart read for this setup.</div>`}
@@ -387,7 +389,17 @@ $("#hyps").addEventListener("click", async e => {
 });
 
 // ---- render ----
+// each section renders on its own: one bad field must not blank the rest of the page
+function section(name, fn) {
+  try { fn(); } catch (e) {
+    console.error(name, e);
+    const bar = $("#errbar"); bar.classList.remove("hidden");
+    bar.textContent = `Section "${name}" failed to render: ${e.message}. The rest of the page is fine; reload (Cmd+Shift+R) if this persists.`;
+  }
+}
+window.addEventListener("error", e => { const bar = $("#errbar"); bar.classList.remove("hidden"); bar.textContent = "Script error: " + e.message; });
 function render() {
+  $("#errbar").classList.add("hidden");
   const d = DATA, st = d.status, rep = d.report;
   const lastLoopAgo = st.last_loop_ts ? Date.now() / 1000 - st.last_loop_ts : (st.last_loop_et ? ago(st.last_loop_et) : null);
   const shotAgo = st.last_screenshot_ts ? Date.now() / 1000 - st.last_screenshot_ts : (st.last_screenshot_et ? ago(st.last_screenshot_et) : null);
@@ -414,6 +426,7 @@ function render() {
   lineChart($("#curve"), d.curve.labels, [
     {name: "Agent", color: "var(--series-1)", values: d.curve.agent},
     {name: "Core", color: "var(--series-2)", values: d.curve.core}]);
+  section("live screen", () => {
   $("#live-shots").innerHTML = d.latest_shots.map(f => `<img src="/shot/${encodeURIComponent(f)}" alt="latest screen">`).join("") || `<div class="empty">No screenshots yet.</div>`;
   $("#shot-age").textContent = (shotAgo != null ? fmtAgo(shotAgo) + " ago" : "") + (st.last_screenshot_kind === "window" ? " · TradingView window" : st.last_screenshot_kind === "fallback" ? " · whole screen (no TradingView window)" : "");
   $("#scans").innerHTML = (d.scans || []).map(x => `<div class="lesson"><span class="badge ${x.stage === "ready" ? "star" : ""}">${esc(x.stage)}</span>
@@ -421,6 +434,8 @@ function render() {
     ${x.r != null ? `<span class="r ${clsR(x.r)}" style="float:right">${fmtR(x.r)} <span class="muted">${esc(x.outcome)}</span></span>` : ""}
     <div class="t2">${(x.reasons || []).map(esc).join(" · ")}${x.entry ? ` · entry ${x.entry} stop ${x.stop} target ${x.target}` : ""}</div></div>`).join("") ||
     `<div class="empty">Nothing spotted yet. The scanner runs every ${st.scanner ? st.scanner.minutes : 5} min in ${esc(st.scanner ? st.scanner.windows_et : "")} ET when the screen changes.</div>`;
+  });
+  section("backtest", () => {
   const bt = d.backtest;
   $("#backtest").innerHTML = !bt ? `<div class="card"><div class="empty">No backtest report yet. Run tools/backtest.py and push it.</div></div>` : [
     `<div class="card"><h2>fvg-mcp ledger backtest <small>${esc(bt.window)} · generated ${esc(bt.generated_et)}</small></h2>
@@ -433,7 +448,9 @@ function render() {
     </table></div></div>`,
     ...["by_session", "by_signal", "by_signal_tf", "by_retrace", "by_day_of_week", "by_hour_et", "by_symbol", "by_week"].map(k => groupTable(k.replace(/_/g, " "), bt[k], k.replace("by_", ""), "after code rules")),
   ].join("");
+  });
   const vz = d.vision || {n: 0};
+  section("books", () => {
   const B = rep.books;
   $("#books-sub").textContent = rep.window;
   $("#books").innerHTML = `<table>${statHead("Book")}
@@ -446,16 +463,24 @@ function render() {
     <tr><td>Agent + walk away at −2R/day</td>${statCells(B.agent_with_daily_stop_minus2R)}</tr>
     <tr><td>Core + walk away at −2R/day</td>${statCells(B.core_with_daily_stop_minus2R)}</tr></table>
     <p class="muted" style="font-size:12px">The agent adds value when its avg R beats the core strategy's and its skips are negative.</p>`;
+  });
+  section("ideas", () => {
   const hy = rep.hypotheses.filter(h => h.status === "testing").sort((a, b) => b.delta_total_r_vs_agent - a.delta_total_r_vs_agent);
   $("#hyp-mini").innerHTML = hy.slice(0, 5).map(h => `<div class="lesson"><b>H${h.id}</b> ${esc(h.title)}
     <div class="t2" style="font-size:12px">${esc(h.verdict)} · <span class="${clsR(h.delta_total_r_vs_agent)}">${fmtR(h.delta_total_r_vs_agent)}</span> vs agent</div></div>`).join("") || `<div class="empty">None yet.</div>`;
+  });
+  section("setups", () => {
   $("#feed-mini").innerHTML = d.feed.slice(0, 5).map(x => setupCard(x, true)).join("") || `<div class="empty">No setups yet.</div>`;
   renderFeed();
+  });
+  section("learning", () => {
   $("#hyps").innerHTML = rep.hypotheses.map(hypCard).join("") +
     (d.hypotheses_other || []).map(hypCard).join("") || `<div class="empty">No hypotheses yet.</div>`;
   $("#lessons").innerHTML = d.lessons.map(l => `<div class="lesson"><span class="badge ${/right/.test(l.verdict) ? "take" : "err"}">${esc(l.verdict)}</span>
     <b>${esc(l.symbol)}</b> <span class="muted">#${l.entry_id} · ${esc(l.created_at_et)}${l.rule_ref ? " · " + esc(l.rule_ref) : ""}</span>
     <div class="t2">${esc(l.lesson)}</div>${l.proposal ? `<div style="font-size:12px;margin-top:2px">Proposal: ${esc(l.proposal)}</div>` : ""}</div>`).join("") || `<div class="empty">Lessons appear when trades settle (usually within ~2 hours).</div>`;
+  });
+  section("breakdown", () => {
   const j = rep.jev;
   $("#breakdowns").innerHTML = [
     groupTable("By play", rep.core_by_play, "Play", "core strategy (every entry, full size): timeframe · signal · kind"),
@@ -474,6 +499,8 @@ function render() {
     `<div class="card"><h2>Jev <small>mode: ${esc(j.mode)}</small></h2><div class="t2">Scored ${j.scored} settled setups · agrees with the agent ${j.agreement_with_agent_pct ?? "–"}% of the time.</div>
      <div class="scroll"><table>${statHead("Book")}<tr><td>Jev P(take) ≥ 50%, full size</td>${statCells(j.jev_take_book_full_size)}</tr></table></div></div>`,
   ].join("");
+  });
+  section("spend", () => {
   $("#spend-tiles").innerHTML = [["Today", usd(d.spend.today)], ["This month", usd(d.spend.month)],
     ["Window", usd(d.spend.window.total_usd)], ["Calls in window", d.spend.window.calls]]
     .map(([k, v]) => `<div class="tile"><div class="k">${k}</div><div class="v">${v}</div></div>`).join("");
@@ -481,9 +508,12 @@ function render() {
   $("#spend-sub").textContent = rep.window;
   $("#spend-table").innerHTML = `<table><tr><th>Purpose</th><th>Model</th><th>Calls</th><th>Cost</th><th>Avg ms</th><th>Errors</th></tr>` +
     d.spend.window.by_purpose.map(r => `<tr><td>${esc(r.purpose)}</td><td>${esc(r.model)}</td><td>${r.calls}</td><td>${usd(r.cost_usd)}</td><td>${r.avg_ms}</td><td>${r.errors}</td></tr>`).join("") + `</table>`;
+  });
+  section("rules", () => {
   $("#by-version").innerHTML = `<table>${statHead("Rules version")}` + rep.agent_by_rules_version.map(v => `<tr><td>${esc(v.rules_version)}</td>${statCells(v)}</tr>`).join("") + `</table>`;
   $("#versions").innerHTML = d.rule_versions.slice().reverse().map(v => `<div class="lesson"><b>${esc(v.version)}</b> <span class="muted">from ${esc(v.first_seen_et)}</span>
     <details><summary>Approved amendments at this version</summary><pre>${esc(v.amendments || "(none)")}</pre></details></div>`).join("") || `<div class="empty">Recorded with the first decision.</div>`;
+  });
 }
 function ago(et) { const t = Date.parse(et.replace(" ET", "").replace(" ", "T") + etOffset(et)); return (Date.now() - t) / 1000; }
 function etOffset(et) { // ET offset for that date: -04:00 in DST, -05:00 otherwise

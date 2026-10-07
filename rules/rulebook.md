@@ -136,6 +136,21 @@ A  = all must-haves + 1-2 boosters -> TAKE, full size.
 B  = must-haves met but a downgrade applies (below) -> TAKE, reduced size.
 C  = a must-have missing -> SKIP.
 
+Live-session plays and targets to look for (the instructor's habits, not extra rules):
+- Blue/purple zone bounce: a retracement INTO the NY blue zone (from 9:30 ET, especially if
+  untouched) or the Asia purple zone, then the full cascade off it; the zone is the foothold
+  and the opposite side / next liquidity is the target. Higher probability than a mid-air entry.
+- Target the higher-timeframe liquidity in play: prior day/session high or low, DSD, 4H/daily
+  FVG, the London/Asia obligation, the high left by the original M. Aim for candle-body
+  highs short of a DSD line. 1:3 must fit BEFORE that obstacle.
+- Use the sister pair's signal: a US500 (MES) DB can be the reason to look for the same trade
+  on NAS (MNQ) if NAS is the stronger index for a long (weaker for a short), and vice versa;
+  "same idea on both" with 2 of 3 agreeing is a booster; a DB the other way on the pair is a
+  block.
+- Spotlight comes from the CHART READ only (no feed carries it): confirmation direction =
+  directional filter for that index; true/false day; opening FVG as a blue-zone-strength
+  level; the DR box edges as liquidity. If the read has no Spotlight, say so.
+
 Downgrades (reduce size): late in the session; setup starts outside the range; only
 confluence is the inverse of the opening FVG; 1m and 5m signals conflict; reversal setup (always
 reduced, see section 5); Friday ("Trap Friday": expect a 20-30% retrace of the weekly candle

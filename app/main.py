@@ -244,8 +244,9 @@ button{background:#3987e5;border:0;color:#fff;cursor:pointer}p{margin:0;color:#e
 
 async def dashboard(request: Request):
     if not _cookie_ok(request):
-        return HTMLResponse(LOGIN_HTML % "")
-    return HTMLResponse(DASH_HTML.read_text())
+        return HTMLResponse(LOGIN_HTML % "", headers={"Cache-Control": "no-store"})
+    # no-store: a cached copy of an older page would keep running old JavaScript against new data
+    return HTMLResponse(DASH_HTML.read_text(), headers={"Cache-Control": "no-store"})
 
 
 async def login(request: Request):
@@ -294,9 +295,11 @@ async def api_dashboard(request: Request):
         d["jev"] = json.loads(r["jev"]) if r["jev"] else None
         d["news"] = json.loads(r["news"]) if r["news"] else None
         try:
-            d["plan"] = (json.loads(r["context"]) or {}).get("_plan") if r["context"] else None
+            ctx = (json.loads(r["context"]) or {}) if r["context"] else {}
+            d["plan"] = ctx.get("_plan")
+            d["read"] = ctx.get("_read")
         except ValueError:
-            d["plan"] = None
+            d["plan"] = d["read"] = None
         d["shots"] = sorted(p.name for p in (config.DATA_DIR / "decision_shots").glob(f"{r['entry_id']}_*"))
         feed.append(d)
     since_month = datetime.now(config.ET).replace(day=1, hour=0, minute=0, second=0).astimezone(timezone.utc).isoformat()

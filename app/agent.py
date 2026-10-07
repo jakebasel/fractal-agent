@@ -178,7 +178,9 @@ def normalise(dec: dict) -> dict:
     return {"decision": d, "grade": grade, "size": size, "confidence": conf, "play": play,
             "hard_rule": dec.get("hard_rule"), "reasons": dec.get("reasons") or [],
             "boosters": dec.get("boosters") or [], "plan": plan,
-            "extra": {"unknowns": dec.get("unknowns"), "kill_conditions": plan.get("kill_conditions")}}
+            "extra": {"unknowns": dec.get("unknowns"), "kill_conditions": plan.get("kill_conditions"),
+                      "spotlight": dec.get("spotlight"), "sister_pair": dec.get("sister_pair"),
+                      "targets": dec.get("targets")}}
 
 
 def _keep_shots(entry_id, files):
@@ -267,6 +269,7 @@ def review(fvg: FVG, entry: dict):
         return row
 
     context["_plan"] = dec["plan"]   # the management plan travels with the context snapshot
+    context["_read"] = {k: dec["extra"].get(k) for k in ("spotlight", "sister_pair", "targets")}
     row.update(decision=dec["decision"], grade=dec["grade"], size=dec["size"],
                play=prompts.play_name(entry.get("mt_tf"), signal, dec["play"]), path="model",
                confidence=dec["confidence"], hard_rule=dec["hard_rule"], reasons=dec["reasons"],

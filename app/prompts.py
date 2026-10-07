@@ -149,6 +149,13 @@ Reply with ONE JSON object and nothing else:
   "boosters": ["each booster that is present"],
   "reasons": ["3-6 short reasons, each citing a rule section, e.g. '§2.6 retracement too shallow'"],
   "unknowns": ["things you could not verify that matter"],
+  "spotlight": "what the chart read shows for Spotlight on this index (DR box, confirmation direction, true/false day, opening FVG) and how it bears on this trade; 'not visible' if the read has none",
+  "sister_pair": "what the other index's signals/setups say (stronger/weaker, same idea on both, a DB the other way) and whether that supports, downgrades or blocks this trade",
+  "targets": {{
+    "first": "the 1:3 target from the engine and whether it is clear of obstacles",
+    "htf_liquidity": "the higher-timeframe target in play (prior day/session high or low, DSD, 4H/daily FVG, London/Asia obligation, blue/purple zone), or null",
+    "zone_bounce": "if this is a bounce off a blue/purple zone, the zone and the target it implies, else null"
+  }},
   "management_plan": {{
     "be_safe_by": "the level or event by which the trade must be at breakeven or partial (e.g. 'before the 5m FVG at 24510', 'before the purple zone'), or null",
     "partial_at": "where to take 50% if not the plain 2R (zone ahead, liquidity level), or '2R'",
