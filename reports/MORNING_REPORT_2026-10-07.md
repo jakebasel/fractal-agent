@@ -192,3 +192,20 @@ and reproduced the serious ones. All fixed and tested (65 tests), deployed:
 - Local secrets: `~/.coolify.env` (Coolify API token, AGENT_TOKEN, dashboard password) and
   `~/.fractal-agent.env` (AGENT_TOKEN). The OpenRouter key is only in Coolify.
 - No terminal restart was needed: permissions apply to the launchd job on its next run.
+
+## 8. Afternoon additions (2026-10-07, after you woke up)
+- News rule: red-folder USD releases only, skip inside ±60 min; session times are downgrades,
+  never skips (your rules, in amendments.md). The fvg-mcp window flag is a downgrade too.
+- Jev playbook generated from the rulebook (36 questions); Jev scores engine setups, the
+  scanner's forming setups and re-evaluated skips. Skips are re-decided automatically when the
+  rules change (re-evaluation line on each card).
+- DeepSeek V3.2 is the decision model (V4 Pro thinks its budget away; kept as fallback).
+- Live-session rules from the FOMC-minutes session (2DB → 70-80% retrace, order-block
+  midpoint, 30s FVG discipline, Spotlight-confirmation protection) in rules + knowledge.
+- Backtest extended with the full MT history and the red-folder calendar: none of the
+  ledger-testable live-session rules moves the needle; "walk away at −2R/day" remains the best.
+- Hermes Agent reviewer deployed (Coolify app hermes-reviewer): reviews every settled trade
+  (wins and losses) on the take/skip error matrix and the exit, with screenshots, posts reviews
+  and proposals; OpenRouter prompt caching on, compact packets, 2 trades per run.
+- Dashboard: pending/armed engine setups panel with the rule that would skip them, engine
+  feed health (MES chart FVG alert stale since 05:05 ET: TradingView-side fix), NY PM scan window.
