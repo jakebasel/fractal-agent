@@ -36,8 +36,11 @@ def _post(model: str, messages: list, max_tokens: int = 1500, temperature: float
         raise LLMError("OPENROUTER_API_KEY is not set")
     body = {"model": model, "messages": messages, "max_tokens": max_tokens,
             "temperature": temperature, "usage": {"include": True}}
-    if model == config.DECISION_MODEL and config.DECISION_FALLBACK_MODELS:
-        body["models"] = [model] + config.DECISION_FALLBACK_MODELS   # OpenRouter model routing
+    if model == config.DECISION_MODEL:
+        if config.DECISION_FALLBACK_MODELS:
+            body["models"] = [model] + config.DECISION_FALLBACK_MODELS   # OpenRouter model routing
+        if config.DECISION_REASONING:
+            body["reasoning"] = config.DECISION_REASONING
     t0 = time.time()
     try:
         r = httpx.post(config.OPENROUTER_URL, json=body, timeout=config.LLM_TIMEOUT_S,
@@ -52,9 +55,21 @@ def _post(model: str, messages: list, max_tokens: int = 1500, temperature: float
     data = r.json()
     _log(purpose, data.get("model") or model, data.get("usage"), ms, True)   # the model that answered
     try:
-        return data["choices"][0]["message"]["content"] or ""
-    except (KeyError, IndexError) as e:
+        msg = data["choices"][0]["message"]
+    except (KeyError, IndexError, TypeError) as e:
         raise LLMError(f"{model}: unexpected reply {str(data)[:300]}") from e
+    content = msg.get("content") or ""
+    if not content.strip():
+        # reasoning models can spend the whole budget thinking, or put the answer in the
+        # reasoning field; take whatever carries a JSON object
+        for alt in (msg.get("reasoning"), msg.get("reasoning_content")):
+            if isinstance(alt, str) and "{" in alt:
+                content = alt
+                break
+    if not content.strip():
+        fin = (data["choices"][0].get("finish_reason") or "")
+        raise LLMError(f"{model}: empty reply (finish_reason={fin}, usage={data.get('usage')})")
+    return content
 
 
 def parse_json(text: str) -> dict:
@@ -85,7 +100,8 @@ def read_chart(images, prompt: str) -> dict:
 
 def decide(system: str, user: str, purpose: str = "decision") -> dict:
     messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
-    return parse_json(_post(config.DECISION_MODEL, messages, max_tokens=1500, purpose=purpose))
+    return parse_json(_post(config.DECISION_MODEL, messages, max_tokens=config.DECISION_MAX_TOKENS,
+                            purpose=purpose))
 
 
 def system_one(state, questions: dict, purpose: str = "jev") -> dict:

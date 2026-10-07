@@ -30,6 +30,11 @@ OPENROUTER_API_KEY = _env("OPENROUTER_API_KEY")
 OPENROUTER_URL = _env("OPENROUTER_URL", "https://openrouter.ai/api/v1/chat/completions")
 # DeepSeek V4 Pro (Jake 2026-10-07: newer and ~4x cheaper than deepseek-chat); take/skip + lessons
 DECISION_MODEL = _env("DECISION_MODEL", "deepseek/deepseek-v4-pro")
+DECISION_MAX_TOKENS = int(_env("DECISION_MAX_TOKENS", "4000"))
+# reasoning control for thinking models (OpenRouter 'reasoning' object), e.g. {"effort":"low"}
+# or {"enabled": false}; empty = send nothing
+import json as _json
+DECISION_REASONING = _json.loads(_env("DECISION_REASONING", '{"effort": "low"}') or "null")
 # OpenRouter falls back to these, in order, when the decision model is rate-limited or down
 DECISION_FALLBACK_MODELS = [m.strip() for m in _env("DECISION_FALLBACK_MODELS",
                                                     "deepseek/deepseek-v3.2,deepseek/deepseek-chat").split(",") if m.strip()]
