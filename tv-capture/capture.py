@@ -37,8 +37,8 @@ AGENT_TOKEN = os.environ.get("AGENT_TOKEN", "")
 UI_PASSWORD = os.environ.get("UI_PASSWORD") or AGENT_TOKEN
 TV_PAGES = [u.strip() for u in os.environ.get("TV_PAGES", "").split(",") if u.strip()]
 TV_LAYOUT = os.environ.get("TV_LAYOUT", "One TradingView window with four charts in a 2x2 grid: "
-                           "MNQ 5-minute top-left, MES 5-minute top-right, MNQ 1-minute bottom-left, "
-                           "MES 1-minute bottom-right.")
+                           "top-left MNQ 5-minute, top-right MNQ 1-minute, bottom-left MES 5-minute, "
+                           "bottom-right MES 1-minute.")   # Jake's "10.7 - Fractal test" layout
 EVERY = int(os.environ.get("CAPTURE_EVERY_S", "30"))
 QUALITY = int(os.environ.get("JPEG_QUALITY", "75"))
 W, H = (int(x) for x in os.environ.get("TV_VIEWPORT", "2560x1440").lower().split("x"))
