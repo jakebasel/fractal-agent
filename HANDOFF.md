@@ -232,9 +232,11 @@ learning loop, Jev shadow scoring, news filter, spend tracking. Still open:
 - fvg-mcp 2026-10-08: `/analysis` page (sortable headers, filter panel, top scrollbar, 1m/5m and
   M/DB cells with win% + avg R, Symbol page `#sym=` with 100-row pages and TradingView layout
   links; `/api/analysis`, `/api/analysis/trades`). Dashboard lag: `/api/entries` and `/api/setups`
-  rebuild in 20-30 s with ~150 symbols and were cached 2 s; now ENTRIES_TTL_S=20 / SETUPS_TTL_S=10.
-  The real fix is making those rebuilds cheaper (profile `_entries_payload` price-stream sims and
-  `compute_setups` per symbol).
+  rebuild in 20-35 s with ~150 symbols and were cached 2 s, so a poll after expiry waited the whole
+  rebuild. Now stale-while-revalidate (`_swr_rebuild`): a stale cache is served at once and rebuilt
+  single-flight in the background; TTLs ENTRIES_TTL_S=20 / SETUPS_TTL_S=10. The board is therefore
+  up to ~60 s behind. The next step, if that matters, is making the rebuilds cheaper (profile
+  `_entries_payload`'s price-stream sims and `compute_setups` per symbol).
 - TradingView throttles a symbol inside a watchlist alert that fires too often ("alerts have been
   temporarily limited due to frequent triggers"): the FVG v16.60 30s alert lost MES1! (and 6A/6B/6E/
   6J/MET) for 29 h on 2026-10-07/08. fvg-mcp shows it as "no FVG alert data for Xh" on that symbol
