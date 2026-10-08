@@ -172,7 +172,19 @@ learning loop, Jev shadow scoring, news filter, spend tracking. Still open:
   alerts on MET1! use [23-09-26], the version with reversal lines — recreating MNQ/MES alerts on
   23-09-26 might expose reversal events in the alert text (untested).
 - 2026-10-07: TradingView alerts were still posting to the old Railway URL after the VPS move;
-  Jake repointed them to `https://fvg.motivationpro.tech/webhook?token=…`. Data resumed 00:49 ET.
+  Jake repointed MNQ/MES/MYM to `https://fvg.motivationpro.tech/webhook?token=…`. Data resumed 00:49 ET.
+  2026-10-08: the other 29 active Market Translator alerts were still on the Railway URL (fvg-mcp had
+  heard from only MNQ/MES/MYM since 10-06); all repointed via TradingView's own alerts API from a
+  logged-in Chrome tab (`pricealerts.tradingview.com/list_alerts` + `modify_restart_alert`, payload
+  shape in git history of this note). Each MT webhook URL carries `token`, `source=market_translator`,
+  `symbol=<lowercase, e.g. mnq1>` and `tf=1m|5m`: fvg-mcp labels the event from those params, so a
+  bare URL (ES/NQ/YM had one) or a wrong symbol (HG1! 1m said ng1) silently loses or mislabels data.
+  Both fixed. The two disabled MET1! [23-09-26] test alerts still point at Railway (left alone).
+- TradingView throttles a symbol inside a watchlist alert that fires too often ("alerts have been
+  temporarily limited due to frequent triggers"): the FVG v16.60 30s alert lost MES1! (and 6A/6B/6E/
+  6J/MET) for 29 h on 2026-10-07/08. fvg-mcp shows it as "no FVG alert data for Xh" on that symbol
+  while Market Translator and the relay keep flowing. Restarting the alert (connector
+  `mcp-tv-restart-alerts`, or Save in its dialog) clears it.
 - Jake's preferences: plain language, short answers, bottom line first; do the work rather than
   give instructions; only hand him what needs his credentials.
 - Claim to verify, not assume: "12% per week". The log decides.
