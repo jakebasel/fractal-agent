@@ -217,6 +217,24 @@ learning loop, Jev shadow scoring, news filter, spend tracking. Still open:
   (49x the same 20-symbol batch) and fvg-mcp sometimes answers "request took too long"; recreating
   it on a single symbol would cut that 49x. The FVG v16.60 watchlist alert tracks Primary
   dynamically (symbolset_data shows all 49), so the 24 new symbols already get FVG events.
+- 2026-10-08 (later): `###OTHER-IRONBEAM` section on Primary: 30 liquid roots TradingView's
+  Ironbeam filter lists that Tradovate does not (CBOE VX VXM; ICE US DX KC CC SB CT OJ RS MME MFS;
+  ICE Europe BRN G C W RC Z; CBOT ZQ KE MZW MZS MZC; CME SR3 NIY 6Z XRP LBR DC CNH; COMEX ALI),
+  MT 1m+5m each. The Ironbeam filter itself returns ~8,900 futures (every exchange, spreads
+  included): this is a curated cut, not "all of Ironbeam". Jake's data plan has NO permission
+  for CBOE / ICE symbols inside the relay script (`no_permissions_for_symbol_used_in_input`), so
+  relay #8 = ZQ KE MZW only and relay #9 = MZS MZC SR3 NIY 6Z XRP LBR DC CNH ALI; the 17 CBOE/ICE
+  symbols have MT alerts and FVG-watchlist coverage but no relay price feed. study_error (dead):
+  OJ 1m+5m, ALI 1m, CNH 1m.
+- 2026-10-08: relay #1 recreated as a single-symbol alert (`FVG Relay v1.02 #1`, id 5802648868, on
+  CME_MINI:MNQ1! 30S, same 20 symbols); the old watchlist relay (5370548697) refused to delete
+  via the connector ("internal") -- stop it / delete it from the Alerts panel if it still posts.
+- fvg-mcp 2026-10-08: `/analysis` page (sortable headers, filter panel, top scrollbar, 1m/5m and
+  M/DB cells with win% + avg R, Symbol page `#sym=` with 100-row pages and TradingView layout
+  links; `/api/analysis`, `/api/analysis/trades`). Dashboard lag: `/api/entries` and `/api/setups`
+  rebuild in 20-30 s with ~150 symbols and were cached 2 s; now ENTRIES_TTL_S=20 / SETUPS_TTL_S=10.
+  The real fix is making those rebuilds cheaper (profile `_entries_payload` price-stream sims and
+  `compute_setups` per symbol).
 - TradingView throttles a symbol inside a watchlist alert that fires too often ("alerts have been
   temporarily limited due to frequent triggers"): the FVG v16.60 30s alert lost MES1! (and 6A/6B/6E/
   6J/MET) for 29 h on 2026-10-07/08. fvg-mcp shows it as "no FVG alert data for Xh" on that symbol
