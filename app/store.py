@@ -131,6 +131,14 @@ CREATE TABLE IF NOT EXISTS shadow (
   at          TEXT,
   PRIMARY KEY (entry_id, hyp_id)
 );
+CREATE TABLE IF NOT EXISTS core_trades (
+    id INTEGER PRIMARY KEY,          -- fvg-mcp trade id
+    symbol TEXT, cascade TEXT, dir TEXT, sig TEXT, mt_tf TEXT, entry_bar INTEGER,
+    entry REAL, stop REAL, target REAL, r REAL, outcome TEXT, exit REAL, close_bar INTEGER,
+    scoring TEXT, session TEXT, in_window INTEGER, nd INTEGER, retrace TEXT, mt_seq TEXT,
+    exec TEXT, synced_at TEXT
+);
+CREATE INDEX IF NOT EXISTS core_trades_sym ON core_trades(symbol, entry_bar);
 """
 
 # columns added after v1; ALTERed into an existing database at start-up
@@ -662,3 +670,36 @@ def stats(since_iso=None):
         "note": "r = fvg-mcp's scored result as if taken at full size; paper_r applies the "
                 "agent's size (reduced = 0.5). The filter adds value if taken avg_r > all avg_r.",
     }
+
+
+# ---- per-symbol core book (fvg-mcp trade_history mirror) ---------------------------------
+CORE_COLS = ("symbol", "cascade", "dir", "sig", "mt_tf", "entry_bar", "entry", "stop", "target",
+             "r", "outcome", "exit", "close_bar", "scoring", "session", "in_window", "nd",
+             "retrace", "mt_seq", "exec")
+
+
+def upsert_core_trades(cols: list, rows: list) -> int:
+    """Columnar trade_history ({cols, rows}) -> core_trades, keyed by fvg-mcp's trade id."""
+    if not cols or "id" not in cols:
+        return 0
+    idx = {c: i for i, c in enumerate(cols)}
+    now = now_utc()
+    recs = []
+    for row in rows:
+        if not config.INCLUDE_GOLD and "cascade" in idx and row[idx["cascade"]] == "Gold Strategy":
+            continue
+        recs.append([row[idx["id"]]] + [row[idx[c]] if c in idx else None for c in CORE_COLS] + [now])
+    with _lock:
+        db().executemany(
+            f"INSERT OR REPLACE INTO core_trades (id, {', '.join(CORE_COLS)}, synced_at) "
+            f"VALUES ({', '.join('?' * (len(CORE_COLS) + 2))})", recs)
+        db().commit()
+    return len(recs)
+
+
+def core_trades(since_ms: int, symbol: str | None = None) -> list[dict]:
+    q = "SELECT * FROM core_trades WHERE entry_bar >= ?"
+    args = [since_ms]
+    if symbol:
+        q += " AND symbol = ?"; args.append(symbol)
+    return [dict(r) for r in db().execute(q + " ORDER BY entry_bar", args)]

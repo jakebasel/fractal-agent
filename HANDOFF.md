@@ -58,6 +58,13 @@ VPS screenshot ──► fractal-agent ──► OpenRouter: cheap vision model 
    from the release to 2 h after it, nothing before; `NEWS_BEFORE_MIN`=0/`NEWS_AFTER_MIN`=120), DB with
    retrace `none`/`shallow`, two losses this session, weekend, NY/London/Asia windows, long
    inside a bearish 4H FVG (from the price archive). `app/rules_code.py`, `app/htf.py`.
+10a. **Per-symbol core book** (`app/symbols.py`, added 2026-10-08). Every 10 min the agent mirrors
+    fvg-mcp's `trade_history` (every scored cascade entry on every symbol it gets alerts for, full
+    size, no AI filter) into `core_trades` (first run backfills 30 days). Dashboard tab **Symbols**,
+    `/api/symbols?days=`, MCP tool `symbol_stats(days)`: per symbol n, win%, avg R, total R, max DD,
+    today, total R per ET day for the last 7 days, by timeframe and session. Only on_time/rescored/
+    fact scoring counts; Gold Strategy rows are dropped. Jake's question: which instruments does the
+    core strategy pay on? Env: `SYMBOLS_SYNC_S` (600), `SYMBOLS_BACKFILL_DAYS` (30).
 10. Dashboard at `/` (password: `DASHBOARD_PASSWORD`, 30-day cookie): status, cumulative R
     agent vs core, live screen, setups feed with the screenshots each decision used, learning
     tab with approve/reject, breakdowns by play/session/config/grade/booster/hard rule, spend
@@ -194,6 +201,13 @@ learning loop, Jev shadow scoring, news filter, spend tracking. Still open:
   with `study_error` (the Pine script cannot run there; Jake's own old MET 5m tests fail the same way).
   The 24 new roots were also added to the Primary watchlist under `###OTHER` (that watchlist feeds the
   two FVG 30s alerts, so expect more FVG traffic).
+- 2026-10-08: two more relay alerts, `FVG Relay v1.02 #2` (6A 6B 6C 6E 6J 6S 6N PL PA RB HO QM QG
+  MCL MGC SIL ZS ZC ZW ZL) and `#3` (ZM HE LE GF EMD NKD M2K M6A M6E), on CME_MINI:MNQ1! 30S, same
+  webhook: the relay script has 20 symbol slots (inputs in_3, in_5 ... in_41 with enable bools in
+  in_2 ... in_40). Relay #1 is a WATCHLIST alert, so it fires once per watchlist symbol per 30s bar
+  (49x the same 20-symbol batch) and fvg-mcp sometimes answers "request took too long"; recreating
+  it on a single symbol would cut that 49x. The FVG v16.60 watchlist alert tracks Primary
+  dynamically (symbolset_data shows all 49), so the 24 new symbols already get FVG events.
 - TradingView throttles a symbol inside a watchlist alert that fires too often ("alerts have been
   temporarily limited due to frequent triggers"): the FVG v16.60 30s alert lost MES1! (and 6A/6B/6E/
   6J/MET) for 29 h on 2026-10-07/08. fvg-mcp shows it as "no FVG alert data for Xh" on that symbol

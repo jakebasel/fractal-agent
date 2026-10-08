@@ -132,6 +132,7 @@ pre { white-space: pre-wrap; word-break: break-word; background: var(--surface-2
     <button data-tab="setups">Setups</button>
     <button data-tab="learning">Learning</button>
     <button data-tab="breakdown">Breakdown</button>
+    <button data-tab="symbols">Symbols</button>
     <button data-tab="spend">Spend</button>
     <button data-tab="rules">Rules</button>
     <button data-tab="backtest">Backtest</button>
@@ -183,6 +184,12 @@ pre { white-space: pre-wrap; word-break: break-word; background: var(--surface-2
   </section>
 
   <section data-panel="breakdown" class="hidden"><div class="grid" id="breakdowns"></div></section>
+
+  <section data-panel="symbols" class="hidden">
+    <div class="card"><h2>Core strategy per symbol <small id="symbols-sub"></small></h2>
+      <div class="t2" id="symbols-note" style="margin-bottom:8px"></div>
+      <div class="scroll" id="symbols-table"></div></div>
+  </section>
 
   <section data-panel="spend" class="hidden">
     <div class="grid tiles" id="spend-tiles"></div>
@@ -454,6 +461,18 @@ function render() {
     ${x.r != null ? `<span class="r ${clsR(x.r)}" style="float:right">${fmtR(x.r)} <span class="muted">${esc(x.outcome)}</span></span>` : ""}
     <div class="t2">${(x.reasons || []).map(esc).join(" · ")}${x.entry ? ` · entry ${x.entry} stop ${x.stop} target ${x.target}` : ""}</div></div>`).join("") ||
     `<div class="empty">Nothing spotted yet. The scanner runs every ${st.scanner ? st.scanner.minutes : 5} min in ${esc(st.scanner ? st.scanner.windows_et : "")} ET when the screen changes.</div>`;
+  });
+  section("symbols", () => {
+  const sy = d.symbols || {symbols: [], days: []};
+  $("#symbols-sub").textContent = `${sy.window || ""}${sy.synced_at_et ? " · synced " + sy.synced_at_et : ""}`;
+  $("#symbols-note").textContent = (sy.note || "") + (sy.excluded_total ? ` ${sy.excluded_total} late/unscored rows excluded.` : "");
+  const dayHead = (sy.days || []).map(x => `<th title="total R, ET day">${x.slice(5)}</th>`).join("");
+  const dayCells = r => (sy.days || []).map(x => { const v = r.by_day[x]; return `<td class="${v ? clsR(v) : "muted"}">${v ? fmtR(v) : "·"}</td>`; }).join("");
+  const tf = r => ["1m", "5m"].map(t => { const s = r.by_tf[t]; return s && s.n ? `${t} <span class="${clsR(s.total_r)}">${fmtR(s.total_r)}</span> (${s.n})` : ""; }).filter(Boolean).join(" · ");
+  $("#symbols-table").innerHTML = sy.symbols.length ? `<table><tr><th>Symbol</th><th>n</th><th>Win %</th><th>Avg R</th><th>Total R</th><th>Max DD</th><th>Today</th>${dayHead}<th>By timeframe</th></tr>` +
+    sy.symbols.map(r => `<tr><td><b>${esc(r.symbol)}</b></td>${statCells(r.window)}<td class="${clsR(r.today.total_r || 0)}">${r.today.n ? fmtR(r.today.total_r) + ` <span class="muted">(${r.today.n})</span>` : "·"}</td>${dayCells(r)}<td style="white-space:nowrap">${tf(r)}</td></tr>`).join("") +
+    `<tr><td><b>All symbols</b></td>${statCells(sy.all)}<td></td>${(sy.days || []).map(() => "<td></td>").join("")}<td></td></tr></table>`
+    : `<div class="empty">No core trades synced yet. The agent pulls fvg-mcp's trade history every 10 minutes.</div>`;
   });
   section("backtest", () => {
   const bt = d.backtest;

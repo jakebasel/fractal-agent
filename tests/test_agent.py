@@ -47,6 +47,25 @@ def recent_events(symbol: str | None = None, source: str | None = None,
              "text": "Upper Double Break", "price": 31400}]
 
 
+@fake.tool()
+def trade_history(days: float = 14, symbol: str | None = None) -> dict:
+    now = int(time.time() * 1000)
+    cols = ["id", "symbol", "cascade", "dir", "sig", "mt_tf", "entry_bar", "entry", "stop", "stop_a", "target",
+            "r", "outcome", "exit", "close_bar", "score_lag_h", "scoring", "session", "in_window", "nd",
+            "retrace", "tap_depth", "fvg_gaps", "two_m", "signal_bar", "n_inv", "n_stages", "v_candles", "mt_seq", "exec"]
+
+    def row(i, sym, r, scoring="on_time", cascade="2-stage", tf="1m", session="asia", age_h=1):
+        bar = now - int(age_h * 3600_000)
+        return [i, sym, cascade, "bull", "DB", tf, bar, 100, 99, 99, 103, r, "x", 101, bar + 60_000, 1.0,
+                scoring, session, True, False, "deep", 0.3, 2, False, bar, 0, 2, 3.0, "MD", "skip"]
+    rows = [row(1, "6A1!", 2.5), row(2, "6A1!", -1), row(3, "6A1!", 3, age_h=30), row(4, "ZB1!", -1),
+            row(5, "ZB1!", -1, scoring="late"), row(6, "GC1!", 2, cascade="Gold Strategy"),
+            row(7, "MNQ1!", 1, tf="5m", session="newyork")]
+    if symbol:
+        rows = [r for r in rows if r[1] == symbol]
+    return {"cols": cols, "rows": rows, "n": len(rows), "note": "fake"}
+
+
 def free_port():
     s = socket.socket()
     s.bind(("127.0.0.1", 0))
@@ -474,6 +493,26 @@ store.reset_for_tests()
 store.add_review(1, "probe", "right_skip", "s", "e", None, {}, scan_id=None)
 ok(store.reviews(1)[0]["reviewer"] == "probe", "old reviews table migrated (scan_id added) before insert")
 config.DATA_DIR = _prev; store.reset_for_tests()
+
+# 20. per-symbol core book: fvg-mcp trade_history mirrored and reported per symbol
+from app import symbols  # noqa: E402
+n = symbols.sync(FVG())
+ok(n == 6, f"trade_history mirrored, Gold Strategy row dropped ({n} rows)")
+rep = symbols.report(7)
+by = {x["symbol"]: x for x in rep["symbols"]}
+ok(rep["symbols"][0]["symbol"] == "6A1!" and by["6A1!"]["window"]["n"] == 3 and by["6A1!"]["window"]["total_r"] == 4.5,
+   "6A1! leads the symbol table with 3 trades, +4.5R")
+ok(by["ZB1!"]["window"]["n"] == 1 and by["ZB1!"]["excluded"] == 1, "late-scored row excluded from ZB1!")
+ok("GC1!" not in by and rep["all"]["n"] == 5, "Gold Strategy rows are not part of the core book")
+ok(by["MNQ1!"]["by_tf"]["5m"]["n"] == 1 and by["MNQ1!"]["by_session"]["newyork"]["n"] == 1, "by-timeframe and by-session splits")
+ok(abs(sum(by["6A1!"]["by_day"].values()) - 4.5) < 1e-9 and len(rep["days"]) == 7, "per-day totals add up over the 7 day columns")
+ok(symbols.sync_if_due(FVG()) == 0, "sync is rate-limited between ticks")
+ok(main.symbol_stats(7)["all"]["n"] == 5, "symbol_stats MCP tool")
+sc = TestClient(main.app)
+ok(sc.get("/api/symbols").status_code == 401, "/api/symbols is closed without login")
+sc.post("/login", data={"password": "pw"}, follow_redirects=False)
+ok(sc.get("/api/symbols?days=7").json()["all"]["n"] == 5, "/api/symbols serves the report after login")
+ok(sc.get("/api/dashboard?days=7").json()["symbols"]["all"]["n"] == 5, "dashboard payload carries the symbol table")
 
 print("all tests passed")
 server.should_exit = True

@@ -30,7 +30,7 @@ from starlette.routing import Route
 
 from pathlib import Path
 
-from . import agent, config, jev, learning, store
+from . import agent, config, jev, learning, store, symbols
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 log = logging.getLogger("main")
@@ -77,6 +77,14 @@ def paper_stats(days: float = 7) -> dict:
     since = datetime.fromtimestamp(datetime.now(timezone.utc).timestamp() - days * 86400,
                                    tz=timezone.utc).isoformat()
     return store.stats(since)
+
+
+@mcp.tool()
+def symbol_stats(days: float = 7) -> dict:
+    """The core strategy per symbol over the last `days`: every fvg-mcp cascade entry at full
+    size (no AI filter), with n, win%, avg R, total R, max drawdown, today, and total R per ET day
+    for the last 7 days. Sorted by total R. Use it to see which instruments pay."""
+    return symbols.report(days)
 
 
 @mcp.tool()
@@ -487,6 +495,13 @@ def _curve(rows, key):
     return out
 
 
+async def api_symbols(request: Request):
+    """Per-symbol core book as JSON (dashboard login or agent token)."""
+    if not _authed(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    return JSONResponse(symbols.report(float(request.query_params.get("days", "7"))))
+
+
 async def api_dashboard(request: Request):
     if not _authed(request):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
@@ -538,6 +553,7 @@ async def api_dashboard(request: Request):
                    "reasons": json.loads(r["reasons"] or "[]")} for r in store.scans(40)],
         "backtest": _backtest(),
         "pending": store.kv_get("setups_snapshot") or {},
+        "symbols": symbols.report(days),
         "jev_playbook": jev.playbook()["readable"],
         "vision": _vision_stats(since),
         "rule_versions": [{"version": v["version"], "first_seen_et": store.to_et(v["first_seen"]),
@@ -668,6 +684,7 @@ app.router.routes.extend([
     Route("/login", login, methods=["POST"]),
     Route("/logout", logout),
     Route("/api/dashboard", api_dashboard),
+    Route("/api/symbols", api_symbols),
     Route("/api/hypotheses/{hid:int}", api_hypothesis, methods=["POST"]),
     Route("/api/hypotheses/propose", propose_hypothesis, methods=["POST"]),
     Route("/api/review_queue", review_queue_route),

@@ -9,7 +9,7 @@ import threading
 import time
 from datetime import datetime, timezone
 
-from . import config, htf, jev, knowledge, learning, llm, prompts, rules_code, scanner, store
+from . import config, htf, jev, knowledge, learning, llm, prompts, rules_code, scanner, store, symbols
 from .mcp_client import FVG
 
 log = logging.getLogger("agent")
@@ -583,6 +583,10 @@ def tick(fvg: FVG):
         reevaluate_skips(fvg)
     except Exception as e:
         log.warning("re-evaluation failed: %s", e)
+    try:   # per-symbol core book: mirror fvg-mcp's trade_history (no LLM calls)
+        symbols.sync_if_due(fvg)
+    except Exception as e:
+        log.warning("core trades sync failed: %s", e)
     learning.promote_queued()
     try:
         learning.run_shadow()
