@@ -2,8 +2,8 @@
 
 One headless Chromium, logged into TradingView with session cookies pasted by Jake at the web
 page this process serves (/). Every CAPTURE_EVERY_S seconds during futures hours it screenshots
-each page in TV_PAGES and posts them to the agent as one set (?batch=&part=&kind=vps), exactly
-like the Mac uploader does for windows. TV_LAYOUT describes what the images show; it is sent
+each page in TV_PAGES and posts them to the agent as one set (?batch=&part=&kind=vps).
+TV_LAYOUT describes what the images show; it is sent
 along so the agent's vision prompt matches whatever layout Jake built.
 
 Env: AGENT_URL, AGENT_TOKEN (required); TV_PAGES (comma-separated TradingView chart URLs;

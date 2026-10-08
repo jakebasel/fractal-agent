@@ -13,7 +13,7 @@ A **paper-only** AI review layer on top of the existing rules engine (`jakebasel
 TradingView alerts ──► fvg-mcp (rules engine, scores every entry)
                               │  read-only MCP  (https://fvg.motivationpro.tech/mcp)
                               ▼
-Mac screenshot ──► fractal-agent ──► OpenRouter: cheap vision model reads the chart
+VPS screenshot ──► fractal-agent ──► OpenRouter: cheap vision model reads the chart
  (every 30s)        (this repo)        DeepSeek decides TAKE/SKIP + writes lessons
                               │
                               ▼
@@ -26,7 +26,7 @@ Mac screenshot ──► fractal-agent ──► OpenRouter: cheap vision model 
    completed, close over the series. Entry, stop and 1:3 target come from fvg-mcp.
 2. Code-level hard rules first (no AI call): ND/trend-fallback, outside window, NY after
    11:00 ET, weekend.
-3. The latest Mac screenshot (if < 3 min old) goes to the **vision model** once; it returns a
+3. The latest VPS screenshot (if < 3 min old) goes to the **vision model** once; it returns a
    JSON read of what the alerts don't carry: white M/2M/DB/2DB lines and whether a body closed
    through them, reversal zones, purple/blue zones, NDOG, Spotlight, EMAs, trend table.
 4. **DeepSeek** gets: the rulebook (`rules/`), the latest lessons, fvg-mcp's entry detail,
@@ -98,7 +98,7 @@ Not deployed yet. Steps:
    - `OPENROUTER_API_KEY` — Jake's key (currently on the fvg-mcp app; copy it, or make it a
      Coolify Shared Variable and reference it from both apps).
    - `AGENT_TOKEN` — any long random string; protects `/screenshot` and `/log.csv`. The same
-     value goes in `~/.fractal-agent.env` on the Mac.
+     value goes on the tv-capture app.
    - `DASHBOARD_PASSWORD` — login for the dashboard at `/`.
    - Optional: `JEV_MODE` (shadow | gate | off), `NEWS_FILTER` (1), `MAX_TESTING_HYPOTHESES` (8),
      `MIN_N_FOR_VERDICT` (30).
@@ -110,33 +110,14 @@ Not deployed yet. Steps:
 6. Add `https://agent.motivationpro.tech/mcp` as a custom connector in claude.ai so Claude can
    call `paper_stats`, `decisions`, `decision_detail`, `lessons`, `agent_status`.
 
-## Mac screenshot uploader
-
-```
-cd ~/Coding/fractal-agent
-bash mac/install.sh          # first run creates ~/.fractal-agent.env — paste AGENT_TOKEN
-bash mac/install.sh          # second run installs the launchd job (every 30s)
-tail -f ~/Library/Logs/fractal-capture.log
-```
-
-Grant Screen Recording to `bash` when macOS asks (System Settings → Privacy & Security).
-The uploader (`mac/capture.sh`) captures **only TradingView windows** (the desktop app, or a
-browser window whose title matches `TV_MATCH`), each one separately, even when other windows
-cover them, and sends them as one set (left window first). Browser tab titles are only visible
-to it if `osascript` also has Screen Recording permission; otherwise, or when no TradingView
-window is open, it sends the whole screen and the vision model marks non-charts `not_chart`,
-which the agent ignores. `CAPTURE=screen` restores the old whole-screen mode.
-Layout assumption (set in `SCREEN_LAYOUT`): 5m charts on the LEFT, 1m on the RIGHT, MNQ and
-MES visible. If TradingView is on an external monitor, set `SCREEN=2` in the env file.
-
 ## VPS screenshot capturer (tv-capture/)
 
 Coolify app `tv-capture` (same project, base directory `/tv-capture`, volume `/data`, domain
 https://tv.motivationpro.tech). Headless Chromium logged into TradingView with Jake's session
 cookies screenshots the pages in `TV_PAGES` every 30 s during futures hours and posts them to
 `/screenshot` with `kind=vps` and `layout=<TV_LAYOUT>`; the agent stores that layout text per
-kind and the vision prompt uses it, so the Mac uploader (kind=window) and the VPS can coexist;
-the agent reads whichever set is newest. Env: `AGENT_URL`, `AGENT_TOKEN`, `UI_PASSWORD`
+kind and the vision prompt uses it; the agent reads whichever set is newest. (The Mac
+screenshot uploader was removed 2026-10-08: it stopped whenever the screen locked.) Env: `AGENT_URL`, `AGENT_TOKEN`, `UI_PASSWORD`
 (dashboard password), `TV_PAGES` (one 4-chart layout URL, or one URL per chart), `TV_LAYOUT`
 (describe what the images show, in order). Login: open the app's page, enter the password and
 the `sessionid` + `sessionid_sign` cookies from Chrome (DevTools → Application → Cookies →
@@ -164,10 +145,10 @@ stats, token gate, screenshot upload, the agent's own MCP tool.
 
 ## Next steps (in order)
 
-Done 2026-10-07: deployed on Coolify (project fractal-agent), Mac uploader running, dashboard,
+Done 2026-10-07: deployed on Coolify (project fractal-agent), VPS capture, dashboard,
 learning loop, Jev shadow scoring, news filter, spend tracking. Still open:
 
-1. ~~Deploy + Mac uploader (above).~~ Watch one session; check `decision_detail` rows to see what
+1. ~~Deploy + screenshot capture (above).~~ Watch one session; check `decision_detail` rows to see what
    the vision model actually read off the screen. Tune `VISION_PROMPT` in `app/prompts.py`
    until it reliably reads white lines and reversal zones. This is the weakest link.
    Reference chart images are in `knowledge/reference/images/`; sending one or two with each

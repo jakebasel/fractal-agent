@@ -1,7 +1,7 @@
 """HTTP surface.
 
   GET  /health                 public, no data
-  POST /screenshot?token=...   the Mac uploads a JPEG/PNG of the TradingView screen
+  POST /screenshot?token=...   the VPS capturer uploads a JPEG/PNG of the TradingView charts
   GET  /log.csv?token=...      every reviewed setup, ET times
   GET  /stats?token=...        paper results: taken vs skipped
   GET  /decisions?token=...    recent rows as JSON
@@ -380,8 +380,8 @@ async def screenshot(request: Request):
 
 
 async def capture_control(request: Request):
-    """GET: the Mac asks whether capture is paused (token). POST (dashboard login or token):
-    {"paused": true|false} toggles it. Paused = the Mac captures and sends nothing."""
+    """GET: the capturer asks whether capture is paused (token). POST (dashboard login or token):
+    {"paused": true|false} toggles it. Paused = the capturer sends nothing."""
     if request.method == "POST":
         if not _authed(request):
             return JSONResponse({"error": "unauthorized"}, status_code=401)
@@ -396,7 +396,7 @@ async def capture_control(request: Request):
 
 
 async def capture_status(request: Request):
-    """The Mac reports why it sent nothing (TradingView tab hidden / not open / capture failed)."""
+    """The capturer reports why it sent nothing (logged out / capture failed / paused)."""
     if not _authed(request):
         return PlainTextResponse("unauthorized", status_code=401)
     state = re.sub(r"[^a-z_]", "", request.query_params.get("state", ""))[:30]
