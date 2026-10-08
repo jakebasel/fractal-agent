@@ -64,6 +64,10 @@ Spotlight
 - Market Translator is designed for 15m, 5m and 1m. Signals print on the 30s but the fractal
   breaks down there; it is not designed for 1h or above (false readings). Zeus covers D/4H/15m.
 
+Signal priority (amendments 2026-10-08): on a timeframe the newest Market Translator signal
+replaces the previous one; setups off a superseded signal are not traded. Only two Ms in the
+same session stay armed together (2M); a DB always replaces what came before it.
+
 The models, step by step (the golden rule: if ANY step doesn't happen, there is NO entry)
 - M: M prints -> first 5m FVG opposite the fake move, tapped -> first 1m FVG, tapped -> first
   30s FVG, tapped -> body close over the series -> enter. Target: liquidity / zone / the M line.

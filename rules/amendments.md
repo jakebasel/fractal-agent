@@ -31,3 +31,11 @@ the Signal Legend): the skip holds on that index and timeframe until the next se
 2DB voids 1m plays only. OPEN POINT for Jake: does "no other logic for a new set up until next
 session" also exclude a Reversal Set Up off the 2DB's white line in the same session? Until
 answered, the agent treats it as excluded (the stricter reading).
+
+## 2026-10-08 — Signal priority on a timeframe (Jake, verified against the transcripts)
+On a given timeframe (1m or 5m) the NEWEST Market Translator signal replaces the previous one:
+once a new signal prints, setups built off the old signal can no longer be traded. The only
+case where two signals stay tradeable together is two Ms in the SAME session (the 2M
+configuration). A DB is always exclusive: it replaces whatever was armed before it on that
+timeframe. (fvg-mcp's `live_arms()` already implements this; the agent must never take an
+entry whose arming signal has been superseded.)
