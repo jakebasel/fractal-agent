@@ -243,8 +243,15 @@ learning loop, Jev shadow scoring, news filter, spend tracking. Still open:
   times, not bar labels); the only exception is an opposite M in the same session (2M). The
   research rows carry `overridden` / `overridden_by` computed the same way over the compiled
   history, and the Analysis ranking, Symbol tiles and stats exclude those rows (listed greyed).
-  Signal expiry stays at whatever Settings says (Jake wants it OFF = 0; set in Settings). No cap
-  on entries per arm (Jake: every entry that meets the parameters counts).
+  Signal expiry: Jake 10/08 (later) = 6 h max (code default 6.0 and the live Settings value set to
+  6 via /api/settings); research rows carry `stale_signal` / `signal_age_h` and the Analysis books
+  exclude entries whose arming signal was older than 6 h at the entry bar. No cap on entries per
+  arm. OPEN: Jake's re-entry rule -- a 2nd+ entry off the same signal must RE-TAP the original 5m
+  (3-stage) / 1m (2-stage) zone, or, if that zone was invalidated, tap the next presented zone --
+  is NOT what the engine does: `_build_chain(hunt_from=<previous entry's confirm bar>)` requires
+  a NEW first-stage FVG formed after the previous entry. Re-tap needs multiple taps per gap
+  (the FVG alert reports only the first tap), so it has to be detected server-side from the
+  relay bars.
 - TradingView throttles a symbol inside a watchlist alert that fires too often ("alerts have been
   temporarily limited due to frequent triggers"): the FVG v16.60 30s alert lost MES1! (and 6A/6B/6E/
   6J/MET) for 29 h on 2026-10-07/08. fvg-mcp shows it as "no FVG alert data for Xh" on that symbol
