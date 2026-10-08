@@ -124,6 +124,21 @@ which the agent ignores. `CAPTURE=screen` restores the old whole-screen mode.
 Layout assumption (set in `SCREEN_LAYOUT`): 5m charts on the LEFT, 1m on the RIGHT, MNQ and
 MES visible. If TradingView is on an external monitor, set `SCREEN=2` in the env file.
 
+## VPS screenshot capturer (tv-capture/)
+
+Coolify app `tv-capture` (same project, base directory `/tv-capture`, volume `/data`, domain
+https://tv.motivationpro.tech). Headless Chromium logged into TradingView with Jake's session
+cookies screenshots the pages in `TV_PAGES` every 30 s during futures hours and posts them to
+`/screenshot` with `kind=vps` and `layout=<TV_LAYOUT>`; the agent stores that layout text per
+kind and the vision prompt uses it, so the Mac uploader (kind=window) and the VPS can coexist;
+the agent reads whichever set is newest. Env: `AGENT_URL`, `AGENT_TOKEN`, `UI_PASSWORD`
+(dashboard password), `TV_PAGES` (one 4-chart layout URL, or one URL per chart), `TV_LAYOUT`
+(describe what the images show, in order). Login: open the app's page, enter the password and
+the `sessionid` + `sessionid_sign` cookies from Chrome (DevTools → Application → Cookies →
+tradingview.com). They persist on the volume. When the session expires the agent dashboard
+shows "VPS capture is logged out" and `/health` on the capture app shows `logged_in: false`:
+paste fresh cookies. Memory: headless Chromium needs about 1 GB; the app has a 1.5 GB limit.
+
 ## Querying the log
 
 - Claude (after adding the connector): "paper_stats for the last 7 days", "show today's

@@ -276,6 +276,11 @@ if True:
     c.post("/screenshot?token=tok&batch=b1&part=1", content=b"\xff\xd8right")
     sset = store.latest_screenshot_set()
     ok(len(sset) == 2 and sset[0]["part"] == 0, "two-window screenshot batch grouped, left first")
+    c.post("/screenshot?token=tok&batch=b2&part=0&kind=vps&layout=four+charts+in+a+grid", content=b"\xff\xd8grid")
+    ok(store.kv_get("screen_layout:vps") == "four charts in a grid", "uploader's layout text stored per kind")
+    from app import prompts
+    ok("four charts in a grid" in prompts.vision_prompt(store.kv_get("screen_layout:vps"))
+       and config.SCREEN_LAYOUT in prompts.vision_prompt(), "vision prompt uses the uploader's layout when given")
     ok(TestClient(main.app).get(f"/shot/{sset[0]['file']}").status_code == 401 and c.get(f"/shot/{sset[0]['file']}").status_code == 200, "screenshot file needs login")
     ok("core_by_play" in main.strategy_report(30) and main.hypotheses() and "by_day" in main.api_spend(7),
        "MCP tools strategy_report / hypotheses / api_spend work")

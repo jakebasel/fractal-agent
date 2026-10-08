@@ -146,9 +146,10 @@ def chart_question(entry_id: int, question: str, at: str = "decision") -> dict:
         return {"error": "no screenshot saved for this trade at that moment"}
     folder = config.DATA_DIR / "decision_shots"
     images = [(folder / n).read_bytes() for n in names[:4]]
-    prompt = ("You are reading TradingView screenshots (left window first; 5-minute charts on the left "
-              "window, 1-minute on the right) for a futures trader using the Fractal Effects Market "
-              "Translator and Spotlight indicators. Answer the question from what is VISIBLE only; say "
+    prompt = ("You are reading TradingView screenshots (each image is one window, which may hold one "
+              "or more chart panels; read every panel's symbol and timeframe from the chart itself) "
+              "for a futures trader using the Fractal Effects Market Translator and Spotlight "
+              "indicators. Answer the question from what is VISIBLE only; say "
               "'not visible' when it is not. Reply with ONE JSON object: {\"answer\": \"...\", "
               "\"evidence\": [\"what on the chart supports it\"], \"confidence\": 0.0-1.0}\n\nQuestion: "
               + question[:800])
@@ -364,8 +365,13 @@ async def screenshot(request: Request):
     part = int(request.query_params.get("part", "0") or 0) if batch else None
     name = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S") + (f"_{part}" if batch else "") + f".{ext}"
     (shots / name).write_bytes(body)
-    kind = request.query_params.get("kind") or ("window" if batch else "screen")
-    store.add_screenshot(name, len(body), batch, part, kind[:20])
+    kind = (request.query_params.get("kind") or ("window" if batch else "screen"))[:20]
+    store.add_screenshot(name, len(body), batch, part, kind)
+    # the uploader may describe what its images show (the VPS capturer sends its layout); the
+    # vision prompt for screenshots of this kind then uses that instead of SCREEN_LAYOUT
+    layout = request.query_params.get("layout", "").strip()
+    if layout and layout != store.kv_get(f"screen_layout:{kind}"):
+        store.kv_set(f"screen_layout:{kind}", layout[:500])
     # keep the folder small: only the newest 400 files (~3h at one every 30s)
     files = sorted(shots.iterdir())
     for old in files[:-400]:

@@ -83,7 +83,9 @@ def chart_read_for_now():
     if not paths:
         return None, files, age
     try:
-        read = llm.read_chart([p.read_bytes() for p in paths], prompts.vision_prompt())
+        kind = shots[0]["kind"] if "kind" in shots[0].keys() else None    # sqlite rows: no .get
+        layout = store.kv_get(f"screen_layout:{kind}") if kind else None
+        read = llm.read_chart([p.read_bytes() for p in paths], prompts.vision_prompt(layout))
     except Exception as e:
         # cache the failure too: a new screenshot set arrives every 30 s, retrying the same
         # one every 15 s would only burn credits

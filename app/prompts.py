@@ -118,8 +118,9 @@ Return one JSON object:
 }}"""
 
 
-def vision_prompt() -> str:
-    return VISION_PROMPT.format(layout=config.SCREEN_LAYOUT)
+def vision_prompt(layout: str | None = None) -> str:
+    """`layout` overrides SCREEN_LAYOUT (an uploader can describe its own images, see /screenshot)."""
+    return VISION_PROMPT.format(layout=layout or config.SCREEN_LAYOUT)
 
 
 DECISION_SYSTEM = """You are the AI review layer of a PAPER-trading system for the Fractal
