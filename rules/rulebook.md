@@ -85,9 +85,9 @@ The models, step by step (the golden rule: if ANY step doesn't happen, there is 
 ## 2. Hard rules (any one = SKIP)
 
 1. No Market Translator signal armed it (trend-fallback / "ND"). Never trade ND.
-2. Inside the bracket around a red-folder (high-impact) USD release (60 min before to 60 min
-   after, amendments 2026-10-07), or a live speech in progress: SKIP. The rest of the day
-   trades normally; London is not affected by US releases.
+2. From a red-folder (high-impact) USD release until 2 hours after it (amendments
+   2026-10-07; nothing before the release), or a live speech in progress: SKIP. The rest of the
+   day trades normally; London is not affected by US releases.
 3. The weekend. Time within a session is never a skip (amendments 2026-10-07): late in the
    session (NY after ~10:30-11:00, London after the first couple of hours, Asia after ~10 PM)
    and the engine's `in_window: false` flag are downgrades, see §3.

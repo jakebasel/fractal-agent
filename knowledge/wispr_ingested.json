@@ -1,0 +1,16 @@
+{
+  "note": "Wispr Flow recordings already pulled into knowledge/ by the /live-session skill. Keyed by Wispr meeting id.",
+  "sessions": [
+    {
+      "id": "bb0c79ab-d903-4971-8167-80431b83983e",
+      "date": "2026-10-07",
+      "title": "FOMC Day Market Analysis",
+      "start_et": "2026-10-07 09:53",
+      "end_et": "2026-10-07 11:01",
+      "file": "knowledge/lessons/Live Session 2026-10-07 FOMC minutes day.txt",
+      "labels": "knowledge/labels/instructor_calls_oct_2026.json",
+      "rules": "rules/live_rules.md §16 (commit 0942438)",
+      "share_link": "https://notes.wisprflow.ai/shared/xpOIdPi3QXtsifT6cgsbquUvaUMEPgZh3MCfzMo3meI"
+    }
+  ]
+}

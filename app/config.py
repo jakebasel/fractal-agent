@@ -63,10 +63,10 @@ SCREEN_LAYOUT = _env(
 # --- news filter (rule 2.2): high-impact USD events from the public weekly calendar ---------
 NEWS_FILTER = _env("NEWS_FILTER", "1") == "1"
 NEWS_URL = _env("NEWS_URL", "https://nfs.faireconomy.media/ff_calendar_thisweek.json")
-# red-folder (high-impact) USD releases only; skip inside a bracket around the release time
-# (Jake 2026-10-07: "around when the news comes out, like a 2-hour bracket, not the full day")
-NEWS_BEFORE_MIN = int(_env("NEWS_BEFORE_MIN", "60"))
-NEWS_AFTER_MIN = int(_env("NEWS_AFTER_MIN", "60"))
+# red-folder (high-impact) USD releases only; skip from the release until NEWS_AFTER_MIN after it
+# (Jake 2026-10-07: the bracket is AFTER the event only, about 2 hours; before it trades normally)
+NEWS_BEFORE_MIN = int(_env("NEWS_BEFORE_MIN", "0"))
+NEWS_AFTER_MIN = int(_env("NEWS_AFTER_MIN", "120"))
 
 # --- spend guard: optional work (shadow tests, scanner, Jev backfill) pauses when today's
 # OpenRouter spend passes this; live decisions always run ---------------------------------------

@@ -260,7 +260,7 @@ def pending_setups() -> dict:
 
 @mcp.tool()
 def instructor_calls() -> list[dict]:
-    """The instructor's own calls from the live-session transcripts (June/July 2025): every
+    """The instructor's own calls from the live-session transcripts (June/July 2025, Oct 2026 on): every
     explicit skip/wait/rule with his reasons and quotes (knowledge/labels/*.json)."""
     out = []
     folder = Path(__file__).resolve().parent.parent / "knowledge" / "labels"

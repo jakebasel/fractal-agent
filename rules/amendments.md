@@ -15,9 +15,11 @@ session" rule remain hard.
 
 ## 2026-10-07 — News: red-folder bracket, not the whole day (Jake)
 Rule §2.2 applies only to red-folder (high-impact) USD releases and only inside a bracket
-around the release time: 60 minutes before to 60 minutes after (`NEWS_BEFORE_MIN` /
-`NEWS_AFTER_MIN`). Outside the bracket the day trades normally; London is unaffected by a US
-release at 8:30 or 14:00 ET. The "CPI/PPI/FOMC week = demo only" reading is retired
+AFTER the release: from the release time until 2 hours after it (`NEWS_AFTER_MIN` = 120;
+`NEWS_BEFORE_MIN` = 0, the hour before the release trades normally, reduced size per the
+instructor is a downgrade, not a skip). Restated by Jake 2026-10-07 evening after the first
+version wrongly used 60 min before to 60 min after. Outside the bracket the day trades
+normally; London is unaffected by a US release at 8:30 or 14:00 ET. The "CPI/PPI/FOMC week = demo only" reading is retired
 (a hypothesis tests it). A live speech is still untradeable while it runs (judgment call for
 the model when the chart read or news list shows one).
 

@@ -42,8 +42,8 @@ def news_events() -> list | None:
 
 def news_rule(when: datetime) -> tuple[str | None, dict]:
     """(rule that fired or None, what was checked) for rule §2.2 as amended: only red-folder
-    (high-impact) USD releases, only inside the bracket NEWS_BEFORE_MIN..NEWS_AFTER_MIN around
-    the release time. The rest of the day, and other sessions, trade normally."""
+    (high-impact) USD releases, only from NEWS_BEFORE_MIN before the release (0: nothing before)
+    to NEWS_AFTER_MIN after it (120). The rest of the day, and other sessions, trade normally."""
     if not config.NEWS_FILTER:
         return None, {"checked": False}
     evs = news_events()

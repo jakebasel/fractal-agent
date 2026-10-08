@@ -207,11 +207,21 @@ from datetime import datetime as _dt  # noqa: E402
 e = mk_entry(6)
 d = json.loads(e["detail"]); d["retrace"] = "none"; e["detail"] = json.dumps(d)
 ok(rules_code.hard_rule(e, d, _dt.now(timezone.utc))[0].startswith("§2.6"), "code rule: DB with no retrace skipped")
-NEWS["events"] = [{"title": "CPI m/m", "at": _dt.now(timezone.utc) + timedelta(minutes=20)}]
+NEWS["events"] = [{"title": "CPI m/m", "at": _dt.now(timezone.utc) - timedelta(minutes=20)}]
 e = mk_entry(7)
 fired, info = rules_code.hard_rule(e, json.loads(e["detail"]), _dt.now(timezone.utc))
-ok(fired and "news bracket" in fired and "20 min before" in fired, f"code rule: inside the news bracket ({fired})")
-NEWS["events"] = [{"title": "CPI m/m", "at": _dt.now(timezone.utc) + timedelta(hours=3)}]
+ok(fired and "news bracket" in fired and "min after" in fired, f"code rule: inside the news bracket ({fired})")
+NEWS["events"] = [{"title": "CPI m/m", "at": _dt.now(timezone.utc) + timedelta(minutes=20)}]
+fired, info = rules_code.hard_rule(e, json.loads(e["detail"]), _dt.now(timezone.utc))
+ok(fired is None, "code rule: 20 min BEFORE a release is not a skip (bracket is after-only)")
+NEWS["events"] = [{"title": "CPI m/m", "at": _dt.now(timezone.utc) - timedelta(minutes=130)}]
+fired, info = rules_code.hard_rule(e, json.loads(e["detail"]), _dt.now(timezone.utc))
+ok(fired is None, "code rule: 130 min after a release trades again")
+_now = _dt.now(timezone.utc)
+_far = _now + timedelta(hours=3)  # same ET date as now, whatever the clock says
+if _far.astimezone(config.ET).date() != _now.astimezone(config.ET).date():
+    _far = _now - timedelta(hours=3)
+NEWS["events"] = [{"title": "CPI m/m", "at": _far}]
 fired, info = rules_code.hard_rule(e, json.loads(e["detail"]), _dt.now(timezone.utc))
 ok(fired is None and info["today"], "code rule: same day but outside the bracket trades normally")
 NEWS["events"] = []

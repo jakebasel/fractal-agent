@@ -13,7 +13,11 @@ To add material: drop a text file in the right folder and redeploy. Nothing else
   `reference/images/` — chart-style reference images (Market Translator screenshots PDF and
   the chart-settings PDF), not yet sent to the vision model.
 
-Not in here yet: the raw live-session transcripts (12 sessions, ~440 KB, mostly filler). Their
-rules are distilled in `rules/live_rules.md`. The raw file lives in the claude.ai "Trading"
-project as `live trading trasnscript.txt` — download it and drop it in `lessons/` if wanted;
-the indexer strips repeated filler lines.
+Live sessions:
+- `lessons/Live Sessions (raw transcripts).txt` — the 12 June/July 2025 sessions (raw).
+- `lessons/Live Session YYYY-MM-DD <title>.txt` — one file per session from Oct 2026 on, instructor
+  lines only. Source: Jake's Wispr Flow recordings, pulled in with the `/live-session` skill
+  (`.claude/skills/live-session/SKILL.md`): it files the transcript, labels his calls in
+  `labels/instructor_calls_<mon>_<year>.json` (served by the `instructor_calls` MCP tool) and adds
+  new rules to `rules/live_rules.md`. `wispr_ingested.json` lists what has been pulled.
+  Their rules are distilled in `rules/live_rules.md`.

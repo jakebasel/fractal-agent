@@ -55,7 +55,7 @@ Mac screenshot ──► fractal-agent ──► OpenRouter: cheap vision model 
    the current rules; the original decision is kept, the re-evaluation sits next to it).
    Switch to gate once the Breakdown tab shows Jev agreeing with the agent.
 9. Code hard rules: 2DB, ND, §2.2 news (ForexFactory calendar, red-folder USD releases only,
-   60 min before to 60 min after the release; `NEWS_BEFORE_MIN`/`NEWS_AFTER_MIN`), DB with
+   from the release to 2 h after it, nothing before; `NEWS_BEFORE_MIN`=0/`NEWS_AFTER_MIN`=120), DB with
    retrace `none`/`shallow`, two losses this session, weekend, NY/London/Asia windows, long
    inside a bearish 4H FVG (from the price archive). `app/rules_code.py`, `app/htf.py`.
 10. Dashboard at `/` (password: `DASHBOARD_PASSWORD`, 30-day cookie): status, cumulative R
@@ -77,6 +77,11 @@ There is no order-placement code in this repo. Keep it that way until Jake says 
 - `rules/amendments.md` — Jake-approved changes; highest priority.
 - Rules are re-read on every call: editing them takes effect on the next decision (but a
   container redeploy resets files to what's in git, so commit changes).
+- Live sessions from Oct 2026 on come from Jake's Wispr Flow recordings. Run `/live-session` in
+  Claude Code after a session: it pulls new finalized recordings through the Wispr Flow connector,
+  files the instructor's transcript in `knowledge/lessons/`, labels his calls for the
+  `instructor_calls` tool and adds new rules to `rules/live_rules.md`. `knowledge/wispr_ingested.json`
+  is the ledger. The VPS agent cannot reach Wispr Flow itself.
 - Source material lives in the claude.ai "Trading" project (course transcripts, live session
   transcripts, `Chart Analysis Playbook.md`, `Reversal Set Up (transcript).txt`).
 
