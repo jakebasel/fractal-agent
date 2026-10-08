@@ -246,12 +246,17 @@ learning loop, Jev shadow scoring, news filter, spend tracking. Still open:
   Signal expiry: Jake 10/08 (later) = 6 h max (code default 6.0 and the live Settings value set to
   6 via /api/settings); research rows carry `stale_signal` / `signal_age_h` and the Analysis books
   exclude entries whose arming signal was older than 6 h at the entry bar. No cap on entries per
-  arm. OPEN: Jake's re-entry rule -- a 2nd+ entry off the same signal must RE-TAP the original 5m
-  (3-stage) / 1m (2-stage) zone, or, if that zone was invalidated, tap the next presented zone --
-  is NOT what the engine does: `_build_chain(hunt_from=<previous entry's confirm bar>)` requires
-  a NEW first-stage FVG formed after the previous entry. Re-tap needs multiple taps per gap
-  (the FVG alert reports only the first tap), so it has to be detected server-side from the
-  relay bars.
+  arm. Re-entry rule (Jake 10/08, LIVE since commit 9267b01): a 2nd+ leg off the same signal must
+  RE-TAP the original 5m (3-stage) / 1m (2-stage) zone after the previous leg CLOSED (relay-bar
+  re-entry, `_first_retap`, `_build_chain(anchor=...)`); if that zone was invalidated, the first
+  zone formed after its death is the anchor. Each leg records `retap_ok` / `retap`; the history is
+  re-tagged with `POST /admin/retap_backfill?days=30` (GET = progress; it runs in-process, so a
+  deploy/restart kills it and it must be re-run). Analysis books exclude retap_ok == False.
+  Also 10/08: Settings -> General "TradingView layout" (`tv_layout`, URL or id) picks the layout
+  the dashboard/mobile/Backtest/Lab pages open; the Analysis page keeps its own (QtNFgmo3 default,
+  per-browser). Analysis header: "Max N trades / symbol / day" cap (`?cap=N`, first N by entry
+  time per ET day, recomputed server-side; Symbol page greys the over-cap rows).
+  NOTE: Coolify auto-deploys fvg-mcp on push to main (GitHub webhook) -- every push restarts it.
 - TradingView throttles a symbol inside a watchlist alert that fires too often ("alerts have been
   temporarily limited due to frequent triggers"): the FVG v16.60 30s alert lost MES1! (and 6A/6B/6E/
   6J/MET) for 29 h on 2026-10-07/08. fvg-mcp shows it as "no FVG alert data for Xh" on that symbol
