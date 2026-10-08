@@ -180,6 +180,16 @@ learning loop, Jev shadow scoring, news filter, spend tracking. Still open:
   `symbol=<lowercase, e.g. mnq1>` and `tf=1m|5m`: fvg-mcp labels the event from those params, so a
   bare URL (ES/NQ/YM had one) or a wrong symbol (HG1! 1m said ng1) silently loses or mislabels data.
   Both fixed. The two disabled MET1! [23-09-26] test alerts still point at Railway (left alone).
+- 2026-10-08: Market Translator [24-09-26] 1m + 5m alerts created for every Tradovate symbol (114
+  roots from the symbol search's Tradovate filter), cloned from the MES1! alerts via
+  `pricealerts.tradingview.com/create_alert` (same payload as modify minus alert_id; grains and
+  livestock only accept the plain `EXCHANGE:SYM1!` symbol string, not the `={json}` form). 236 alerts,
+  227 active. 7 fail with `study_error` (the Pine script cannot run there): ZO 5m, ZR 5m, ZT 5m, 6M 5m,
+  MET 5m, FSXE 1m, FVS 1m. Coinbase Derivatives products have no continuous contract, so those alerts
+  sit on a dated contract (GOLZ2026, BITV2026, ...) and expire with it. Every new alert's URL carries
+  `symbol=<lowercase root>1&tf=` like the old ones. The 95 new symbols were also added to the Primary
+  watchlist under `###OTHER` (Jake's call; that watchlist feeds the two FVG 30s alerts, so expect more
+  FVG traffic and more throttling).
 - TradingView throttles a symbol inside a watchlist alert that fires too often ("alerts have been
   temporarily limited due to frequent triggers"): the FVG v16.60 30s alert lost MES1! (and 6A/6B/6E/
   6J/MET) for 29 h on 2026-10-07/08. fvg-mcp shows it as "no FVG alert data for Xh" on that symbol
