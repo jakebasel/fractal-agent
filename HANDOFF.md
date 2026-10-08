@@ -187,21 +187,30 @@ learning loop, Jev shadow scoring, news filter, spend tracking. Still open:
   `symbol=<lowercase, e.g. mnq1>` and `tf=1m|5m`: fvg-mcp labels the event from those params, so a
   bare URL (ES/NQ/YM had one) or a wrong symbol (HG1! 1m said ng1) silently loses or mislabels data.
   Both fixed. The two disabled MET1! [23-09-26] test alerts still point at Railway (left alone).
-- 2026-10-08: Market Translator [24-09-26] 1m + 5m alerts exist for every product Jake's prop firms
-  allow: the union of Apex Trader Funding's Tradovate instrument list
-  (apextraderfunding.com/help-center/tradovate/tradovate-commission-instruments/) and Lucid Trading's
-  approved products (support.lucidtrading.com article 11508978); Lucid is a subset of Apex. Eurex is on
-  Apex's list but needs an extra subscription and TradingView refuses it via Tradovate for Jake, so it
-  is excluded. 43 roots: YM ES NQ RTY EMD NKD 6A 6B 6J 6C 6S 6E 6N HE LE GF ZS ZL ZC ZW ZM RB CL NG QM
-  QG HO GC HG SI PL PA MYM MES MNQ M2K MCL SIL MGC M6A M6E MBT MET. Created by cloning the MES1! alerts
-  via `pricealerts.tradingview.com/create_alert` (same payload as modify minus alert_id; grains and
-  livestock only accept the plain `EXCHANGE:SYM1!` symbol string). TradingView's symbol-search
-  "Tradovate" filter lists 114 roots (single-stock, nano, yield, Eurex, Coinbase Derivatives...): those
-  were created first and then deleted again, so do not trust that filter as "tradable". MET 5m fails
-  with `study_error` (the Pine script cannot run there; Jake's own old MET 5m tests fail the same way).
-  The 24 new roots were also added to the Primary watchlist under `###OTHER` (that watchlist feeds the
-  two FVG 30s alerts, so expect more FVG traffic).
-- 2026-10-08: two more relay alerts, `FVG Relay v1.02 #2` (6A 6B 6C 6E 6J 6S 6N PL PA RB HO QM QG
+- 2026-10-08: Market Translator [24-09-26] 1m + 5m alerts exist for EVERY product TradingView's
+  symbol-search "Tradovate" filter lists (114 roots; Jake: "I can still trade them, just not with
+  Apex, so we should track them"). Two groups in the Primary watchlist: `###OTHER` = the 24 roots
+  Apex Trader Funding / Lucid Trading allow beyond the original set (Apex Tradovate list at
+  apextraderfunding.com/help-center/tradovate/tradovate-commission-instruments/, Lucid at
+  support.lucidtrading.com article 11508978), `###OTHER-TRADOVATE` = the other 71 (Eurex, Coinbase
+  Derivatives dated contracts, treasuries, yields, nanos, single-stock futures, mini grains, full
+  BTC/ETH ...). Created by cloning the MES1! alerts via `pricealerts.tradingview.com/create_alert`
+  (same payload as modify minus alert_id; CBOT grains only accept the plain `EXCHANGE:SYM1!` symbol
+  string). MT webhook URL `symbol=` param: `mnq1`-style for roots in fvg-mcp's `_CONT_ROOTS`, the
+  exact FVG spelling (`ho1!`, `golz2026`) for everything else, or fvg-mcp files the MT signal under
+  a different key than the FVG data ("has a Market Translator signal but NO fair value gap data").
+  Known dead (study_error, the Pine script cannot run there): MET 5m, and on the first pass ZO/ZR/
+  ZT/6M 5m, FSXE/FVS 1m. The Ironbeam filter is NOT usable the same way: it lists ~8,900 futures
+  (every exchange TradingView carries, spreads included); Jake picks a curated set.
+- 2026-10-08: relay alerts `FVG Relay v1.02 #2` .. `#7` on CME_MINI:MNQ1! 30S, same webhook, 20
+  symbol slots each (inputs in_3, in_5 ... in_41 with enable bools in_2 ... in_40): #2/#3 = the 29
+  Apex/Lucid roots, #4-#7 = the 71 OTHER-TRADOVATE symbols. Relay #1 (the original) is a
+  WATCHLIST alert, so it fires once per watchlist symbol per 30s bar (now 128x the same 20-symbol
+  batch) and fvg-mcp answers "request took too long" on some; recreating it on a single symbol
+  would cut that. The FVG v16.60 watchlist alert tracks Primary dynamically, so every watchlist
+  symbol gets FVG events; the symbol throttle ("temporarily limited due to frequent triggers")
+  is the risk.
+- (superseded) two more relay alerts, `FVG Relay v1.02 #2` (6A 6B 6C 6E 6J 6S 6N PL PA RB HO QM QG
   MCL MGC SIL ZS ZC ZW ZL) and `#3` (ZM HE LE GF EMD NKD M2K M6A M6E), on CME_MINI:MNQ1! 30S, same
   webhook: the relay script has 20 symbol slots (inputs in_3, in_5 ... in_41 with enable bools in
   in_2 ... in_40). Relay #1 is a WATCHLIST alert, so it fires once per watchlist symbol per 30s bar
