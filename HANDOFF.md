@@ -237,6 +237,14 @@ learning loop, Jev shadow scoring, news filter, spend tracking. Still open:
   single-flight in the background; TTLs ENTRIES_TTL_S=20 / SETUPS_TTL_S=10. The board is therefore
   up to ~60 s behind. The next step, if that matters, is making the rebuilds cheaper (profile
   `_entries_payload`'s price-stream sims and `compute_setups` per symbol).
+- fvg-mcp 2026-10-08 (evening): Jake's signal-priority rule is enforced at entry time. A leg that
+  would `enter` is voided (`status: superseded`, `void_reason`) when a newer Market Translator
+  signal on the SAME timeframe arrived between the arming signal and the entry trigger (arrival
+  times, not bar labels); the only exception is an opposite M in the same session (2M). The
+  research rows carry `overridden` / `overridden_by` computed the same way over the compiled
+  history, and the Analysis ranking, Symbol tiles and stats exclude those rows (listed greyed).
+  Signal expiry stays at whatever Settings says (Jake wants it OFF = 0; set in Settings). No cap
+  on entries per arm (Jake: every entry that meets the parameters counts).
 - TradingView throttles a symbol inside a watchlist alert that fires too often ("alerts have been
   temporarily limited due to frequent triggers"): the FVG v16.60 30s alert lost MES1! (and 6A/6B/6E/
   6J/MET) for 29 h on 2026-10-07/08. fvg-mcp shows it as "no FVG alert data for Xh" on that symbol
