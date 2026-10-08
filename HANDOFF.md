@@ -117,6 +117,27 @@ Not deployed yet. Steps:
 6. Add `https://agent.motivationpro.tech/mcp` as a custom connector in claude.ai so Claude can
    call `paper_stats`, `decisions`, `decision_detail`, `lessons`, `agent_status`.
 
+### The host itself (added 2026-10-08)
+
+One Hostinger KVM 4 VPS (4 cores, 16 GB, 200 GB) runs Coolify and every app and database.
+Root SSH works from Jake's Mac: `ssh root@srv2037171.hstgr.cloud`. On 2026-10-08 Hostinger
+throttled the box ("CPU limitation activated", 90% steal); every container then failed its
+health check and Coolify showed all apps and databases `exited:unhealthy` while `docker ps`
+showed them up, and fvg.motivationpro.tech served "no available server". Only Jake can click
+"Remove limitations" in the Hostinger panel. Causes and fixes:
+
+- fvg-mcp rebuilt the setups/entries boards back to back (10 s / 20 s TTL vs 20-35 s rebuilds).
+  Defaults are now 20 s / 45 s (`SETUPS_TTL_S`, `ENTRIES_TTL_S` env override), commit f6d334d.
+- tv-capture leaked Chromium processes after renderer crashes (94 chrome processes on the host).
+  `kill_leftover_chrome()` now runs on every relaunch (commit 290b4ee).
+- Disk was 156 GB of 200: 65 GB buildx railpack state, 19 GB unused images, 8 GB build cache.
+  `docker image prune -af` plus the builder's own GC brought it to 54 GB. Real data is under
+  10 GB (Postgres volumes), so nothing needs migrating to R2 for disk reasons.
+- 6 of the 12 Coolify Postgres instances are referenced by no running app (fvg-postgres,
+  simulator-postgres, studio-production-live-postgres, studio-production-postgres,
+  viral-postgres, writer-postgres). Each idles at 80-180 MB RAM plus a health-check `psql` every
+  few seconds. Stopping or deleting them is Jake's decision; the data stays in the volumes.
+
 ## VPS screenshot capturer (tv-capture/)
 
 Coolify app `tv-capture` (same project, base directory `/tv-capture`, volume `/data`, domain
