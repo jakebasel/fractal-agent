@@ -18,6 +18,7 @@ import hmac
 import html
 import json
 import os
+import subprocess
 import sys
 import threading
 import time
@@ -176,6 +177,26 @@ def launch(pw):
     return ctx, pages
 
 
+def kill_leftover_chrome():
+    """10/08: after a renderer crash, ctx.close() does not reap every Chromium process; over a
+    day the VPS was carrying ~94 chrome processes (and <defunct> zombies) from this one
+    container, which is what tripped Hostinger's CPU limitation. The container runs nothing
+    else, so killing every chrome process here is safe."""
+    try:
+        subprocess.run(["pkill", "-9", "-f", "chrome-linux/chrome"], check=False)
+    except Exception:
+        pass
+    try:                                 # reap zombies if we are the parent
+        while True:
+            pid, _ = os.waitpid(-1, os.WNOHANG)
+            if pid == 0:
+                break
+    except ChildProcessError:
+        pass
+    except Exception:
+        pass
+
+
 def is_crash(msg: str) -> bool:
     """A crashed renderer (OOM, usually) can never be reloaded: only a relaunch helps."""
     m = msg.lower()
@@ -245,6 +266,7 @@ def run():
                 ctx.close()
             except Exception:
                 pass
+            kill_leftover_chrome()      # a crashed Chromium leaves renderer/zombie processes behind
             if why == "crash":
                 time.sleep(5)
 
