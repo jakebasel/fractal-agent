@@ -9,6 +9,7 @@ along so the agent's vision prompt matches whatever layout Jake built.
 Env: AGENT_URL, AGENT_TOKEN (required); TV_PAGES (comma-separated TradingView chart URLs;
 one 4-chart layout, or one URL per chart); TV_LAYOUT (text); TV_VIEWPORT (default 2560x1440);
 CAPTURE_EVERY_S (30); JPEG_QUALITY (75); UI_PASSWORD (login page; defaults to AGENT_TOKEN).
+Data (cookies, browser profile, preview) lives on the /data volume.
 Nothing is captured while the agent's dashboard has capture paused, on Saturdays, or during the
 daily futures break (17:00-18:00 ET).
 """
