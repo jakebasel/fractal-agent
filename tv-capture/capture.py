@@ -132,10 +132,21 @@ def open_pages(ctx):
     return pages
 
 
+def dismiss_banners(p):
+    """TradingView's cookie-consent banner covers the bottom-left chart; accept it once."""
+    try:
+        b = p.get_by_role("button", name="Accept all")
+        if b.count():
+            b.first.click(timeout=1500)
+    except Exception:
+        pass
+
+
 def capture_set(pages) -> int:
     batch = datetime.now(ET).strftime("%Y%m%d%H%M%S")
     sent = 0
     for i, p in enumerate(pages):
+        dismiss_banners(p)
         img = p.screenshot(type="jpeg", quality=QUALITY, full_page=False)
         if i == 0:
             PREVIEW.write_bytes(img)
