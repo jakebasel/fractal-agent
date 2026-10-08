@@ -8,7 +8,8 @@ along so the agent's vision prompt matches whatever layout Jake built.
 
 Env: AGENT_URL, AGENT_TOKEN (required); TV_PAGES (comma-separated TradingView chart URLs;
 one 4-chart layout, or one URL per chart); TV_LAYOUT (text); TV_VIEWPORT (default 2560x1440);
-CAPTURE_EVERY_S (30); JPEG_QUALITY (75); UI_PASSWORD (login page; defaults to AGENT_TOKEN).
+CAPTURE_EVERY_S (30); JPEG_QUALITY (75); UI_PASSWORD (login page; defaults to AGENT_TOKEN);
+RELAUNCH_EVERY_S (10800: Chromium is relaunched this often, and at once after a renderer crash).
 Data (cookies, browser profile, preview) lives on the /data volume.
 Nothing is captured while the agent's dashboard has capture paused, on Saturdays, or during the
 daily futures break (17:00-18:00 ET).
@@ -156,63 +157,96 @@ def capture_set(pages) -> int:
     return sent
 
 
+RELAUNCH_S = int(os.environ.get("RELAUNCH_EVERY_S", str(3 * 3600)))   # fresh Chromium: memory back to baseline
+LAUNCH_ARGS = ["--disable-dev-shm-usage", "--no-sandbox", "--disable-gpu",
+               "--disable-extensions", "--disable-background-networking", "--mute-audio"]
+
+
+def launch(pw):
+    """A fresh browser with the persistent profile, cookies applied, every TV page open."""
+    ctx = pw.chromium.launch_persistent_context(
+        str(PROFILE), headless=True, viewport={"width": W, "height": H},
+        device_scale_factor=1, locale="en-US", timezone_id="America/New_York", args=LAUNCH_ARGS,
+        user_agent=("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+                    "(KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"))
+    c = load_cookies()
+    if c:
+        apply_cookies(ctx, c)
+    pages = open_pages(ctx) if TV_PAGES else []
+    return ctx, pages
+
+
+def is_crash(msg: str) -> bool:
+    """A crashed renderer (OOM, usually) can never be reloaded: only a relaunch helps."""
+    m = msg.lower()
+    return "crashed" in m or "target closed" in m or "browser has been closed" in m \
+        or "connection closed" in m
+
+
 def run():
     if not TV_PAGES:
         log("TV_PAGES is empty: nothing to capture. Set it to your TradingView chart URL(s).")
     PROFILE.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as pw:
-        ctx = pw.chromium.launch_persistent_context(
-            str(PROFILE), headless=True, viewport={"width": W, "height": H},
-            device_scale_factor=1, locale="en-US", timezone_id="America/New_York",
-            args=["--disable-dev-shm-usage", "--no-sandbox", "--disable-gpu"],
-            user_agent=("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
-                        "(KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"))
-        c = load_cookies()
-        if c:
-            apply_cookies(ctx, c)
-        pages = open_pages(ctx) if TV_PAGES else []
-        last_reload = time.time()
-        while True:
-            t0 = time.time()
+        while True:                                   # one iteration = one browser lifetime
             try:
-                c = load_cookies()
-                if c and c.get("at", 0) != state["cookies_applied"]:    # new cookies pasted
-                    apply_cookies(ctx, c)
-                    for p in pages:
-                        p.reload(wait_until="domcontentloaded", timeout=60_000)
-                    pages and pages[0].wait_for_timeout(8_000)
-                if not TV_PAGES:
-                    time.sleep(EVERY); continue
-                if time.time() - last_reload > 6 * 3600:    # fresh page twice a day: no stuck sockets
-                    for p in pages:
-                        p.reload(wait_until="domcontentloaded", timeout=60_000)
-                    pages[0].wait_for_timeout(8_000)
-                    last_reload = time.time()
-                state["logged_in"] = logged_in(pages[0])
-                if not state["logged_in"]:
-                    state["last_error"] = "not logged in to TradingView: paste fresh cookies"
-                    report("logged_out")
-                    pages[0].screenshot(type="jpeg", quality=QUALITY, path=str(PREVIEW))
-                elif not market_open():
-                    pass
-                elif paused():
-                    pass
-                else:
-                    n = capture_set(pages)
-                    state["last_capture"] = state["last_post"] = time.time()
-                    state["last_error"] = None
-                    log(f"sent {n} image(s)")
+                ctx, pages = launch(pw)
             except Exception as e:
-                state["last_error"] = f"{type(e).__name__}: {e}"[:300]
-                log("capture failed:", state["last_error"])
-                traceback.print_exc()
+                state["last_error"] = f"launch: {type(e).__name__}: {e}"[:300]
+                log("launch failed:", state["last_error"])
                 report("capture_failed")
+                time.sleep(EVERY)
+                continue
+            launched = time.time()
+            why = None                                # set when this browser must go
+            while why is None:
+                t0 = time.time()
                 try:
-                    for p in pages:
-                        p.reload(wait_until="domcontentloaded", timeout=60_000)
-                except Exception:
-                    pass
-            time.sleep(max(1.0, EVERY - (time.time() - t0)))
+                    c = load_cookies()
+                    if c and c.get("at", 0) != state["cookies_applied"]:    # new cookies pasted
+                        apply_cookies(ctx, c)
+                        for p in pages:
+                            p.reload(wait_until="domcontentloaded", timeout=60_000)
+                        pages and pages[0].wait_for_timeout(8_000)
+                    if not TV_PAGES:
+                        time.sleep(EVERY); continue
+                    if time.time() - launched > RELAUNCH_S:
+                        why = "periodic refresh"; break
+                    state["logged_in"] = logged_in(pages[0])
+                    if not state["logged_in"]:
+                        state["last_error"] = "not logged in to TradingView: paste fresh cookies"
+                        report("logged_out")
+                        pages[0].screenshot(type="jpeg", quality=QUALITY, path=str(PREVIEW))
+                    elif not market_open():
+                        pass
+                    elif paused():
+                        pass
+                    else:
+                        n = capture_set(pages)
+                        state["last_capture"] = state["last_post"] = time.time()
+                        state["last_error"] = None
+                        log(f"sent {n} image(s)")
+                except Exception as e:
+                    state["last_error"] = f"{type(e).__name__}: {e}"[:300]
+                    log("capture failed:", state["last_error"])
+                    traceback.print_exc()
+                    report("capture_failed")
+                    if is_crash(state["last_error"]):
+                        why = "crash"; break
+                    try:
+                        for p in pages:
+                            p.reload(wait_until="domcontentloaded", timeout=60_000)
+                    except Exception as e2:
+                        if is_crash(str(e2)):
+                            why = "crash"; break
+                time.sleep(max(1.0, EVERY - (time.time() - t0)))
+            log(f"relaunching Chromium ({why})")
+            try:
+                ctx.close()
+            except Exception:
+                pass
+            if why == "crash":
+                time.sleep(5)
 
 
 # ---- tiny web UI: paste cookies, see the preview -------------------------------------------------
