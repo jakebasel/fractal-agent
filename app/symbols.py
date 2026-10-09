@@ -54,7 +54,11 @@ def report(days: float = 7, day_columns: int = 7) -> dict:
     now = datetime.now(timezone.utc)
     since_ms = int((now - timedelta(days=days)).timestamp() * 1000)
     rows = store.core_trades(since_ms)
-    good = [r for r in rows if r["scoring"] in GOOD_SCORING and r["r"] is not None]
+    # the same book as fvg-mcp's Analysis tab (Jake 2026-10-08): a trade overridden by a
+    # newer same-timeframe signal, entered off a signal older than 6 h, or a later leg that
+    # never re-tapped its zone is not core-strategy and is not counted here either.
+    good = [r for r in rows if r["scoring"] in GOOD_SCORING and r["r"] is not None
+            and not r.get("overridden") and not r.get("stale_signal") and r.get("retap_ok") != 0]
     today = datetime.now(config.ET).strftime("%Y-%m-%d")
     day_keys = [(datetime.now(config.ET) - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(day_columns)][::-1]
     by_sym: dict[str, list] = {}

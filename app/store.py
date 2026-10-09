@@ -143,6 +143,7 @@ CREATE INDEX IF NOT EXISTS core_trades_sym ON core_trades(symbol, entry_bar);
 
 # columns added after v1; ALTERed into an existing database at start-up
 MIGRATIONS = {
+    "core_trades": {"overridden": "INTEGER", "stale_signal": "INTEGER", "retap_ok": "INTEGER"},
     "decisions": {"play": "TEXT", "rules_version": "TEXT", "jev": "TEXT", "jev_p_take": "REAL",
                   "path": "TEXT", "news": "TEXT", "vision_score": "REAL", "vision_note": "TEXT",
                   "kill_events": "TEXT", "managed_r": "REAL", "managed_outcome": "TEXT",
@@ -675,7 +676,9 @@ def stats(since_iso=None):
 # ---- per-symbol core book (fvg-mcp trade_history mirror) ---------------------------------
 CORE_COLS = ("symbol", "cascade", "dir", "sig", "mt_tf", "entry_bar", "entry", "stop", "target",
              "r", "outcome", "exit", "close_bar", "scoring", "session", "in_window", "nd",
-             "retrace", "mt_seq", "exec")
+             "retrace", "mt_seq", "exec",
+             # 2026-10-08: the core-book flags fvg-mcp's Analysis applies (Jake: "sync it")
+             "overridden", "stale_signal", "retap_ok")
 
 
 def upsert_core_trades(cols: list, rows: list) -> int:
