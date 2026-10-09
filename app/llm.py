@@ -1,5 +1,6 @@
-"""OpenRouter calls: a cheap vision model reads the chart, DeepSeek decides and writes lessons,
-Jev (System One) scores each rule. Every call is logged with its cost (store.api_calls)."""
+"""LLM calls: Claude (Anthropic API, any "claude-" model id) or OpenRouter. One cheap model reads
+the chart, decides, writes lessons and runs shadow tests; Jev (System One, OpenRouter only)
+scores each rule. Every call is logged with its cost (store.api_calls)."""
 import base64
 import json
 import re
@@ -30,8 +31,75 @@ def _log(purpose, model, usage, ms, ok, err=None):
         pass   # spend logging must never break a decision
 
 
+def _is_anthropic(model: str) -> bool:
+    return bool(config.ANTHROPIC_API_KEY) and str(model).startswith("claude-")
+
+
+def _to_anthropic(messages: list) -> tuple[str, list]:
+    """OpenAI-style messages -> (system, Anthropic messages). Data-URL images become
+    base64 image blocks."""
+    system, out = [], []
+    for m in messages:
+        role, content = m.get("role"), m.get("content")
+        if role == "system":
+            system.append(content if isinstance(content, str) else json.dumps(content))
+            continue
+        if isinstance(content, str):
+            blocks = [{"type": "text", "text": content}]
+        else:
+            blocks = []
+            for part in content or []:
+                if part.get("type") == "text":
+                    blocks.append({"type": "text", "text": part.get("text") or ""})
+                elif part.get("type") == "image_url":
+                    url = (part.get("image_url") or {}).get("url") or ""
+                    if url.startswith("data:"):
+                        head, _, data = url.partition(",")
+                        media = head[5:].split(";")[0] or "image/jpeg"
+                        blocks.append({"type": "image", "source": {"type": "base64", "media_type": media, "data": data}})
+                    else:
+                        blocks.append({"type": "image", "source": {"type": "url", "url": url}})
+        out.append({"role": "assistant" if role == "assistant" else "user", "content": blocks})
+    return "\n\n".join(system), out
+
+
+def _post_anthropic(model: str, messages: list, max_tokens: int, temperature: float,
+                    purpose: str) -> str:
+    system, msgs = _to_anthropic(messages)
+    want_json = purpose != "vision" or True        # every prompt here wants one JSON object
+    if want_json and (not msgs or msgs[-1]["role"] != "assistant"):
+        msgs.append({"role": "assistant", "content": [{"type": "text", "text": "{"}]})   # prefill
+    body = {"model": model, "max_tokens": max_tokens, "temperature": temperature, "messages": msgs}
+    if system:
+        body["system"] = system
+    headers = {"x-api-key": config.ANTHROPIC_API_KEY, "anthropic-version": config.ANTHROPIC_VERSION,
+               "content-type": "application/json"}
+    t0 = time.time()
+    try:
+        r = httpx.post(config.ANTHROPIC_URL, json=body, timeout=config.LLM_TIMEOUT_S, headers=headers)
+    except httpx.HTTPError as e:
+        _log(purpose, model, None, int((time.time() - t0) * 1000), False, str(e)[:200])
+        raise LLMError(f"{model}: {e}") from e
+    ms = int((time.time() - t0) * 1000)
+    if r.status_code >= 400:
+        _log(purpose, model, None, ms, False, f"HTTP {r.status_code}")
+        raise LLMError(f"{model}: HTTP {r.status_code} {r.text[:300]}")
+    data = r.json()
+    u = data.get("usage") or {}
+    cost = ((u.get("input_tokens") or 0) * config.ANTHROPIC_PRICE_IN_PER_M
+            + (u.get("output_tokens") or 0) * config.ANTHROPIC_PRICE_OUT_PER_M) / 1_000_000
+    _log(purpose, data.get("model") or model,
+         {"input_tokens": u.get("input_tokens"), "output_tokens": u.get("output_tokens"), "cost": round(cost, 6)}, ms, True)
+    text = "".join(b.get("text") or "" for b in (data.get("content") or []) if b.get("type") == "text")
+    if not text.strip():
+        raise LLMError(f"{model}: empty reply (stop_reason={data.get('stop_reason')}, usage={u})")
+    return ("{" + text) if want_json and not text.lstrip().startswith("{") else text
+
+
 def _post(model: str, messages: list, max_tokens: int = 1500, temperature: float = 0.1,
           purpose: str = "other") -> str:
+    if _is_anthropic(model):
+        return _post_anthropic(model, messages, max_tokens, temperature, purpose)
     if not config.OPENROUTER_API_KEY:
         raise LLMError("OPENROUTER_API_KEY is not set")
     body = {"model": model, "messages": messages, "max_tokens": max_tokens,

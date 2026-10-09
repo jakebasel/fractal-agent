@@ -25,13 +25,25 @@ MAX_ENTRY_AGE_S = int(_env("MAX_ENTRY_AGE_S", "300"))
 # include the "Gold Strategy" rows fvg-mcp also records? default no: Fractal Effects only
 INCLUDE_GOLD = _env("INCLUDE_GOLD", "0") == "1"
 
-# --- AI (OpenRouter) ----------------------------------------------------------------------
+# --- AI (Anthropic direct, or OpenRouter) --------------------------------------------------
+# Jake 2026-10-08: OpenRouter ran out of credits and every decision errored for a day, so
+# the agent talks to the Claude API directly when ANTHROPIC_API_KEY is set. Any model id
+# starting with "claude-" goes to Anthropic; everything else still goes through OpenRouter
+# (Jev's /systemone endpoint only exists there).
+ANTHROPIC_API_KEY = _env("ANTHROPIC_API_KEY")
+ANTHROPIC_URL = _env("ANTHROPIC_URL", "https://api.anthropic.com/v1/messages")
+ANTHROPIC_VERSION = _env("ANTHROPIC_VERSION", "2023-06-01")
+# $ per million tokens, for the spend log and the daily budget (Haiku-class defaults;
+# override to match the current price list)
+ANTHROPIC_PRICE_IN_PER_M = float(_env("ANTHROPIC_PRICE_IN_PER_M", "1.0"))
+ANTHROPIC_PRICE_OUT_PER_M = float(_env("ANTHROPIC_PRICE_OUT_PER_M", "5.0"))
+CLAUDE_CHEAP_MODEL = _env("CLAUDE_CHEAP_MODEL", "claude-haiku-5-5")   # the lowest-price Claude
 OPENROUTER_API_KEY = _env("OPENROUTER_API_KEY")
 OPENROUTER_URL = _env("OPENROUTER_URL", "https://openrouter.ai/api/v1/chat/completions")
 # DeepSeek V3.2 (Jake 2026-10-07: newer and cheaper than deepseek-chat). V4 Pro is a thinking
 # model that spent its whole budget reasoning and answered nothing; it stays as a fallback
 # with reasoning disabled. take/skip + lessons + shadow + scans.
-DECISION_MODEL = _env("DECISION_MODEL", "deepseek/deepseek-v3.2")
+DECISION_MODEL = _env("DECISION_MODEL", CLAUDE_CHEAP_MODEL if ANTHROPIC_API_KEY else "deepseek/deepseek-v3.2")
 DECISION_MAX_TOKENS = int(_env("DECISION_MAX_TOKENS", "4000"))
 # reasoning control for thinking models (OpenRouter 'reasoning' object), e.g. {"effort":"low"}
 # or {"enabled": false}; empty = send nothing
@@ -40,7 +52,7 @@ DECISION_REASONING = _json.loads(_env("DECISION_REASONING", '{"enabled": false}'
 # OpenRouter falls back to these, in order, when the decision model is rate-limited or down
 DECISION_FALLBACK_MODELS = [m.strip() for m in _env("DECISION_FALLBACK_MODELS",
                                                     "deepseek/deepseek-v4-pro,deepseek/deepseek-chat").split(",") if m.strip()]
-VISION_MODEL = _env("VISION_MODEL", "google/gemini-2.5-flash")      # reads the screenshot
+VISION_MODEL = _env("VISION_MODEL", CLAUDE_CHEAP_MODEL if ANTHROPIC_API_KEY else "google/gemini-2.5-flash")   # reads the screenshot
 LLM_TIMEOUT_S = int(_env("LLM_TIMEOUT_S", "60"))
 # Jev (TypeSafe "System One" model) via OpenRouter's /systemone endpoint: fast rule-by-rule
 # probabilities. JEV_MODE: off | shadow (score every setup, decide nothing; default) |
