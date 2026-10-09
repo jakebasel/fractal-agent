@@ -191,6 +191,14 @@ showed them up, and fvg.motivationpro.tech served "no available server". Only Ja
   M/DB, entry session and hour in ET, exit reason, R and $-risked ranges, tickers by group)
   applied client-side to the loaded paper rows, with a filtered stats strip; state in
   localStorage `lab_filters_v1`.
+- Live board latency (10/09): the cascade pass that runs on every webhook now also refreshes
+  that symbol's cached board entry and expires the board cache; the single-flight SWR rebuild
+  (cheap, all symbols cached) runs on the next poll and announces `{"type":"board"}` on
+  `/events/stream`. The Analysis Live tab subscribes (push updates, default on), has a
+  refresh-interval setting (5-60 s, default 10), Entry time and Open P&L columns, $ on prices,
+  and drag-to-reorder / drag-to-resize columns (localStorage `fvg_live_cols` / `fvg_live_colw`).
+  Do NOT re-assemble the board inside the webhook path: the first attempt stalled the server
+  during warm-up and was reverted the same hour.
 - `tick()` logs per-phase timing when a loop takes 5 s or more: loops were taking minutes
   (every review landed on the 'late' path with no chart read); read the agent log for
   `tick took` lines to see which phase.
