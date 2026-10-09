@@ -134,6 +134,8 @@ PARK_WARMUP_MS = int(os.environ.get("PARK_WARMUP_MS", "9000"))  # chart settle t
 
 def open_pages(ctx):
     pages = []
+    if FRESH_PAGE:
+        return pages                 # capture_set opens and closes its own tab each time
     for url in TV_PAGES:
         p = ctx.new_page()
         p._tv_url = url
@@ -141,6 +143,25 @@ def open_pages(ctx):
         p.wait_for_timeout(8_000)      # let the chart, indicators and data stream settle
         pages.append(p)
     return pages
+
+
+FRESH_PAGE = os.environ.get("FRESH_PAGE", "1") == "1"     # a new tab per capture, closed right after
+
+
+class NotLoggedIn(RuntimeError):
+    pass
+
+
+def kill_leftover_renderers():
+    """10/08 (measured): after navigating a TradingView tab away, its renderer stayed alive
+    for most of a minute at ~97% CPU with no sockets open -- a JS task that never yields,
+    so neither CPU throttling, the lifecycle freeze nor parking on about:blank stopped it.
+    In FRESH_PAGE mode every capture uses a new tab that is closed afterwards, and any
+    renderer still alive after that is a leftover: kill it. Browser, GPU and zygote stay."""
+    try:
+        subprocess.run(["pkill", "-9", "-f", "--", "--type=renderer"], check=False)
+    except Exception:
+        pass
 
 
 def park(p):
@@ -217,9 +238,40 @@ def set_throttle(p, rate):
             _THROTTLE_LOGGED["err"] = str(e)[:80]; log("throttle failed:", str(e)[:160])
 
 
-def capture_set(pages) -> int:
+def capture_set(ctx, pages) -> int:
     batch = datetime.now(ET).strftime("%Y%m%d%H%M%S")
     sent = 0
+    if FRESH_PAGE:
+        for i, url in enumerate(TV_PAGES):
+            p = ctx.new_page()
+            try:
+                p.goto(url, wait_until="domcontentloaded", timeout=60_000)
+                p.wait_for_timeout(PARK_WARMUP_MS)        # chart, indicators and data settle
+                if not logged_in(p):
+                    try:
+                        p.screenshot(type="jpeg", quality=QUALITY, path=str(PREVIEW))
+                    except Exception:
+                        pass
+                    raise NotLoggedIn("not logged in to TradingView: paste fresh cookies")
+                dismiss_banners(p)
+                img = p.screenshot(type="jpeg", quality=QUALITY, full_page=False)
+            finally:
+                try:
+                    p.close()
+                except Exception:
+                    pass
+                for extra in list(ctx.pages):             # nothing else may stay open
+                    try:
+                        extra.close()
+                    except Exception:
+                        pass
+                kill_leftover_renderers()
+            if i == 0:
+                PREVIEW.write_bytes(img)
+            q = urllib.parse.urlencode({"batch": batch, "part": i, "kind": "vps", "layout": TV_LAYOUT})
+            agent("POST", f"/screenshot?{q}", body=img, ctype="image/jpeg")
+            sent += 1
+        return sent
     for i, p in enumerate(pages):
         if IDLE_THROTTLE > 1:
             set_throttle(p, 1)
@@ -334,8 +386,8 @@ def run():
                         time.sleep(EVERY); continue
                     if time.time() - launched > RELAUNCH_S:
                         why = "periodic refresh"; break
-                    state["logged_in"] = logged_in(pages[0])
-                    if not state["logged_in"]:
+                    state["logged_in"] = logged_in(pages[0]) if pages else state.get("logged_in", True)
+                    if pages and not state["logged_in"]:
                         state["last_error"] = "not logged in to TradingView: paste fresh cookies"
                         report("logged_out")
                         pages[0].screenshot(type="jpeg", quality=QUALITY, path=str(PREVIEW))
@@ -344,10 +396,16 @@ def run():
                     elif paused():
                         pass
                     else:
-                        n = capture_set(pages)
+                        n = capture_set(ctx, pages)
+                        state["logged_in"] = True
                         state["last_capture"] = state["last_post"] = time.time()
                         state["last_error"] = None
                         log(f"sent {n} image(s)")
+                except NotLoggedIn as e:
+                    state["logged_in"] = False
+                    state["last_error"] = str(e)[:300]
+                    log(state["last_error"])
+                    report("logged_out")
                 except Exception as e:
                     state["last_error"] = f"{type(e).__name__}: {e}"[:300]
                     log("capture failed:", state["last_error"])
