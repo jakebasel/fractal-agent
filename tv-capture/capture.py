@@ -233,6 +233,16 @@ def capture_set(pages) -> int:
         park(p)
         if IDLE_THROTTLE > 1:
             set_throttle(p, IDLE_THROTTLE)
+        try:                                 # anything TradingView opened besides our pages
+            for extra in list(p.context.pages):
+                if extra not in pages:
+                    log("closing stray page:", (extra.url or "")[:100])
+                    extra.close()
+            sws = len(p.context.service_workers)
+            if sws:
+                log(f"note: {sws} service worker(s) alive despite service_workers=block")
+        except Exception as e:
+            log("stray-page sweep failed:", str(e)[:120])
         if i == 0:
             PREVIEW.write_bytes(img)
         q = urllib.parse.urlencode({"batch": batch, "part": i, "kind": "vps", "layout": TV_LAYOUT})
@@ -251,6 +261,11 @@ def launch(pw):
     ctx = pw.chromium.launch_persistent_context(
         str(PROFILE), headless=True, viewport={"width": W, "height": H},
         device_scale_factor=1, locale="en-US", timezone_id="America/New_York", args=LAUNCH_ARGS,
+        # 10/08: with the tab parked on about:blank a renderer STILL ran at ~95% between
+        # captures -- a process the page list does not show. TradingView's service worker
+        # (and any popup it opens) lives in its own renderer; block service workers and
+        # close stray pages after every capture (see capture_set).
+        service_workers="block",
         user_agent=("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
                     "(KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"))
     c = load_cookies()
