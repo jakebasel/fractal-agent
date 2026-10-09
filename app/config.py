@@ -45,8 +45,10 @@ CLAUDE_CHEAP_MODEL = _env("CLAUDE_CHEAP_MODEL", "claude-haiku-5-5")   # the lowe
 # vision, scan, shadow) stays on the cheap model. HEAVY_MAX_PER_DAY caps the heavy calls per ET
 # day; past the cap they fall back to the cheap model.
 HEAVY_MODEL = _env("HEAVY_MODEL", "claude-fable-5-1")
-HEAVY_PURPOSES = {x.strip() for x in _env("HEAVY_PURPOSES", "lesson,hypothesis,reeval").split(",") if x.strip()}
-HEAVY_MAX_PER_DAY = int(_env("HEAVY_MAX_PER_DAY", "20"))
+# reeval is NOT heavy by default: the first three Fable re-evaluations cost ~$0.65 each (the
+# prompt carries the whole setup context) and blew the daily budget in one tick.
+HEAVY_PURPOSES = {x.strip() for x in _env("HEAVY_PURPOSES", "lesson,hypothesis").split(",") if x.strip()}
+HEAVY_MAX_PER_DAY = int(_env("HEAVY_MAX_PER_DAY", "10"))
 # $ per million tokens by model-id prefix, for the spend log and the daily budget. Set these to
 # the current price list; unknown models use ANTHROPIC_PRICE_*_PER_M.
 ANTHROPIC_PRICES = _json.loads(_env("ANTHROPIC_PRICES", '{"claude-haiku": [1.0, 5.0], "claude-sonnet": [3.0, 15.0], "claude-opus": [15.0, 75.0], "claude-fable": [15.0, 75.0]}') or "{}")
