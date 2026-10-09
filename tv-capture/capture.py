@@ -144,12 +144,46 @@ def dismiss_banners(p):
         pass
 
 
+IDLE_THROTTLE = int(os.environ.get("IDLE_CPU_THROTTLE", "8"))   # 1 = off; 8 = renderer runs at 1/8 speed between captures
+
+
+def _cdp(p):
+    """One CDP session per page, kept on the page object."""
+    c = getattr(p, "_cdp", None)
+    if c is None:
+        try:
+            c = p.context.new_cdp_session(p)
+        except Exception:
+            c = False
+        p._cdp = c
+    return c or None
+
+
+def set_throttle(p, rate):
+    """10/08: a live TradingView chart re-renders continuously, so headless Chromium burned
+    ~half a core even at one capture every 90 s. Between captures the renderer is slowed
+    IDLE_THROTTLE-fold via CDP (the page stays alive and logged in); it runs at full speed
+    for a couple of seconds before each screenshot so the chart is current."""
+    c = _cdp(p)
+    if c is None:
+        return
+    try:
+        c.send("Emulation.setCPUThrottlingRate", {"rate": float(max(1, rate))})
+    except Exception:
+        pass
+
+
 def capture_set(pages) -> int:
     batch = datetime.now(ET).strftime("%Y%m%d%H%M%S")
     sent = 0
     for i, p in enumerate(pages):
+        if IDLE_THROTTLE > 1:
+            set_throttle(p, 1)
+            p.wait_for_timeout(2500)         # let the chart catch up at full speed
         dismiss_banners(p)
         img = p.screenshot(type="jpeg", quality=QUALITY, full_page=False)
+        if IDLE_THROTTLE > 1:
+            set_throttle(p, IDLE_THROTTLE)
         if i == 0:
             PREVIEW.write_bytes(img)
         q = urllib.parse.urlencode({"batch": batch, "part": i, "kind": "vps", "layout": TV_LAYOUT})
@@ -212,6 +246,9 @@ def run():
         while True:                                   # one iteration = one browser lifetime
             try:
                 ctx, pages = launch(pw)
+                if IDLE_THROTTLE > 1:
+                    for _p in pages:
+                        set_throttle(_p, IDLE_THROTTLE)
             except Exception as e:
                 state["last_error"] = f"launch: {type(e).__name__}: {e}"[:300]
                 log("launch failed:", state["last_error"])
