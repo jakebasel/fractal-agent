@@ -66,9 +66,9 @@ def _to_anthropic(messages: list) -> tuple[str, list]:
 def _post_anthropic(model: str, messages: list, max_tokens: int, temperature: float,
                     purpose: str) -> str:
     system, msgs = _to_anthropic(messages)
-    want_json = purpose != "vision" or True        # every prompt here wants one JSON object
-    if want_json and (not msgs or msgs[-1]["role"] != "assistant"):
-        msgs.append({"role": "assistant", "content": [{"type": "text", "text": "{"}]})   # prefill
+    # no assistant prefill: Claude 5.5 models reject it; parse_json() pulls the object out
+    # of whatever prose surrounds it
+    want_json = False
     # no `temperature`: Claude 5.5 models reject it ("deprecated for this model")
     body = {"model": model, "max_tokens": max_tokens, "messages": msgs}
     if system:
