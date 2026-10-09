@@ -146,6 +146,17 @@ showed them up, and fvg.motivationpro.tech served "no available server". Only Ja
   (commit 0bb0953, `_mt_recent`); the Live Dashboard polls a 7-day history window by default
   (commit 098e4b5, pick a From date to widen; Analysis keeps 30 d); tv-capture
   `CAPTURE_EVERY_S=90`, `TV_VIEWPORT=1920x1080`. Re-enable the engine by deleting the env var.
+- Later the same night (fvg-mcp 2353eb8, 44bb02e): the Market Translator [24-09-26] alert fires
+  each signal twice, once as text/structured form A and once as JSON form B
+  (`signal_type`/`direction: bullish|bearish`); form B was stored textless and invisible to
+  the cascade (6S1! kept a 5m M armed after a 5m DB that arrived only as form B). Form B is
+  now parsed, the two deliveries fold into one row, and roots BZ/HO/MCL/MGC/NKD/QM/RB fold onto
+  their 1! spelling. Live Dashboard and Analysis now judge trades by the same book: entries carry
+  `overridden` / `stale_signal` / `retap_ok`, History has a "core rules only" toggle (default
+  on), `trade_history` exports the three flags and this repo's Symbols tab (`app/symbols.py`)
+  excludes flagged rows (rows synced before 10/08 carry NULL flags and still count). Every live
+  row/card shows its sister pair ticker bottom-right; the Analysis trade chart has a
+  30s/1m/5m bar switch; the board reuses a symbol's cascade pass until a new event arrives.
 
 ## VPS screenshot capturer (tv-capture/)
 
