@@ -39,3 +39,31 @@ case where two signals stay tradeable together is two Ms in the SAME session (th
 configuration). A DB is always exclusive: it replaces whatever was armed before it on that
 timeframe. (fvg-mcp's `live_arms()` already implements this; the agent must never take an
 entry whose arming signal has been superseded.)
+
+## 2026-10-08 — A Market Translator signal expires after 6 hours (Jake)
+A signal is live for at most 6 hours after it prints. An entry whose arming signal was older
+than 6 hours at the entry bar was taken off a dead signal and is not a strategy trade.
+fvg-mcp enforces it live (`strategy.signal_max_age_h = 6`) and the Analysis book excludes
+such entries as "stale signal"; the agent must never take one.
+
+## 2026-10-08 — Re-entries must re-tap the original zone (Jake)
+There is no cap on the number of entries off one signal, but a later leg is only valid if
+price came back and re-tapped the ORIGINAL 5m/1m zone after the previous trade closed. The
+only time the original zone can be skipped is when it was invalidated first; then the next
+presented zone is the one to tap. fvg-mcp enforces it live and the Analysis book excludes
+legs that did not re-tap ("no re-tap"); the agent must never take one.
+
+## 2026-10-08 — What counts as a tap (course wording; fvg-mcp setting noted)
+The course never gives a depth: the instructor paints the box and waits for the market to
+"come back and touch it". Any contact with the zone is a tap; a wick to the edge counts and
+the body does not have to enter. fvg-mcp follows that for the first presented gap. For the
+SECOND presented gap (its "first two gaps" setting, `fvg_gaps = 2`) it also requires the tap
+to reach the gap's midpoint — Jake's own 2026-08-11 setting, not a course rule. Open for Jake:
+drop the midpoint requirement to match the course exactly.
+
+## 2026-10-08 — The core book (Jake: "sync the Live Dashboard with the Analysis tab")
+One book, everywhere: a trade counts only if its arming signal was not superseded before the
+entry (signal priority above), the signal was under 6 hours old at the entry, and any later
+leg re-tapped its zone. The fvg-mcp Live Dashboard History (default "core rules only"), the
+Analysis tab and this agent's Symbols tab all apply the same three exclusions, plus the
+standing ones (ND and Gold Strategy are never aggregated with real signals).

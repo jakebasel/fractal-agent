@@ -26,6 +26,11 @@ Market Translator (MT)
 - Triangle = an M in one direction and a DB in the other (M, [M], DB): both point the DB way;
   price returns to the FVG between the Ms, then goes the DB way. A later M after a DB is just
   a second M (retracement coming; if in a trade, secure profits and roll the stop).
+- A Market Translator signal expires 6 hours after it prints (amendments, Jake 2026-10-08);
+  the newest signal on a timeframe replaces the previous one, only two same-session Ms coexist.
+- Re-entries off one signal: no cap, but each later leg must re-tap the ORIGINAL zone unless
+  that zone was invalidated first, then the next presented zone (amendments, Jake 2026-10-08).
+- A tap = any touch of the zone (wick to the edge counts; the course never names a depth).
 - 2DB = DBs both ways = SKIP, always (amendments, Jake 2026-10-07). "No other logic for a new
   set up should form after this point, until next session" on that index/timeframe. A 1m 2DB
   voids 1m plays; the 5m may still set up. The 2DB's reversal zone is information about which
