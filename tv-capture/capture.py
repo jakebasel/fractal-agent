@@ -118,20 +118,49 @@ def logged_in(page) -> bool:
     except Exception:
         pass
     try:   # anonymous chart pages show a Sign in entry in the header's user menu
-        return page.locator('[data-name="header-user-menu-sign-in"]').count() == 0 and \
+        if page.url.startswith("about:blank"):        # parked: last known state (see park)
+            return bool(getattr(page, "_logged_in", True))
+        ok = page.locator('[data-name="header-user-menu-sign-in"]').count() == 0 and \
             any(c["name"] == "sessionid" for c in page.context.cookies("https://www.tradingview.com"))
+        page._logged_in = ok
+        return ok
     except Exception:
         return False
+
+
+IDLE_PARK = os.environ.get("IDLE_PARK", "1") == "1"          # park on about:blank between captures
+PARK_WARMUP_MS = int(os.environ.get("PARK_WARMUP_MS", "9000"))  # chart settle time after un-parking
 
 
 def open_pages(ctx):
     pages = []
     for url in TV_PAGES:
         p = ctx.new_page()
+        p._tv_url = url
         p.goto(url, wait_until="domcontentloaded", timeout=60_000)
         p.wait_for_timeout(8_000)      # let the chart, indicators and data stream settle
         pages.append(p)
     return pages
+
+
+def park(p):
+    """10/08: CPU throttling and the page-lifecycle freeze did not stop a live TradingView
+    chart from burning a full core between captures. Parking the tab on about:blank does:
+    nothing renders until the next capture reloads the chart (cookies and the layout persist
+    in the profile, so it comes back logged in)."""
+    if not IDLE_PARK:
+        return
+    try:
+        p.goto("about:blank", wait_until="commit", timeout=15_000)
+    except Exception as e:
+        log("park failed:", str(e)[:120])
+
+
+def unpark(p):
+    if not IDLE_PARK or not getattr(p, "_tv_url", None) or not p.url.startswith("about:blank"):
+        return
+    p.goto(p._tv_url, wait_until="domcontentloaded", timeout=60_000)
+    p.wait_for_timeout(PARK_WARMUP_MS)
 
 
 def dismiss_banners(p):
@@ -194,9 +223,14 @@ def capture_set(pages) -> int:
     for i, p in enumerate(pages):
         if IDLE_THROTTLE > 1:
             set_throttle(p, 1)
+        unpark(p)
+        if not logged_in(p):
+            raise RuntimeError("not logged in to TradingView: paste fresh cookies")
+        if IDLE_THROTTLE > 1 and not IDLE_PARK:
             p.wait_for_timeout(2500)         # let the chart catch up at full speed
         dismiss_banners(p)
         img = p.screenshot(type="jpeg", quality=QUALITY, full_page=False)
+        park(p)
         if IDLE_THROTTLE > 1:
             set_throttle(p, IDLE_THROTTLE)
         if i == 0:

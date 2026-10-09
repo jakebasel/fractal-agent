@@ -86,8 +86,11 @@ def _post_anthropic(model: str, messages: list, max_tokens: int, temperature: fl
         raise LLMError(f"{model}: HTTP {r.status_code} {r.text[:300]}")
     data = r.json()
     u = data.get("usage") or {}
-    cost = ((u.get("input_tokens") or 0) * config.ANTHROPIC_PRICE_IN_PER_M
-            + (u.get("output_tokens") or 0) * config.ANTHROPIC_PRICE_OUT_PER_M) / 1_000_000
+    pin, pout = config.ANTHROPIC_PRICE_IN_PER_M, config.ANTHROPIC_PRICE_OUT_PER_M
+    for pref, pr in (config.ANTHROPIC_PRICES or {}).items():
+        if str(model).startswith(pref) and isinstance(pr, (list, tuple)) and len(pr) == 2:
+            pin, pout = float(pr[0]), float(pr[1])
+    cost = ((u.get("input_tokens") or 0) * pin + (u.get("output_tokens") or 0) * pout) / 1_000_000
     _log(purpose, data.get("model") or model,
          {"input_tokens": u.get("input_tokens"), "output_tokens": u.get("output_tokens"), "cost": round(cost, 6)}, ms, True)
     text = "".join(b.get("text") or "" for b in (data.get("content") or []) if b.get("type") == "text")
@@ -177,9 +180,22 @@ def read_chart(images, prompt: str) -> dict:
                             max_tokens=2500, purpose="vision"))
 
 
+def model_for(purpose: str) -> str:
+    """Heavy purposes go to HEAVY_MODEL while today's heavy-call count is under the cap."""
+    if (purpose in config.HEAVY_PURPOSES and config.HEAVY_MODEL
+            and _is_anthropic(config.HEAVY_MODEL) and config.HEAVY_MAX_PER_DAY > 0):
+        try:
+            from . import store
+            if store.calls_today(config.HEAVY_MODEL) < config.HEAVY_MAX_PER_DAY:
+                return config.HEAVY_MODEL
+        except Exception:
+            pass
+    return config.DECISION_MODEL
+
+
 def decide(system: str, user: str, purpose: str = "decision") -> dict:
     messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
-    return parse_json(_post(config.DECISION_MODEL, messages, max_tokens=config.DECISION_MAX_TOKENS,
+    return parse_json(_post(model_for(purpose), messages, max_tokens=config.DECISION_MAX_TOKENS,
                             purpose=purpose))
 
 

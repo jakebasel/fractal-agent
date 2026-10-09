@@ -25,6 +25,7 @@ MAX_ENTRY_AGE_S = int(_env("MAX_ENTRY_AGE_S", "300"))
 # include the "Gold Strategy" rows fvg-mcp also records? default no: Fractal Effects only
 INCLUDE_GOLD = _env("INCLUDE_GOLD", "0") == "1"
 
+import json as _json
 # --- AI (Anthropic direct, or OpenRouter) --------------------------------------------------
 # Jake 2026-10-08: OpenRouter ran out of credits and every decision errored for a day, so
 # the agent talks to the Claude API directly when ANTHROPIC_API_KEY is set. Any model id
@@ -38,6 +39,17 @@ ANTHROPIC_VERSION = _env("ANTHROPIC_VERSION", "2023-06-01")
 ANTHROPIC_PRICE_IN_PER_M = float(_env("ANTHROPIC_PRICE_IN_PER_M", "1.0"))
 ANTHROPIC_PRICE_OUT_PER_M = float(_env("ANTHROPIC_PRICE_OUT_PER_M", "5.0"))
 CLAUDE_CHEAP_MODEL = _env("CLAUDE_CHEAP_MODEL", "claude-haiku-5-5")   # the lowest-price Claude
+# Jake 2026-10-08: Haiku for the per-setup work, Fable for the bigger, rarer calls. HEAVY_PURPOSES
+# names which call purposes go to HEAVY_MODEL (lesson = after a settled trade, hypothesis =
+# proposal matching, reeval = re-judging an old skip under new rules); everything else (decision,
+# vision, scan, shadow) stays on the cheap model. HEAVY_MAX_PER_DAY caps the heavy calls per ET
+# day; past the cap they fall back to the cheap model.
+HEAVY_MODEL = _env("HEAVY_MODEL", "claude-fable-5-1")
+HEAVY_PURPOSES = {x.strip() for x in _env("HEAVY_PURPOSES", "lesson,hypothesis,reeval").split(",") if x.strip()}
+HEAVY_MAX_PER_DAY = int(_env("HEAVY_MAX_PER_DAY", "20"))
+# $ per million tokens by model-id prefix, for the spend log and the daily budget. Set these to
+# the current price list; unknown models use ANTHROPIC_PRICE_*_PER_M.
+ANTHROPIC_PRICES = _json.loads(_env("ANTHROPIC_PRICES", '{"claude-haiku": [1.0, 5.0], "claude-sonnet": [3.0, 15.0], "claude-opus": [15.0, 75.0], "claude-fable": [15.0, 75.0]}') or "{}")
 OPENROUTER_API_KEY = _env("OPENROUTER_API_KEY")
 OPENROUTER_URL = _env("OPENROUTER_URL", "https://openrouter.ai/api/v1/chat/completions")
 # DeepSeek V3.2 (Jake 2026-10-07: newer and cheaper than deepseek-chat). V4 Pro is a thinking
@@ -47,7 +59,6 @@ DECISION_MODEL = _env("DECISION_MODEL", CLAUDE_CHEAP_MODEL if ANTHROPIC_API_KEY 
 DECISION_MAX_TOKENS = int(_env("DECISION_MAX_TOKENS", "4000"))
 # reasoning control for thinking models (OpenRouter 'reasoning' object), e.g. {"effort":"low"}
 # or {"enabled": false}; empty = send nothing
-import json as _json
 DECISION_REASONING = _json.loads(_env("DECISION_REASONING", '{"enabled": false}') or "null")
 # OpenRouter falls back to these, in order, when the decision model is rate-limited or down
 DECISION_FALLBACK_MODELS = [m.strip() for m in _env("DECISION_FALLBACK_MODELS",

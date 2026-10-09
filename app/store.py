@@ -443,6 +443,13 @@ def log_api_call(purpose, model, in_tok, out_tok, cost, ms, ok, error=None):
         db().commit()
 
 
+def calls_today(model: str) -> int:
+    """Successful API calls to `model` since ET midnight (the heavy-model daily cap)."""
+    start = datetime.now(config.ET).replace(hour=0, minute=0, second=0, microsecond=0).astimezone(timezone.utc).isoformat()
+    r = db().execute("SELECT COUNT(*) AS n FROM api_calls WHERE model = ? AND at >= ? AND ok = 1", (model, start)).fetchone()
+    return int(r["n"] if r else 0)
+
+
 def spend(since_iso=None) -> dict:
     where, args = "", []
     if since_iso:
