@@ -183,6 +183,14 @@ showed them up, and fvg.motivationpro.tech served "no available server". Only Ja
   entry/stop/target, sister; row click opens TradingView); the symbol groups were rebuilt into
   14 product families via `/api/groups` (old set backed up in the session scratchpad; the
   'Other' group holds the roots I could not place: SIC1! MSL1! MFS1! MME1! Z1! NOLX2026).
+- Symbol names: `SYMBOL_NAMES` in server.py (Python, keyed by root) is the source of truth; the
+  same table is rendered as a `const SYMNAME=` literal on the dashboard, mobile, Analysis and
+  Lab pages (the UI tests parse the page source, so it must stay literal). `symName()` strips
+  `1!`, dated month codes (BITV2026 -> BIT) and USD suffixes. Unnamed roots still: MFS, MME,
+  MSL, SIC, SNVDA, Z, C (ask Jake). The Lab has a right-hand filter panel (direction, timeframe,
+  M/DB, entry session and hour in ET, exit reason, R and $-risked ranges, tickers by group)
+  applied client-side to the loaded paper rows, with a filtered stats strip; state in
+  localStorage `lab_filters_v1`.
 - `tick()` logs per-phase timing when a loop takes 5 s or more: loops were taking minutes
   (every review landed on the 'late' path with no chart read); read the agent log for
   `tick took` lines to see which phase.
