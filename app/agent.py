@@ -532,15 +532,40 @@ def _prefetch_htf(fvg: FVG):
             log.warning("htf prefetch %s: %s", sym, e)
 
 
+class _Phase:
+    """Per-phase wall time of one tick, logged at the end (2026-10-08: loops were taking
+    minutes, so every review ran on the 'late' path with no chart read; this says which
+    phase eats the time)."""
+    def __init__(self):
+        self.t = {}; self._t0 = None; self._name = None
+    def start(self, name):
+        self.stop(); self._name = name; self._t0 = time.time()
+    def stop(self):
+        if self._name is not None:
+            self.t[self._name] = round(self.t.get(self._name, 0.0) + time.time() - self._t0, 1)
+            self._name = None
+    def report(self):
+        self.stop()
+        slow = {k: v for k, v in self.t.items() if v >= 1.0}
+        total = round(sum(self.t.values()), 1)
+        if total >= 5.0:
+            log.info("tick took %ss: %s", total, slow)
+
+
 def tick(fvg: FVG):
+    ph = _Phase()
+    ph.start("seed")
     learning.seed()
     changed = False
     by_id: dict[int, dict] = {}
+    ph.start("htf_prefetch")
     _prefetch_htf(fvg)
+    ph.start("setups_snapshot")
     try:
         snapshot_setups(fvg)
     except Exception as e:
         log.warning("setups snapshot: %s", e)
+    ph.start("entries_review")
     for sym in config.SYMBOLS:
         rows = fvg.entries(sym, limit=40)
         for e in rows:
@@ -556,14 +581,17 @@ def tick(fvg: FVG):
                 continue
             _safe_review(fvg, e)
             changed = True
+    ph.start("settle")
     for row in store.open_decisions():
         scored = by_id.get(row["entry_id"])
         if scored and settle(fvg, row, scored):
             changed = True
+    ph.start("manage_pending")
     try:
         manage_pending(fvg)
     except Exception as e:
         log.warning("managed scoring failed: %s", e)
+    ph.start("scanner")
     try:   # the chart scanner: only inside its windows, only on a new screenshot set
         if config.SCAN_MINUTES > 0 and not store.over_budget():
             shots = store.latest_screenshot_set()
@@ -575,25 +603,31 @@ def tick(fvg: FVG):
                 scanner.scan(fvg, read, files, now, force=True)
     except Exception as e:
         log.warning("scanner failed: %s", e)
+    ph.start("scan_scoring")
     try:
         scanner.score_pending(fvg)
     except Exception as e:
         log.warning("scan scoring failed: %s", e)
+    ph.start("reeval")
     try:
         reevaluate_skips(fvg)
     except Exception as e:
         log.warning("re-evaluation failed: %s", e)
+    ph.start("symbols_sync")
     try:   # per-symbol core book: mirror fvg-mcp's trade_history (no LLM calls)
         symbols.sync_if_due(fvg)
     except Exception as e:
         log.warning("core trades sync failed: %s", e)
+    ph.start("learning")
     learning.promote_queued()
     try:
         learning.run_shadow()
     except Exception as e:   # the learning loop must never stop the review loop
         log.warning("shadow failed: %s", e)
+    ph.start("csv")
     if changed:
         store.write_csv_file()
+    ph.report()
     return changed
 
 
