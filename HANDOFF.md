@@ -176,6 +176,13 @@ showed them up, and fvg.motivationpro.tech served "no available server". Only Ja
   the page-lifecycle freeze and parking on about:blank changed nothing. `FRESH_PAGE=0` restores
   the old persistent tab. `IDLE_PARK` / `IDLE_CPU_THROTTLE` only matter in that old mode.
 - fvg-mcp has `GET /admin/profile?seconds=N` (UI login), a CPU-weighted sampling profiler.
+- 2026-10-09 morning: the Tickers hide/show now expires the board cache on save and hides
+  setups client-side at once (it used to wait a cycle); `/api/execution_pipeline` is served
+  stale-while-revalidate (it took ~17 s and blanked a tab's columns); the Analysis page has a
+  **Live** tab (same table format as the book, one row per live setup with stage, taps,
+  entry/stop/target, sister; row click opens TradingView); the symbol groups were rebuilt into
+  14 product families via `/api/groups` (old set backed up in the session scratchpad; the
+  'Other' group holds the roots I could not place: SIC1! MSL1! MFS1! MME1! Z1! NOLX2026).
 - `tick()` logs per-phase timing when a loop takes 5 s or more: loops were taking minutes
   (every review landed on the 'late' path with no chart read); read the agent log for
   `tick took` lines to see which phase.
