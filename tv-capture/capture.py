@@ -159,18 +159,33 @@ def _cdp(p):
     return c or None
 
 
+_THROTTLE_LOGGED = {"err": None}
+
+
 def set_throttle(p, rate):
     """10/08: a live TradingView chart re-renders continuously, so headless Chromium burned
-    ~half a core even at one capture every 90 s. Between captures the renderer is slowed
-    IDLE_THROTTLE-fold via CDP (the page stays alive and logged in); it runs at full speed
-    for a couple of seconds before each screenshot so the chart is current."""
+    a full core even at one capture every 90 s. Between captures the page is FROZEN via the
+    CDP page-lifecycle API (what Chrome does to background tabs: no timers, no rendering;
+    the tab stays open and logged in) and the renderer is also CPU-throttled as a belt and
+    braces. It is set active again, at full speed, ~2.5 s before each screenshot so the
+    chart reconnects and is current. rate 1 = active/full speed; rate > 1 = parked."""
     c = _cdp(p)
     if c is None:
+        if _THROTTLE_LOGGED["err"] != "nocdp":
+            _THROTTLE_LOGGED["err"] = "nocdp"; log("throttle: no CDP session; page runs at full speed")
         return
     try:
-        c.send("Emulation.setCPUThrottlingRate", {"rate": float(max(1, rate))})
-    except Exception:
-        pass
+        if rate > 1:
+            c.send("Emulation.setCPUThrottlingRate", {"rate": float(rate)})
+            c.send("Page.setWebLifecycleState", {"state": "frozen"})
+        else:
+            c.send("Page.setWebLifecycleState", {"state": "active"})
+            c.send("Emulation.setCPUThrottlingRate", {"rate": 1.0})
+        if _THROTTLE_LOGGED["err"] != "ok":
+            _THROTTLE_LOGGED["err"] = "ok"; log(f"throttle: CDP ok (park rate {IDLE_THROTTLE}, freeze between captures)")
+    except Exception as e:
+        if _THROTTLE_LOGGED["err"] != str(e)[:80]:
+            _THROTTLE_LOGGED["err"] = str(e)[:80]; log("throttle failed:", str(e)[:160])
 
 
 def capture_set(pages) -> int:
