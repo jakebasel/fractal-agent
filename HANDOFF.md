@@ -198,7 +198,15 @@ showed them up, and fvg.motivationpro.tech served "no available server". Only Ja
   refresh-interval setting (5-60 s, default 10), Entry time and Open P&L columns, $ on prices,
   and drag-to-reorder / drag-to-resize columns (localStorage `fvg_live_cols` / `fvg_live_colw`).
   Do NOT re-assemble the board inside the webhook path: the first attempt stalled the server
-  during warm-up and was reverted the same hour.
+  during warm-up and was reverted the same hour. Rebuilds are kicked by alerts as background
+  single-flight tasks, >= BOARD_MIN_GAP_S (3 s) apart; a price tick invalidates a symbol only
+  if it has a live MT signal. Steady cost with the board live: ~10% of a core (first load after
+  a restart ~20 s).
+- Live tab P&L comes from the paper ledger (`/api/entries?hist_days=1`, joined on
+  detail.entry_id): the cascade keeps reporting 'enter' after a chain entered, but the ledger
+  closes the trade at stop/target -- those rows show as Closed with the realized R; open rows
+  are clamped between -1R and the target. Also on the Live rail: ticker multi-select with
+  type-to-search, "today's top N performers" (from the 1-day book), and a Today R column.
 - `tick()` logs per-phase timing when a loop takes 5 s or more: loops were taking minutes
   (every review landed on the 'late' path with no chart read); read the agent log for
   `tick took` lines to see which phase.
