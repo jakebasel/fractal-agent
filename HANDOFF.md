@@ -138,7 +138,8 @@ showed them up, and fvg.motivationpro.tech served "no available server". Only Ja
   viral-postgres, writer-postgres). Each idles at 80-180 MB RAM plus a health-check `psql` every
   few seconds. Stopping or deleting them is Jake's decision; the data stays in the volumes.
   (Jake stopped all six plus script-studio-staging later on 10/08; viral-finder now runs one
-  gunicorn worker and a host cron, `/root/autostop_viral.sh`, stops it 4 h after any start.)
+  gunicorn worker; the auto-stop cron was REMOVED the same night: Script Studio's "Reference"
+  links are `viral.motivationpro.tech/s/...` redirects served by viral-finder, so it must stay up.)
 - Second pass, same evening, after CPU was still ~70% of the host with no dashboard open:
   fvg-mcp `FVG_ENGINE=0` in Coolify (the server-side gap engine was a shadow writing ~21k
   events/hour while Settings > Gap engine = Chart alerts); the per-webhook cascade pass is
