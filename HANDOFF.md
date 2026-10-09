@@ -169,6 +169,12 @@ showed them up, and fvg.motivationpro.tech served "no available server". Only Ja
 - Live Dashboard 'Apex only' toggle (fvg-mcp 8a064e2+): hides every instrument not on Apex
   Trader Funding's Tradovate list (read from their help center 10/08; roots in `APEX_ROOTS` in
   server.py), on boards, trays, counters and History, desktop and mobile; stored per browser.
+- tv-capture runs in FRESH_PAGE mode since c734b3a: a new tab per capture, closed right after,
+  leftover Chromium renderers killed. Reason (measured): after navigating away, TradingView's
+  renderer kept ~97% CPU with no sockets open (a JS task that never yields); CPU throttling,
+  the page-lifecycle freeze and parking on about:blank changed nothing. `FRESH_PAGE=0` restores
+  the old persistent tab. `IDLE_PARK` / `IDLE_CPU_THROTTLE` only matter in that old mode.
+- fvg-mcp has `GET /admin/profile?seconds=N` (UI login), a CPU-weighted sampling profiler.
 - `tick()` logs per-phase timing when a loop takes 5 s or more: loops were taking minutes
   (every review landed on the 'late' path with no chart read); read the agent log for
   `tick took` lines to see which phase.
