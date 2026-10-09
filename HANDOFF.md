@@ -157,6 +157,21 @@ showed them up, and fvg.motivationpro.tech served "no available server". Only Ja
   excludes flagged rows (rows synced before 10/08 carry NULL flags and still count). Every live
   row/card shows its sister pair ticker bottom-right; the Analysis trade chart has a
   30s/1m/5m bar switch; the board reuses a symbol's cascade pass until a new event arrives.
+- Agent models (2026-10-08 night): OpenRouter ran out of credits at 10:59 ET on 10/08 and every
+  decision errored (HTTP 402) until the switch. The agent now calls the Claude API directly
+  (`ANTHROPIC_API_KEY` on the Coolify app; any `claude-*` model id goes to Anthropic, the rest
+  to OpenRouter). Haiku (`claude-haiku-5-5`) does decisions, vision, scans and shadow tests;
+  Fable (`HEAVY_MODEL=claude-fable-5-1`) does lessons, hypothesis matching and skip
+  re-evaluations, capped at `HEAVY_MAX_PER_DAY=20`. Claude 5.5 rejects `temperature` and
+  assistant prefill; both are off. Prices for the spend log are in `ANTHROPIC_PRICES` (set to
+  the current price list). Jev stays on OpenRouter (needs credits) -- set `JEV_MODE=off` if not.
+  Verified 10/08 22:45 ET with a real chart read via the `chart_question` tool.
+- Live Dashboard 'Apex only' toggle (fvg-mcp 8a064e2+): hides every instrument not on Apex
+  Trader Funding's Tradovate list (read from their help center 10/08; roots in `APEX_ROOTS` in
+  server.py), on boards, trays, counters and History, desktop and mobile; stored per browser.
+- `tick()` logs per-phase timing when a loop takes 5 s or more: loops were taking minutes
+  (every review landed on the 'late' path with no chart read); read the agent log for
+  `tick took` lines to see which phase.
 
 ## VPS screenshot capturer (tv-capture/)
 
