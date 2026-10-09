@@ -207,6 +207,16 @@ showed them up, and fvg.motivationpro.tech served "no available server". Only Ja
   closes the trade at stop/target -- those rows show as Closed with the realized R; open rows
   are clamped between -1R and the target. Also on the Live rail: ticker multi-select with
   type-to-search, "today's top N performers" (from the 1-day book), and a Today R column.
+- P&L truth (10/09 afternoon): the frozen result (`f_pnl_r`, scored at close) is the book;
+  Analysis/Research read it. The ledger (`/api/entries`) re-simulates only trades whose ENTRY
+  is inside the 48 h price window (it used to key on the row's insert time, so late-discovered
+  legs were replayed on a stream starting hours after entry -> phantom 2R+3R hits, the
+  "+23R open P&L" Jake saw). The simulator checks the auto-close deadline BEFORE stop/target
+  on every bar and marks out at the last pre-gap price when a bar follows a feed gap
+  ("(feed gap)" label). `/admin/rescore` (UI login) replays days from the R2 archive;
+  'auto-closed 2h (no further data)' and '(feed gap)' results count as suspect; the hourly
+  safety net covers yesterday once archived and clears the Analysis caches. After these fixes
+  Analysis vs ledger over 7 d differ on 72 of 2,501 trades by +1.15R net (label-only).
 - `tick()` logs per-phase timing when a loop takes 5 s or more: loops were taking minutes
   (every review landed on the 'late' path with no chart read); read the agent log for
   `tick took` lines to see which phase.
