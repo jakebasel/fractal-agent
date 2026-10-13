@@ -221,6 +221,48 @@ showed them up, and fvg.motivationpro.tech served "no available server". Only Ja
   (every review landed on the 'late' path with no chart read); read the agent log for
   `tick took` lines to see which phase.
 
+## 2026-10-13 — why nothing learned for five days, and what changed
+
+Found by Jake's question "why is the agent not learning". Three stalls stacked:
+
+1. **Haiku decisions failed from 10/08 10:59 ET on.** Claude 5.5 models think by default and
+   the thinking tokens come out of `max_tokens`; with 4000 every decision burned the whole
+   budget thinking and returned an empty reply (`stop_reason=max_tokens`, 43 ERROR rows in
+   five days, 21 of the last 40). Fix: `DECISION_MAX_TOKENS` 16000, `output_config.effort`
+   = `ANTHROPIC_EFFORT` (low) for the per-setup work and `HEAVY_EFFORT` (medium) for Fable,
+   vision budget 8000. No `thinking` field is sent (Haiku 5.5 runs adaptive by default).
+2. **Built-in lessons were off** (`BUILTIN_LESSONS=0` since 10/07, Hermes was meant to cover
+   it). Default is now 1: a lesson is written per settled TAKE/SKIP whether or not Hermes is up.
+   Both lessons and Hermes reviews feed the decision prompt (`prompts._lessons_block`).
+3. **Hermes stopped reviewing at 10/08 07:23 ET**: it ran on OpenRouter, whose credits ran out
+   that morning (Jev, also OpenRouter, has 415 errors of 543 calls). `hermes/seed/config.yaml`
+   now uses `provider: anthropic`, model `claude-haiku-5-5`, vision on Haiku too. **Jake must add
+   `ANTHROPIC_API_KEY` to the Hermes Coolify app** (same key as the agent) and redeploy it; until
+   then Hermes still fails. Jev stays on OpenRouter: set `JEV_MODE=off` or top up credits.
+
+Also fixed: `ANTHROPIC_PRICES` defaults were ~10x the list price for Haiku (1.0/5.0 vs
+0.10/0.50) and 1.5x for Fable, so `spend_today`, the per-day chart and the `DAILY_BUDGET_USD`
+guard (set to 4.00 in Coolify; code default 1.50) overstated real spend: the $18.90 logged for
+Claude calls 10/08-10/13 was about $3.00 real. The system prompt's rulebook part now carries a
+prompt-cache breakpoint (`llm._system_blocks`, split at the LESSONS heading); cache reads bill
+at 10% and are priced into the spend log. Expect the ~23k-token decision prompt to cost ~1/8
+of before once the cache is warm (5-minute TTL, refreshed by every call inside a session).
+
+Not done, needs a decision from Jake:
+- **fvg-mcp's Zoom transcripts do not reach this agent.** The `/transcripts` page in fvg-mcp
+  (whisper in the browser or `transcribe_agent.py`) stores the live-session recordings in
+  fvg-mcp's Postgres `transcripts` table; nothing reads that table except the page itself (no
+  MCP tool, not the strategy page). This agent's `knowledge/` is the repo folder only, indexed at
+  start-up, plus the manual `/live-session` skill for Wispr Flow recordings (one session
+  ingested, 10/07; the 10/07 Asia and 10/08 NY Wispr recordings are not). To close the loop:
+  a read-only `transcripts(since)` MCP tool on fvg-mcp, a sync here into `knowledge/live/` and
+  the BM25 index, and the labelling step (instructor calls, candidate rules) done by Fable with
+  Jake's veto, same as `/live-session` does by hand.
+- The "late" path: 21 of the last 40 rows were logged more than 5 min after their bar, so they
+  got no chart read. Look at `tick took` lines; fvg-mcp board latency is the likely cause.
+- A hypothesis is waiting for approval: "London: whole session" (+4.42R on 4 changed decisions,
+  n is small).
+
 ## VPS screenshot capturer (tv-capture/)
 
 Coolify app `tv-capture` (same project, base directory `/tv-capture`, volume `/data`, domain

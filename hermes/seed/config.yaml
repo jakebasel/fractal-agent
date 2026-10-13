@@ -1,13 +1,13 @@
 # Hermes Agent config for the trade reviewer (see tools/backtest_protocol.md for how its
 # proposals are judged). Only the LLM costs money: web/search/image/tts/browser/vision are off.
+# 2026-10-13: Hermes moved from OpenRouter (DeepSeek) to the Claude API. OpenRouter ran out of
+# credits on 10/08 and Hermes posted no review for five days. Needs ANTHROPIC_API_KEY on the
+# Coolify app (same key as the agent). Haiku 5.5 is the lowest-price Claude; set HERMES_MODEL
+# in Coolify is not read: edit `default` here to change it.
 model:
-  provider: "openrouter"
-  default: "deepseek/deepseek-v3.2"
+  provider: "anthropic"
+  default: "claude-haiku-5-5"
   base_url: ""
-  api_mode: chat_completions
-provider_routing:
-  sort: "price"
-  data_collection: "deny"
 agent:
   max_turns: 40
   run_budget_seconds: 1200
@@ -15,7 +15,7 @@ agent:
   disabled_toolsets: [web, search, browser, image_gen, video_gen, tts, delegation,
                       code_execution, computer_use, cronjob, clarify, messaging, todo, kanban]
 auxiliary:
-  vision: {provider: openrouter, model: google/gemini-2.5-flash}   # the vision tool reads the saved screenshots
+  vision: {provider: anthropic, model: claude-haiku-5-5}   # the vision tool reads the saved screenshots
   compression: {provider: auto, model: ''}
   background_review: {enabled: false}
 memory:

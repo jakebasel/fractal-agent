@@ -443,6 +443,53 @@ ok("reevaluated_skips" in rep3 and rep3["reevaluated_skips"]["re_evaluated"] >= 
 ok(llm.parse_json('<think>maybe {x}</think> Here: {"a": 1, "b": {"c": 2}} and then {broken')["b"]["c"] == 2, "parse_json survives think blocks and trailing junk")
 ok(llm.parse_json('```json\n{"a": [1,2]}\n```')["a"] == [1, 2], "parse_json reads fenced JSON")
 
+# Anthropic request shape (2026-10-13): effort set, no thinking/temperature field, the rulebook
+# part of the system prompt carries one cache breakpoint, max_tokens leaves room for thinking,
+# cache tokens are priced into the spend log, and an all-thinking reply is a clear error
+import httpx as _httpx
+_sent = {}
+class _FakeResp:
+    status_code = 200
+    def __init__(self, data): self._d = data
+    def json(self): return self._d
+def _fake_httpx_post(url, json=None, timeout=None, headers=None):
+    _sent.update(json)
+    return _FakeResp({"model": "claude-haiku-5-5", "stop_reason": "end_turn",
+                      "usage": {"input_tokens": 1000, "output_tokens": 100,
+                                "cache_creation_input_tokens": 0, "cache_read_input_tokens": 20000},
+                      "content": [{"type": "text", "text": '{"ok": true}'}]})
+_real_post, _real_key, _real_cache = _httpx.post, config.ANTHROPIC_API_KEY, config.ANTHROPIC_CACHE
+_httpx.post, config.ANTHROPIC_API_KEY, config.ANTHROPIC_CACHE = _fake_httpx_post, "sk-test", True
+try:
+    big_rules = "R" * 9000 + "\n=== LESSONS FROM PAST PAPER TRADES ===\n- lesson one"
+    out = llm._post_anthropic("claude-haiku-5-5", [{"role": "system", "content": big_rules},
+                                                   {"role": "user", "content": "setup"}], 16000, 0.1, "decision")
+    ok(out == '{"ok": true}', "anthropic call returns the text")
+    ok(_sent["output_config"] == {"effort": config.ANTHROPIC_EFFORT} and "thinking" not in _sent
+       and "temperature" not in _sent, "anthropic body: effort set, no thinking/temperature field")
+    ok(_sent["max_tokens"] == 16000 and config.DECISION_MAX_TOKENS >= 16000, "max_tokens leaves room for thinking")
+    sysb = _sent["system"]
+    ok(isinstance(sysb, list) and sysb[0].get("cache_control") == {"type": "ephemeral"}
+       and sysb[0]["text"].startswith("RRRR") and "LESSONS" not in sysb[0]["text"]
+       and "LESSONS" in sysb[1]["text"], "rulebook part of the system prompt is the cache breakpoint; lessons stay outside it")
+    last = store.db().execute("SELECT * FROM api_calls ORDER BY id DESC LIMIT 1").fetchone()
+    want = (1000 * 0.10 + 20000 * 0.10 * 0.10 + 100 * 0.50) / 1_000_000
+    ok(last["model"] == "claude-haiku-5-5" and abs(last["cost"] - want) < 1e-9 and last["in_tokens"] == 21000,
+       "spend log prices Haiku at list price and cache reads at 10%")
+    def _thinking_only(url, json=None, timeout=None, headers=None):
+        return _FakeResp({"model": "claude-haiku-5-5", "stop_reason": "max_tokens",
+                          "usage": {"input_tokens": 1000, "output_tokens": 4000}, "content": []})
+    _httpx.post = _thinking_only
+    try:
+        llm._post_anthropic("claude-haiku-5-5", [{"role": "user", "content": "x"}], 4000, 0.1, "decision")
+        ok(False, "empty reply raises")
+    except llm.LLMError as e:
+        ok("thinking" in str(e) and "DECISION_MAX_TOKENS" in str(e), "an all-thinking reply names the fix")
+    ok(llm._effort(config.HEAVY_MODEL) == config.HEAVY_EFFORT and llm._effort("claude-haiku-5-5") == config.ANTHROPIC_EFFORT,
+       "heavy model gets its own effort")
+finally:
+    _httpx.post, config.ANTHROPIC_API_KEY, config.ANTHROPIC_CACHE = _real_post, _real_key, _real_cache
+
 # 17. outside reviewer (Hermes) queue + reviews + proposals
 hc = TestClient(main.app)
 q = hc.get("/api/review_queue?token=tok&reviewer=hermes").json()

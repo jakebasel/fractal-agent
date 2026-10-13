@@ -63,6 +63,28 @@ def _to_anthropic(messages: list) -> tuple[str, list]:
     return "\n\n".join(system), out
 
 
+# the system prompt splits here: everything before is the rulebook (identical call after call,
+# cached), everything after changes a few times a day (lessons, reviews)
+_CACHE_SPLIT = "=== LESSONS FROM PAST PAPER TRADES"
+_CACHE_MIN_CHARS = 8000   # Claude 5.5 models need a few thousand tokens before a prefix caches
+
+
+def _system_blocks(system: str) -> list:
+    """The system prompt as content blocks with one prompt-cache breakpoint on the stable part."""
+    if not config.ANTHROPIC_CACHE or len(system) < _CACHE_MIN_CHARS:
+        return [{"type": "text", "text": system}]
+    i = system.find(_CACHE_SPLIT)
+    stable, rest = (system[:i], system[i:]) if i >= _CACHE_MIN_CHARS else (system, "")
+    blocks = [{"type": "text", "text": stable, "cache_control": {"type": "ephemeral"}}]
+    if rest:
+        blocks.append({"type": "text", "text": rest})
+    return blocks
+
+
+def _effort(model: str) -> str:
+    return config.HEAVY_EFFORT if model == config.HEAVY_MODEL else config.ANTHROPIC_EFFORT
+
+
 def _post_anthropic(model: str, messages: list, max_tokens: int, temperature: float,
                     purpose: str) -> str:
     system, msgs = _to_anthropic(messages)
@@ -70,9 +92,12 @@ def _post_anthropic(model: str, messages: list, max_tokens: int, temperature: fl
     # of whatever prose surrounds it
     want_json = False
     # no `temperature`: Claude 5.5 models reject it ("deprecated for this model")
-    body = {"model": model, "max_tokens": max_tokens, "messages": msgs}
+    # no `thinking` field: Claude 5.5 thinks adaptively by default; effort sets how much, and
+    # max_tokens must leave room for it (DECISION_MAX_TOKENS)
+    body = {"model": model, "max_tokens": max_tokens, "messages": msgs,
+            "output_config": {"effort": _effort(model)}}
     if system:
-        body["system"] = system
+        body["system"] = _system_blocks(system)
     headers = {"x-api-key": config.ANTHROPIC_API_KEY, "anthropic-version": config.ANTHROPIC_VERSION,
                "content-type": "application/json"}
     t0 = time.time()
@@ -91,12 +116,18 @@ def _post_anthropic(model: str, messages: list, max_tokens: int, temperature: fl
     for pref, pr in (config.ANTHROPIC_PRICES or {}).items():
         if str(model).startswith(pref) and isinstance(pr, (list, tuple)) and len(pr) == 2:
             pin, pout = float(pr[0]), float(pr[1])
-    cost = ((u.get("input_tokens") or 0) * pin + (u.get("output_tokens") or 0) * pout) / 1_000_000
+    # input_tokens excludes the cached part; cache writes bill at 1.25x, cache reads at 0.1x
+    c_write, c_read = u.get("cache_creation_input_tokens") or 0, u.get("cache_read_input_tokens") or 0
+    cost = ((u.get("input_tokens") or 0) * pin + c_write * pin * 1.25 + c_read * pin * 0.10
+            + (u.get("output_tokens") or 0) * pout) / 1_000_000
     _log(purpose, data.get("model") or model,
-         {"input_tokens": u.get("input_tokens"), "output_tokens": u.get("output_tokens"), "cost": round(cost, 6)}, ms, True)
+         {"input_tokens": (u.get("input_tokens") or 0) + c_write + c_read,
+          "output_tokens": u.get("output_tokens"), "cost": round(cost, 6)}, ms, True)
     text = "".join(b.get("text") or "" for b in (data.get("content") or []) if b.get("type") == "text")
     if not text.strip():
-        raise LLMError(f"{model}: empty reply (stop_reason={data.get('stop_reason')}, usage={u})")
+        why = ("the whole max_tokens budget went to thinking; raise DECISION_MAX_TOKENS or lower "
+               "ANTHROPIC_EFFORT" if data.get("stop_reason") == "max_tokens" else "")
+        raise LLMError(f"{model}: empty reply (stop_reason={data.get('stop_reason')}, usage={u}) {why}".strip())
     return ("{" + text) if want_json and not text.lstrip().startswith("{") else text
 
 
@@ -178,7 +209,7 @@ def read_chart(images, prompt: str) -> dict:
         content.append({"type": "image_url", "image_url": {
             "url": f"data:{_mime(b)};base64,{base64.b64encode(b).decode()}"}})
     return parse_json(_post(config.VISION_MODEL, [{"role": "user", "content": content}],
-                            max_tokens=2500, purpose="vision"))
+                            max_tokens=8000, purpose="vision"))   # thinking shares this budget
 
 
 def model_for(purpose: str) -> str:

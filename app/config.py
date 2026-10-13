@@ -36,8 +36,8 @@ ANTHROPIC_URL = _env("ANTHROPIC_URL", "https://api.anthropic.com/v1/messages")
 ANTHROPIC_VERSION = _env("ANTHROPIC_VERSION", "2023-06-01")
 # $ per million tokens, for the spend log and the daily budget (Haiku-class defaults;
 # override to match the current price list)
-ANTHROPIC_PRICE_IN_PER_M = float(_env("ANTHROPIC_PRICE_IN_PER_M", "1.0"))
-ANTHROPIC_PRICE_OUT_PER_M = float(_env("ANTHROPIC_PRICE_OUT_PER_M", "5.0"))
+ANTHROPIC_PRICE_IN_PER_M = float(_env("ANTHROPIC_PRICE_IN_PER_M", "0.10"))
+ANTHROPIC_PRICE_OUT_PER_M = float(_env("ANTHROPIC_PRICE_OUT_PER_M", "0.50"))
 CLAUDE_CHEAP_MODEL = _env("CLAUDE_CHEAP_MODEL", "claude-haiku-5-5")   # the lowest-price Claude
 # Jake 2026-10-08: Haiku for the per-setup work, Fable for the bigger, rarer calls. HEAVY_PURPOSES
 # names which call purposes go to HEAVY_MODEL (lesson = after a settled trade, hypothesis =
@@ -51,14 +51,28 @@ HEAVY_PURPOSES = {x.strip() for x in _env("HEAVY_PURPOSES", "lesson,hypothesis")
 HEAVY_MAX_PER_DAY = int(_env("HEAVY_MAX_PER_DAY", "10"))
 # $ per million tokens by model-id prefix, for the spend log and the daily budget. Set these to
 # the current price list; unknown models use ANTHROPIC_PRICE_*_PER_M.
-ANTHROPIC_PRICES = _json.loads(_env("ANTHROPIC_PRICES", '{"claude-haiku": [1.0, 5.0], "claude-sonnet": [3.0, 15.0], "claude-opus": [15.0, 75.0], "claude-fable": [15.0, 75.0]}') or "{}")
+# 2026-10-13 list prices (per MTok): Haiku 5.5 0.10/0.50, Sonnet 5.5 2/10, Opus 5.5 4/20, Fable 5.1
+# 10/50. The old defaults were ~10x too high for Haiku, so the spend log and the daily budget
+# guard overstated real spend by roughly that factor. Cache reads bill at 10% of the input price,
+# cache writes at 125% (see llm._post_anthropic).
+ANTHROPIC_PRICES = _json.loads(_env("ANTHROPIC_PRICES", '{"claude-haiku": [0.10, 0.50], "claude-sonnet": [2.0, 10.0], "claude-opus": [4.0, 20.0], "claude-fable": [10.0, 50.0]}') or "{}")
+# Claude 5.5 models think by default (adaptive) and the thinking tokens count against
+# max_tokens. Effort controls how much: "low" for the per-setup work (decision, vision, scan,
+# shadow), HEAVY_EFFORT for the rarer lesson / hypothesis calls. 2026-10-08..12 every Haiku
+# decision burned its whole 4000-token budget thinking and returned nothing (ERROR rows).
+ANTHROPIC_EFFORT = _env("ANTHROPIC_EFFORT", "low")
+HEAVY_EFFORT = _env("HEAVY_EFFORT", "medium")
+# prompt caching: the rulebook part of the system prompt is identical call after call, so it
+# is marked as a cache breakpoint (reads cost 10% of the input price). 0 turns it off.
+ANTHROPIC_CACHE = _env("ANTHROPIC_CACHE", "1") == "1"
 OPENROUTER_API_KEY = _env("OPENROUTER_API_KEY")
 OPENROUTER_URL = _env("OPENROUTER_URL", "https://openrouter.ai/api/v1/chat/completions")
 # DeepSeek V3.2 (Jake 2026-10-07: newer and cheaper than deepseek-chat). V4 Pro is a thinking
 # model that spent its whole budget reasoning and answered nothing; it stays as a fallback
 # with reasoning disabled. take/skip + lessons + shadow + scans.
 DECISION_MODEL = _env("DECISION_MODEL", CLAUDE_CHEAP_MODEL if ANTHROPIC_API_KEY else "deepseek/deepseek-v3.2")
-DECISION_MAX_TOKENS = int(_env("DECISION_MAX_TOKENS", "4000"))
+# 16000: thinking tokens are drawn from the same budget on Claude 5.5 (4000 was too small)
+DECISION_MAX_TOKENS = int(_env("DECISION_MAX_TOKENS", "16000"))
 # reasoning control for thinking models (OpenRouter 'reasoning' object), e.g. {"effort":"low"}
 # or {"enabled": false}; empty = send nothing
 DECISION_REASONING = _json.loads(_env("DECISION_REASONING", '{"enabled": false}') or "null")
@@ -115,9 +129,11 @@ TELEGRAM_BOT_TOKEN = _env("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = _env("TELEGRAM_CHAT_ID")
 NOTIFY_SKIPS = _env("NOTIFY_SKIPS", "1") == "1"   # also message skipped setups
 LESSONS_IN_PROMPT = int(_env("LESSONS_IN_PROMPT", "20"))
-# the built-in one-call lesson per settled trade is OFF now that Hermes reviews every trade;
-# its reviews feed the decision prompt instead (set BUILTIN_LESSONS=1 to turn it back on)
-BUILTIN_LESSONS = _env("BUILTIN_LESSONS", "0") == "1"
+# the built-in one-call lesson per settled trade. It was turned off on 2026-10-07 when Hermes
+# took over reviewing; Hermes then went dark for five days (OpenRouter credits) and nothing
+# learned anything. Jake 2026-10-13: ON by default so lessons never depend on Hermes being up.
+# Both feed the decision prompt (prompts._lessons_block). Set BUILTIN_LESSONS=0 to turn it off.
+BUILTIN_LESSONS = _env("BUILTIN_LESSONS", "1") == "1"
 # passages from knowledge/ (full course transcripts, mini lessons, PDFs) added per decision
 KNOWLEDGE_PASSAGES = int(_env("KNOWLEDGE_PASSAGES", "6"))
 
