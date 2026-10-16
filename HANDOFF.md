@@ -270,7 +270,8 @@ Not done, needs a decision from Jake:
   `https://agent.motivationpro.tech/mcp/<AGENT_TOKEN>` (use that for the claude.ai connector).
   Hermes' `loop.sh` adds the token to its `paper` MCP URL at seed time (the repo is public).
 - Telegram (`app/telegram_bot.py`): Jake asks in a dedicated bot chat or posts a chart screenshot
-  (caption = question); `TELEGRAM_MODEL` (Sonnet 5.5) answers with the rule files in its prompt,
+  (caption = question); `TELEGRAM_MODEL` (Haiku 5.5; `/model haiku|sonnet|opus` changes the default,
+  `/deep <question>` sends one question to `TELEGRAM_DEEP_MODEL`, Sonnet 5.5) answers with the rule files in its prompt,
   the same read-only tools as /mcp, and every fvg-mcp tool (prefixed `fvg_`, list cached 10 min);
   purpose `telegram` in the spend log. Live-session transcripts stored in fvg-mcp's Postgres
   (`/transcripts`) are still not reachable: fvg-mcp has no tool for them yet.

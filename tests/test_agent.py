@@ -621,6 +621,16 @@ telegram_bot.handle(42, "", image_id="photo1")
 _q = LLM_TURNS[0]["messages"][-1]["content"]
 ok(_q[0]["type"] == "image" and _q[0]["source"]["media_type"] == "image/png" and "Analyse" in _q[1]["text"],
    "screenshot goes to the model as an image with a default question")
+ok(config.TELEGRAM_MODEL == "claude-haiku-5-5", "Telegram defaults to Haiku")
+LLM_TURNS.clear()
+telegram_bot.handle(42, "/deep why do 2DBs fail?")
+ok(LLM_TURNS[0]["model"] == config.TELEGRAM_DEEP_MODEL and LLM_TURNS[0]["messages"][-1]["content"] == "why do 2DBs fail?",
+   "/deep sends one question to the stronger model")
+telegram_bot.handle(42, "/model opus")
+LLM_TURNS.clear()
+telegram_bot.handle(42, "and now?")
+ok(LLM_TURNS[0]["model"] == "claude-opus-5-5", "/model changes the default")
+telegram_bot.handle(42, "/model haiku")
 ok(telegram_bot._image_file_id({"photo": [{"file_id": "s", "file_size": 10}, {"file_id": "b", "file_size": 99}]}) == "b",
    "largest photo size is used")
 config.TELEGRAM_BOT_TOKEN = config.TELEGRAM_CHAT_ID = ""

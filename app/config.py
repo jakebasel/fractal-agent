@@ -132,8 +132,10 @@ TELEGRAM_BOT_TOKEN = _env("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = _env("TELEGRAM_CHAT_ID")      # only this chat gets answers; empty = reply with the chat id
 PUBLIC_URL = _env("PUBLIC_URL", "https://agent.motivationpro.tech").rstrip("/")   # Telegram webhook base
 # Telegram Q&A: Jake asks in the chat, this model answers with the agent's read-only tools
-TELEGRAM_MODEL = _env("TELEGRAM_MODEL", "claude-sonnet-5-5")
-TELEGRAM_EFFORT = _env("TELEGRAM_EFFORT", "medium")
+TELEGRAM_MODEL = _env("TELEGRAM_MODEL", "claude-haiku-5-5")         # default; /model changes it
+TELEGRAM_EFFORT = _env("TELEGRAM_EFFORT", "low")
+TELEGRAM_DEEP_MODEL = _env("TELEGRAM_DEEP_MODEL", "claude-sonnet-5-5")   # /deep <question>
+TELEGRAM_DEEP_EFFORT = _env("TELEGRAM_DEEP_EFFORT", "medium")
 TELEGRAM_MAX_PER_DAY = int(_env("TELEGRAM_MAX_PER_DAY", "60"))     # questions per ET day
 TELEGRAM_HISTORY = int(_env("TELEGRAM_HISTORY", "8"))               # past messages kept for follow-ups
 NOTIFY_SKIPS = _env("NOTIFY_SKIPS", "1") == "1"   # also message skipped setups

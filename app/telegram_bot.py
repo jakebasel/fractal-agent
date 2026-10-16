@@ -189,14 +189,22 @@ def send(chat_id, text: str):
         _api("sendMessage", chat_id=chat_id, text=text[i:i + 4000], disable_web_page_preview=True)
 
 
-def answer(question, history: list) -> str:
+MODELS = {"haiku": "claude-haiku-5-5", "sonnet": "claude-sonnet-5-5", "opus": "claude-opus-5-5"}
+
+
+def default_model() -> str:
+    return store.kv_get("tg_model") or config.TELEGRAM_MODEL
+
+
+def answer(question, history: list, model: str | None = None, effort: str | None = None) -> str:
     """The tool loop. question: text, or content blocks (image + text). history: past
     {"role", "content": str} turns, oldest first."""
     messages = history + [{"role": "user", "content": question}]
     tools, system = tool_defs(), system_prompt()
+    model, effort = model or default_model(), effort or config.TELEGRAM_EFFORT
     for _ in range(MAX_ROUNDS):
-        data = llm.chat_with_tools(config.TELEGRAM_MODEL, system, messages, tools, max_tokens=16000,
-                                   effort=config.TELEGRAM_EFFORT, purpose="telegram")
+        data = llm.chat_with_tools(model, system, messages, tools, max_tokens=16000,
+                                   effort=effort, purpose="telegram")
         content = data.get("content") or []
         calls = [b for b in content if b.get("type") == "tool_use"]
         if data.get("stop_reason") != "tool_use" or not calls:
@@ -226,12 +234,27 @@ def handle(chat_id, text: str, image_id: str | None = None):
     cmd = text.strip().split()[0].lower() if text.strip() and not image_id else ""
     if cmd in ("/start", "/help"):
         send(chat_id, "Ask me about the paper agent or the live engine, or send a chart screenshot "
-                      "(add a question as the caption). /reset clears the conversation.")
+                      "(add a question as the caption).\n/deep <question> - one answer from the stronger "
+                      f"model ({config.TELEGRAM_DEEP_MODEL})\n/model haiku|sonnet|opus - change the default "
+                      f"(now {default_model()})\n/reset - clear the conversation")
         return
     if cmd == "/reset":
         store.kv_set(hkey, [])
         send(chat_id, "Conversation cleared.")
         return
+    if cmd == "/model":
+        arg = text.strip().split()[1].lower() if len(text.split()) > 1 else ""
+        if arg in MODELS:
+            store.kv_set("tg_model", MODELS[arg])
+        send(chat_id, f"Default model: {default_model()}. Options: {', '.join(MODELS)}.")
+        return
+    model = effort = None
+    if cmd == "/deep" or (image_id and text.strip().lower().startswith("/deep")):
+        model, effort = config.TELEGRAM_DEEP_MODEL, config.TELEGRAM_DEEP_EFFORT
+        text = text.strip()[5:].strip()
+        if not text and not image_id:
+            send(chat_id, "Usage: /deep <question>")
+            return
     with _lock:
         n = int(store.kv_get(_today_key()) or 0)
         if n >= config.TELEGRAM_MAX_PER_DAY:
@@ -256,7 +279,7 @@ def handle(chat_id, text: str, image_id: str | None = None):
                         {"type": "text", "text": text or "Analyse this chart against the rules."}]
         else:
             question = text
-        reply = answer(question, history)
+        reply = answer(question, history, model, effort)
     except Exception as e:
         log.exception("telegram answer failed")
         send(chat_id, f"Error answering: {str(e)[:300]}")
