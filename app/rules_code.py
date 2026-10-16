@@ -4,6 +4,7 @@ consistent). Each returns the rulebook section that fired, or None.
 Rulebook §2: 1 ND, 2 news, 3 window, 6 no/shallow retracement (DB setups).
 """
 import logging
+import re
 import time
 from datetime import datetime, timedelta, timezone
 
@@ -40,10 +41,21 @@ def news_events() -> list | None:
     return _news["events"]
 
 
-def news_rule(when: datetime) -> tuple[str | None, dict]:
-    """(rule that fired or None, what was checked) for rule §2.2 as amended: only red-folder
-    (high-impact) USD releases, only from NEWS_BEFORE_MIN before the release (0: nothing before)
-    to NEWS_AFTER_MIN after it (120). The rest of the day, and other sessions, trade normally."""
+US_ROOTS = ("NQ", "MNQ", "ES", "MES", "YM", "MYM", "RTY", "M2K", "NAS100", "US100", "US500", "SPX500",
+            "US30", "US2000")
+_CPI_PPI = re.compile(r"\b(CPI|PPI)\b", re.I)
+
+
+def is_us_index(symbol: str | None) -> bool:
+    s = (symbol or "").upper().split(":")[-1]
+    return s in US_ROOTS or re.sub(r"\d!$", "", s) in US_ROOTS
+
+
+def news_rule(when: datetime, symbol: str | None = None) -> tuple[str | None, dict]:
+    """(rule that fired or None, what was checked) for rule §2.2 as amended: on a CPI or PPI
+    release day (ET) US-related assets are skipped all day (Jake 2026-10-16, following the
+    instructor); otherwise only red-folder (high-impact) USD releases, from NEWS_BEFORE_MIN
+    before the release (0: nothing before) to NEWS_AFTER_MIN after it (120)."""
     if not config.NEWS_FILTER:
         return None, {"checked": False}
     evs = news_events()
@@ -54,6 +66,11 @@ def news_rule(when: datetime) -> tuple[str | None, dict]:
     info = {"checked": True,
             "today": [f'{e["at"].astimezone(config.ET):%H:%M} {e["title"]}' for e in today],
             "bracket_min": [config.NEWS_BEFORE_MIN, config.NEWS_AFTER_MIN]}
+    cpi_ppi = [e for e in today if _CPI_PPI.search(e["title"] or "")]
+    if cpi_ppi and is_us_index(symbol):
+        e = cpi_ppi[0]
+        return (f"§2.2 CPI/PPI release day: no US-related assets ({e['title']} at "
+                f"{e['at'].astimezone(config.ET):%H:%M} ET)"), info
     for e in today:
         delta_min = (when - e["at"]).total_seconds() / 60
         if -config.NEWS_BEFORE_MIN <= delta_min <= config.NEWS_AFTER_MIN:
@@ -110,7 +127,7 @@ def hard_rules(entry: dict, detail: dict, now: datetime) -> tuple[list[str], dic
     if detail.get("trend_fallback"):
         fired.append("§2.1 no Market Translator signal (ND / trend-fallback)")
     at = _iso_to_dt(entry["at"])
-    news_fired, info = news_rule(at)
+    news_fired, info = news_rule(at, entry.get("symbol"))
     if news_fired:
         fired.append(news_fired)
     if _is_db(entry, detail) and (detail.get("retrace") or "").lower() in ("none", "shallow"):

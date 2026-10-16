@@ -23,6 +23,15 @@ normally; London is unaffected by a US release at 8:30 or 14:00 ET. The "CPI/PPI
 (a hypothesis tests it). A live speech is still untradeable while it runs (judgment call for
 the model when the chart read or news list shows one).
 
+## 2026-10-16 — CPI/PPI release days: no US-related assets all day (Jake)
+Follows the instructor (live sessions 2026-10-15: "Do not be trading any US-related assets on PPI
+day, CPI day. It's just not smart."). On any ET day with a CPI or PPI release (core or headline),
+US-related assets (NQ, ES, YM, RTY and their micros; NAS100, US500, US30, US2000) are SKIP for
+the whole day, every session, before and after the release. Supersedes the 2-hour bracket of
+2026-10-07 for CPI/PPI only; other red-folder USD releases keep the bracket. Non-US assets
+(gold, FX, oil, Japan 225, Europe) trade normally outside the bracket. The rest of a CPI/PPI
+WEEK is not affected.
+
 ## 2026-10-07 — 2DB is never traded (Jake)
 A 2DB (two Double Breaks) is a SKIP, always. It is the overarching reason: when a 2DB also
 falls outside the window or has a bad retracement, the skip is reported as "2DB", not as the
