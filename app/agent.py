@@ -624,6 +624,11 @@ def tick(fvg: FVG):
         learning.run_shadow()
     except Exception as e:   # the learning loop must never stop the review loop
         log.warning("shadow failed: %s", e)
+    ph.start("assess")
+    try:
+        learning.assess_next()
+    except Exception as e:
+        log.warning("hypothesis assessment failed: %s", e)
     ph.start("csv")
     if changed:
         store.write_csv_file()

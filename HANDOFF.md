@@ -107,8 +107,8 @@ Not deployed yet. Steps:
    - `AGENT_TOKEN` — any long random string; protects `/screenshot` and `/log.csv`. The same
      value goes on the tv-capture app.
    - `DASHBOARD_PASSWORD` — login for the dashboard at `/`.
-   - Optional: `JEV_MODE` (shadow | gate | off), `NEWS_FILTER` (1), `MAX_TESTING_HYPOTHESES` (8),
-     `MIN_N_FOR_VERDICT` (30).
+   - Optional: `JEV_MODE` (shadow | gate | off), `NEWS_FILTER` (1), `MAX_TESTING_HYPOTHESES` (16),
+     `REASSESS_HOURS` (24).
    - Optional: `DECISION_MODEL` (default `deepseek/deepseek-chat`), `VISION_MODEL` (default
      `google/gemini-2.5-flash`), `SYMBOLS` (default `MNQ1!,MES1!`), `POLL_SECONDS` (15),
      `FVG_MCP_URL` (default public URL; inside Coolify the internal container URL is faster).
@@ -278,6 +278,13 @@ Not done, needs a decision from Jake:
   `TELEGRAM_CHAT_ID` (leave empty first; the bot replies with the id to set), optional
   `TELEGRAM_MAX_PER_DAY` (60), `TELEGRAM_EFFORT` (medium), `PUBLIC_URL`. The webhook registers
   itself on start-up. `/reset` clears the conversation.
+
+- Hypotheses (Jake 10/16): the core strategy is fixed; a hypothesis is an ENTRY FILTER (which
+  entry types, assets, sessions or contexts to skip) judged on the win rate and avg R of the trades
+  it keeps. No minimum trade count: each testing hypothesis gets a written case
+  (`learning.assess`, purpose `hypothesis`): theory from the rules/course passages, the changed
+  trades, counter-evidence, a recommendation (adopt / reject / keep watching). Redone when new
+  changed trades settle or every `REASSESS_HOURS`. Jake still clicks Approve.
 
 ## VPS screenshot capturer (tv-capture/)
 

@@ -116,10 +116,13 @@ SCAN_WINDOWS = _env("SCAN_WINDOWS", "02:00-04:00,09:25-11:00,13:00-15:00,20:00-2
 SCAN_SHOTS_KEEP_DAYS = int(_env("SCAN_SHOTS_KEEP_DAYS", "14"))   # archived scan screenshots
 
 # --- learning loop ------------------------------------------------------------------------------
-MAX_TESTING_HYPOTHESES = int(_env("MAX_TESTING_HYPOTHESES", "8"))
+MAX_TESTING_HYPOTHESES = int(_env("MAX_TESTING_HYPOTHESES", "16"))
 SHADOW_PER_TICK = int(_env("SHADOW_PER_TICK", "3"))        # shadow re-decisions per loop
 SHADOW_BACKFILL_DAYS = int(_env("SHADOW_BACKFILL_DAYS", "60"))
-MIN_N_FOR_VERDICT = int(_env("MIN_N_FOR_VERDICT", "30"))   # settled trades before a hypothesis is "ready"
+# Jake 2026-10-16: no fixed trade count before a verdict. Each hypothesis gets a written case
+# (theory from the rules/course + the trades it changed + what argues against it) and is
+# re-assessed when new changed trades settle or after REASSESS_HOURS.
+REASSESS_HOURS = float(_env("REASSESS_HOURS", "24"))
 
 # --- dashboard ----------------------------------------------------------------------------------
 DASHBOARD_PASSWORD = _env("DASHBOARD_PASSWORD")   # empty = dashboard closed

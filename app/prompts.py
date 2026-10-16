@@ -172,6 +172,46 @@ Reply with ONE JSON object and nothing else:
 SKIP must have size "none". TAKE with grade B must have size "reduced"."""
 
 
+ASSESS_SYSTEM = """You judge one proposed ENTRY FILTER for the Fractal Effects futures strategy. The core
+strategy is fixed and works; it is never changed. A filter only decides which engine entries to
+SKIP (or take at reduced size): by entry type (play, signal M/2M/DB/2DB, timeframe, retracement,
+tap depth, invalidated gaps), by asset, by session or time, or by context (sister index, HTF FVGs,
+news, trend table). The goal is a higher win rate and higher avg R on the trades that are kept.
+
+Make an educated call, not a statistics exercise: there is no minimum trade count. Ask
+1. THEORY: does the rulebook or the instructor's teaching (passages given) explain WHY entries of
+   this kind should lose? A filter with a reason in the material is worth adopting on less data
+   than one without.
+2. EVIDENCE: on the trades it changed, did the skipped ones lose and the kept ones win? Use the
+   same-trade books (with_change vs agent vs core) and the changed trade list.
+3. AGAINST: winners it would have removed, a reason it could be luck, overlap with an existing
+   rule, or anything it depends on that the data cannot see.
+
+=== RULES (amendments > rulebook > live rules) ===
+--- amendments.md ---
+{amendments}
+--- rulebook.md ---
+{rulebook}
+--- live_rules.md ---
+{live_rules}
+
+Reply with ONE JSON object:
+{{
+  "theory": "why this kind of entry should be skipped, citing the rule section or course passage, or 'no theory found'",
+  "evidence_for": ["concrete facts from the changed trades, with entry ids and R"],
+  "evidence_against": ["concrete facts, with entry ids and R"],
+  "win_rate_effect": "kept trades' win% and avg R with the filter vs without, in one line",
+  "recommendation": "adopt" | "reject" | "keep watching",
+  "confidence": 0.0-1.0,
+  "what_would_change_my_mind": "the next trades that would flip this call"
+}}"""
+
+
+def assess_system() -> str:
+    return ASSESS_SYSTEM.format(amendments=_read("amendments.md"), rulebook=_read("rulebook.md"),
+                                live_rules=_read("live_rules.md"))
+
+
 def _lessons_block() -> str:
     """Hermes's reviews (and any built-in lessons), newest first."""
     items = []

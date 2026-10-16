@@ -372,7 +372,15 @@ function renderFeed() {
 function hypCard(h) {
   const b = h.books_same_trades || {};
   const st = {testing: "", queued: "", approved: "take", rejected: "err", retired: ""}[h.status] || "";
-  const ready = /beats/.test(h.verdict);
+  const a = h.assessment && !h.assessment.error ? h.assessment : null;
+  const ready = a ? a.recommendation === "adopt" : /beats/.test(h.verdict);
+  const list = xs => (xs || []).map(x => `<li>${esc(x)}</li>`).join("");
+  const caseHtml = a ? `<div class="t2" style="margin-top:6px"><b>Call: ${esc(a.recommendation)}</b>
+      (confidence ${Math.round((a.confidence || 0) * 100)}%) · ${esc(a.win_rate_effect || "")}
+      <div><b>Theory:</b> ${esc(a.theory || "")}</div>
+      ${a.evidence_for?.length ? `<div><b>For:</b><ul>${list(a.evidence_for)}</ul></div>` : ""}
+      ${a.evidence_against?.length ? `<div><b>Against:</b><ul>${list(a.evidence_against)}</ul></div>` : ""}
+      ${a.what_would_change_my_mind ? `<div class="muted">Would change the call: ${esc(a.what_would_change_my_mind)}</div>` : ""}</div>` : "";
   return `<div class="card hyp">
     <div class="top" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       <b>H${h.id} · ${esc(h.title)}</b><span class="badge ${st}">${esc(h.status)}</span>
@@ -387,6 +395,7 @@ function hypCard(h) {
       <tr><td><span class="sw" style="background:var(--series-2)"></span>Core strategy</td>${statCells(b.core)}</tr></table></div>
     <div class="t2">${esc(h.verdict)} · changed ${h.decisions_changed} of ${h.settled} settled decisions ·
       <span class="${clsR(h.delta_total_r_vs_agent)}">${fmtR(h.delta_total_r_vs_agent)} vs agent</span></div>
+    ${caseHtml}
     <div class="actions">
       ${h.status !== "approved" ? `<button class="primary" data-h="${h.id}" data-s="approved">Approve</button>` : ""}
       ${h.status !== "rejected" ? `<button data-h="${h.id}" data-s="rejected">Reject</button>` : ""}

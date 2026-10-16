@@ -104,6 +104,10 @@ def fake_post(model, messages, max_tokens=1500, temperature=0.1, purpose="other"
     if "review a finished PAPER trade" in sysmsg:
         return '```json\n{"verdict":"right_take","lesson":"DB retrace into purple worked","rule_ref":"§3",' \
                '"proposal":"IF the DB retrace taps a purple zone THEN TAKE full size","proposal_title":"Purple zone DB full"}\n```'
+    if "proposed ENTRY FILTER" in sysmsg:
+        assert "Hard rules" in sysmsg and "course_passages" in messages[1]["content"]
+        return '{"theory": "§2.6 runaway DB", "evidence_for": ["#1 -1R"], "evidence_against": [],' \
+               '"win_rate_effect": "40% -> 50%", "recommendation": "adopt", "confidence": 0.6}'
     if "file proposed rule changes" in sysmsg:
         return '{"same_as": null, "title": "Purple zone DB full"}'
     if "re-deciding a PAPER trade" in sysmsg:
@@ -343,6 +347,13 @@ ok(found and store.scans(1)[0]["play"] == "5m DB reversal set up", "scanner logs
 ok(scanner.scan(fvg, cr, "x.jpg", _dt2(2026, 10, 7, 9, 41, tzinfo=ET)) is None, "scanner does not re-scan the same screenshot")
 config.DAILY_BUDGET_USD = 0.000001
 ok(store.over_budget() and learning.run_shadow() == 0, "budget guard pauses shadow tests")
+ok(learning.assess_next() is False, "budget guard pauses hypothesis assessments")
+_h = store.hypotheses("testing")[0]
+_a = learning.assess(_h)
+ok(_a["recommendation"] == "adopt" and learning.hypothesis_result(_h)["assessment"]["theory"].startswith("§2.6"),
+   "hypothesis gets a written theory + evidence case")
+ok(not learning._assess_due(_h, learning.hypothesis_result(_h)), "case is not redone until new changed trades or 24h")
+ok("collecting data" not in learning.hypothesis_result(_h)["verdict"], "no fixed trade count before a verdict")
 config.DAILY_BUDGET_USD = 1.5
 llm._post = fake_post
 r = c.post("/screenshot?token=tok&kind=fallback", content=b"\xff\xd8x")

@@ -140,8 +140,8 @@ def hypothesis_result(h) -> dict:
     delta = round((s_book.get("total_r") or 0) - (a_book.get("total_r") or 0), 2)
     changed = [x for x in rows if x["changed"]]
     n = len(rows)
-    if n < config.MIN_N_FOR_VERDICT:
-        verdict = f"collecting data ({n}/{config.MIN_N_FOR_VERDICT} settled)"
+    if not changed:
+        verdict = f"no decision changed yet ({n} settled)"
     elif delta > 0 and (s_book.get("max_dd_r") or 0) >= (a_book.get("max_dd_r") or 0) - 1:
         verdict = "beats the agent: review for approval"
     elif delta > 0:
@@ -157,7 +157,57 @@ def hypothesis_result(h) -> dict:
         "books_same_trades": {"with_change": s_book, "agent": a_book,
                               "core": store.summarize(core)},
         "delta_total_r_vs_agent": delta, "verdict": verdict,
+        "assessment": store.kv_get(f"hyp_assess:{h['id']}"),
     }
+
+
+def _assess_due(h, res) -> bool:
+    a = res.get("assessment")
+    if not a:
+        return True
+    if res["decisions_changed"] > (a.get("changed_at_assessment") or 0):
+        return True
+    age_h = (datetime.now(timezone.utc) - datetime.fromisoformat(a["at"])).total_seconds() / 3600
+    return age_h >= config.REASSESS_HOURS
+
+
+def assess(h) -> dict:
+    """The case for and against one hypothesis: the theory behind it (rules + course passages),
+    the trades it changed, what argues against it, and a recommendation for Jake."""
+    from . import knowledge
+    res = hypothesis_result(h)
+    changed = [{"entry_id": x["entry_id"], "symbol": x["symbol"], "entry_at_et": store.to_et(x["entry_at"]),
+                "agent": f"{x['real_decision']} {x['real_size']}", "with_change": f"{x['decision']} {x['size']}",
+                "r_full_size": x["r"], "why_changed": x["why"]}
+               for x in store.shadows_for(h["id"]) if x["changed"]][-25:]
+    passages = knowledge.index().search(h["rule"][:400], k=5)
+    payload = {"hypothesis": {k: res[k] for k in ("id", "title", "rule", "rule_ref", "source", "note", "support")},
+               "same_trades": res["books_same_trades"], "delta_total_r_vs_agent": res["delta_total_r_vs_agent"],
+               "settled": res["settled"], "decisions_changed": res["decisions_changed"],
+               "changed_trades": changed, "course_passages": passages}
+    out = llm.decide(prompts.assess_system(), json.dumps(payload, default=str), purpose="hypothesis")
+    rec = str(out.get("recommendation") or "").lower()
+    out["recommendation"] = rec if rec in ("adopt", "reject", "keep watching") else "keep watching"
+    out["at"] = store.now_utc()
+    out["changed_at_assessment"] = res["decisions_changed"]
+    store.kv_set(f"hyp_assess:{h['id']}", out)
+    return out
+
+
+def assess_next() -> bool:
+    """One assessment per tick: the testing hypothesis whose case is missing or out of date."""
+    if store.over_budget():
+        return False
+    for h in store.hypotheses("testing"):
+        if _assess_due(h, hypothesis_result(h)):
+            try:
+                assess(h)
+            except Exception as e:
+                log.warning("assess H%s failed: %s", h["id"], e)
+                store.kv_set(f"hyp_assess:{h['id']}", {"at": store.now_utc(), "error": str(e)[:200],
+                                                       "changed_at_assessment": 10**9})
+            return True
+    return False
 
 
 def daily_stop_book(rows, r_key, stop_r=-2.0):
@@ -269,6 +319,6 @@ def report(days: float = 30) -> dict:
         "hypotheses": [hypothesis_result(h) for h in store.hypotheses(["testing", "queued", "approved"])],
         "spend": store.spend(since),
         "note": "core = mechanical strategy (every engine entry, full size). agent = AI paper book. "
-                "Hypotheses are compared on the same settled trades. Small n is noise: wait for "
-                f"{config.MIN_N_FOR_VERDICT}+ settled trades before acting on any row.",
+                "Hypotheses are compared on the same settled trades; each carries a written case "
+                "(theory + changed trades + counter-evidence). Few changed trades = weak evidence.",
     }

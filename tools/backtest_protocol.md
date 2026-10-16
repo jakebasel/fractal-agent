@@ -29,7 +29,7 @@ tweak that looks good is actually good, not just lucky on the trades we happened
 6. **One tweak at a time.** Tweaks are stacked only after each passed alone, and the stack is
    re-run as a whole.
 7. **Then the live shadow test.** A passed tweak becomes a hypothesis on the dashboard and runs
-   on new trades (`MIN_N_FOR_VERDICT`) before Jake approves it into `rules/amendments.md`.
+   on new trades, with a written theory + evidence case (`learning.assess`), before Jake approves it into `rules/amendments.md`.
 
 What DeepSeek is for in this loop: proposing tweaks in the DSL from the breakdown tables and the
 rulebook (`tools/backtest.py --propose`, ~1 cent per round), and writing the plain-language
