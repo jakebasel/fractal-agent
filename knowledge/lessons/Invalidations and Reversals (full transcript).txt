@@ -1,0 +1,413 @@
+# Invalidations and Reversals training video, full transcript
+Source: fvg-mcp Transcripts page (Postgres), uploaded 2026-08-18 as "training_invalidations_and_reversals.txt". Raw speech-to-text: speakers are not labelled, times are the instructor's Pacific clock (ET minus 3 h).
+
+Fair Value Gap Invalidations
+An invalidation of a specific fair value gap, FBG, occurs when a candle closes above or below the leg that created that fair value gap.
+And the following candle fails to rebalance price back into that range.
+When this happens, the fair value gap is considered invalid.
+And we wait for the market to form a new valid fair value gap before looking for the next opportunity.
+However, if price temporarily sweeps beyond the leg through a wick or even a candle close, and then re-enters and re-balances back into the original range, the fair value gap has not necessarily been invalidated.
+Instead, this is often considered a stop hunt, a market manipulation tactic designed to trigger traders' stop losses and remove liquidity before continuing in the original direction of the trend.
+And we're going to take a look at what that actually looks like on a chart.
+So anytime you're looking to invalidate a fair value gap, you have to sweep and close above or below the leg that contains that specific fair value gap.
+Right?
+So here we had an M signal.
+There was your five-minute fair value gap.
+Market came back, tapped it, created a one-minute fair value gap right there.
+So this fair value gap is still in play until the market drops and closes on the same time frame.
+It has to be on the one-minute.
+So a one-minute candle has to close below the leg that has the one-minute fair value gap in it.
+Okay?
+Now, when you're measuring the legs, keep in mind you want to see progressive candles.
+Each progressive candle has to close above the previous candle.
+Wick and all.
+The wick has to be above as well.
+At any point, you see a candle drop below the previous candle.
+So if this next candle had dropped, even wicked under here, that would have started a new leg up.
+So the definition of a leg is candles going in the same direction, be it up or down, without taking out the previous candles high or low.
+So if we're going up, each candle that is printed cannot take out the previous candles low.
+That's it.
+So it's not just a matter of seeing a green candle.
+So the wick cannot go below the previous candle's wick.
+So it has to be progressively going up.
+Now, if a candle is printed inside, right?
+So if this next candle was printed right here inside the range, then that's just in this candle's shadow.
+So this is still the actual candle.
+Anything that's printed within this candle is just in this candle's shadow and it doesn't count.
+This is still the next candle.
+And then we have to see if the next candle from the shadow actually prints above or below.
+So that's how we count a leg.
+Now here, same thing, this leg is going down, right?
+Each candle has not taken out the previous candle's high.
+It can take out the candle's low, obviously, as it's going in that direction.
+That's a trend, right?
+But the second a candle's wick goes above the previous candle's wick, that starts a new leg.
+So that's how we count a leg.
+Candle's heading in the exact same direction without taking out the previous candle's high or low.
+Can't take out the previous candle's low when we're going up.
+Can't take out the previous candle's high when we're going down.
+And yes, wicks count.
+So here, there's the one-minute fair value gap that was printed in this leg.
+And what did we do?
+We closed one minute candle closed below the leg that contained the one-minute fair value gap in it.
+Now, if the next candle that's printed does not bring us back into the range,
+then this one-minute fair value gap is invalidated.
+And we have to look for another one-minute bullish fair value gap to be created.
+And then tapped and then the 30 second off of that.
+But if this next candle brings us back into the range, let's say this was a green candle back into the range,
+then we can look at this as just a stop hunt by the market designed to take out everybody's stops who already jumped in.
+And then it's going to continue up in the same direction of the original trend as the original bias.
+So we have to close below it.
+And then the next candle is going to be the candle of focus.
+Does it bring us back into the range?
+Or does it just close here and or continue down?
+So either way, we would invalidate that unless we get an immediate rebalance into the range.
+And we'll see what that looks like on a live chart next.
+So here we are.
+A Bitcoin example in the one-minute.
+There's your one-minute signal.
+There's the first presented fair value gap on the one-minute.
+Market came back.
+Tapped it.
+There's the first 30-second fair value gap.
+So now when we drop down to the lower time frame.
+As you can see, that's the 30-second fair value gap.
+Or if it came back and tapped it.
+Actually, if we zoom in.
+There's an even smaller one right here that I actually missed.
+Right here between these two candles.
+Right there.
+So as the market came back and tapped it, we did not close under here.
+Right?
+The market just wicked it.
+So that's a stop hunt.
+Took out all that liquidity for anybody who already went in long there.
+And that was their stop right here.
+So it wicked it.
+And then had an immediate rebalance back into the range and continued up.
+So this is still a valid 30-second fair value gap.
+We can use this.
+And as soon as we get a closure above this line, we can take this.
+And this turned out to be a 1 to 2.36.
+So once we got to 2R, we would have rolled our stops and been in safe trade.
+So this is actually a good trade.
+But now imagine this candle had actually closed under this line right here.
+If we had had a closure under that, this would have been invalidated completely.
+So we would have had to look for a new 30-second fair value gap to be created.
+Now, if this closed under here, right?
+Instead of just wicking, if this candle had closed under this line, and the next candle
+immediately rebalanced us back in, just like this one did, right?
+This one wicked, and then this one went up.
+So if this one closed under here, but the next one was a green candle back into the range,
+back above this line, then this is still valid.
+And we can still take a play after it closes above here.
+But one candle close under here.
+And if the next one does not rebalance us and closes under here as well, we're done.
+That's it.
+This 30-second is invalidated.
+And then we look for the next 30-second fair value gap to be created,
+which would have been right here.
+Much bigger one, but that's the next one.
+And then this becomes the new low, right?
+So this is the leg that has the 30-second fair value gap in it.
+If we close below the leg, then it's invalidated.
+And now this works for every single time frame.
+So on the one minute, if we run right past the one minute fair value gap
+and close under the leg that contains that fair value gap,
+then that one minute is invalidated.
+So you can only invalidate a fair value gap on the same time frame you're looking at it.
+It would have to be a one minute candle close under the one minute candle leg.
+Just like here, this is a 30-second fair value gap.
+And we were looking for a 30-second candle close under the 30-second leg.
+So once again, this was the original play.
+If we had closed under this line with a 30-second fair value, sorry, a 30-second candle,
+and then that next candle did not immediately rebalance us back above this line,
+then that would have been invalidated.
+And we would have had to look for a new 30-second fair value gap, which would have been this one.
+But since that didn't happen, we could actually play that 30-second fair value gap, that original one.
+I'll just back this up.
+Right here.
+And it's still in play.
+They did a stop hunt, sweeped out that liquidity, came back, closed above,
+and we could have taken it right there at that line.
+One-minute reversal, telltale signs that the market may be reversing.
+Remember, there's two things happening, right?
+We're looking at the market on two different fractals.
+Obviously, we start looking at the market translator on the one-minute and see if there's a setup there.
+And we try to catch it into the five-minute.
+But a double break on a one-minute is technically still just a M signal on a five-minute.
+So we want to see, is the one-minute strategy going to pan out, the double break retracement and continuation,
+or is the five-minute strategy going to pan out, the manipulation five-minute fair value gap entry to go in that direction?
+So there are three key factors that can reduce our 80% directional bias after a dB on the one-minute to a 50%,
+signaling a potential reversal may be developing.
+So first criteria, price hits a higher time frame fair value gap, FVG, such as a daily or four-hour fair value gap.
+Two, price sweeps the leg containing the 5M signal, indicating that liquidity may have been taken.
+And three, a 5M fair value gap forms, which can act as an entry for the 5M setup.
+When all three conditions occur, the probability of the original directional bias decreases.
+It goes from 80% to 50%.
+At this point, we can only take a setup into the 5-minute fair value gap.
+So we can take that double break setup, double break retracement entry, into the 5-minute fair value gap that's been created.
+So we want to be in a safe trade by the time we hit there, where we have to be, again, in a safe trade by the time we tap the 5-minute fair value gap.
+After which, price could push through the fair value gap and create a new 1-minute fair value gap inside of it,
+which would suggest continuation in the direction of the 1-minute double break.
+However, if price respects this fair value gap and fails to create new fair value gaps in the direction of the double break,
+while forming new fair value gaps in the opposite direction of that double break,
+this provides confirmation that a potential reversal is taking place.
+Now, that might sound a little confusing, and don't worry, we're going to actually have a visual representation of it,
+and then we'll jump onto the chart to show you what it actually looks like.
+So now, we're going to take a look at what a 1-minute reversal possibly looks like,
+or rather, a 5-minute reversal, but a 1-minute potential continuation.
+So when you get a double break signal on the 1-minute time frame, we're still looking for that setup, right?
+So what happens after a double break?
+We have a retracement, and then we look for a setup to go long, right here, first presented fair value gap.
+But now, this is the 5-minute.
+So there's the same M signal right here, right?
+Now, let's say the market dropped and took out the signal right here, sorry, the leg that contains the M signal in it,
+and left a 5-minute fair value gap, right?
+So now we're looking at a potential reversal pattern.
+So there's three things that we're looking for for a potential reversal to happen.
+And when I say reversal, I mean on the lower time frame, the double break might not get fulfilled.
+We might not get a double break, pullback, and a push to take out the double break high.
+Because on the 5-minute, what we might have is the M signal candle hit a 4-hour fair value gap.
+That's what this red box is right here.
+We're imagining this is a 4-hour fair value gap that we hit.
+So a higher time frame fair value gap was hit.
+Remember, that can cause a reversal.
+That's the first criteria.
+Second criteria, we took out the bottom of the leg that contains the M signal in it, right?
+We closed.
+We swept and closed right down here.
+Now, you don't even have to close.
+You just have to sweep this low.
+That's criteria number two.
+We swept out that liquidity.
+What's criteria number three?
+We left a 5-minute fair value gap, right?
+So that's what the strategy looks like on the 5-minute.
+We get an M signal, and we look for the first 5-minute fair value gap to be created.
+Market to come back into it.
+Tap it 1 minute, 30 second, and we go short here.
+So now two things are happening.
+On the lower time frame, we have a double break to the upside, meaning that the market wants to do a retracement and push up.
+But on the 5-minute, we have the M signal right into a 4-hour fair value gap, and then we have a 5-minute fair value gap set up to go short, right?
+So what do you do in a situation like this?
+Well, this is when our probabilities are decreased from 80% down to 50%.
+There's a 50% chance we could get a reversal.
+So if you're looking for this double break to continue after this retracement, we want to make sure we don't take out that leg.
+And we want to make sure we don't print a 5-minute fair value gap.
+All of those actually help us with our probability that the lower time frame double break will continue and be fulfilled.
+So then we would look for a setup to go long and take out this high, right?
+Just like the 1-minute strategy, which we're not going to go over right now.
+We're just talking about reversals.
+But now the other thing that can happen, once again, once this low is taken, now the probabilities are decreased to 50%.
+So we want to proceed with caution.
+So as the market comes back into here, we could look for a potential sell setup.
+But we already have a double break here, right?
+Double break, retracement, extension, right?
+Well, guess what?
+We could still do it here.
+As we drop, there's a high probability that the market's going to come back to this fair value gap because it's the only fair value gap that it printed.
+So even if the 5-minute is going to continue down, it's going to do it from here.
+So if we do have a buy setup here on the 1-minute, I can take it right into this 5-minute fair value gap.
+But I want to be in a safe trade by the time I hit this 5-minute fair value gap.
+And we'll see what that looks like on a live chart next.
+So we can take a long setup right into here.
+And then in here, this is going to be the deciding factor.
+Does the market punch through and continue up?
+Or does it bounce off of here and stick with the 5-minute play, which is, again, manipulation.
+5-minute fair value gap, tap, 1-minute 30-second to go short.
+So as soon as we hit here, I want to see what prints next.
+Do we get a bullish candle in here, a bullish fair value gap that's printed in here on the 1-minute?
+Or do we get a tap and an immediate rebalance and a bearish fair value gap that's printed?
+So we call that the battle of the fair value gaps.
+Whatever is going to print in here is going to be a higher probability of continuation.
+Bullish up to fulfill the double break.
+A bearish down to take the lows here in the 5-minute setup to go short from this manipulation play.
+So once again, don't want it to get too confusing.
+We are going to show you what it looks like on the live chart next.
+But if there is a buy setup on the 1-minute, I am going to take it into this 5-minute.
+I just want to be in a safe trade by the time I hit this 5-minute fair value gap.
+By safe trade, I mean I want to roll my stops to break even and I want to close off 50% of my position.
+And then we'll see what happens here.
+If I'm already in the trade, then obviously I'm hoping it continues.
+But if it reverses and takes me out, I can then potentially look for a short setup to go down with it.
+But those are the two plays that we want to be conscientious of when we have this reversal pattern set up.
+So ideally, we want to continue with this double break.
+We don't want to sweep out the double break, sorry, the manipulation leg.
+And we don't want to print a 5-minute fair value gap.
+We just want to have a double break, drop, set up to go long.
+But if these happen, if you hit a higher time frame fair value gap, like this red one, and you create a 5-minute fair value gap,
+and you sweep the M leg, then you would look for a sell setup from here.
+And if there is a buy setup, you can take it into here as long as you're in a safe trade by the time you hit this fair value gap.
+And we'll take a look at the live chart next.
+There's a great example.
+There was your M signal.
+Market kept just dropping away.
+And we had a double break.
+Now we double broke right into a 4-hour fair value gap.
+That's what this purple box is right here.
+So we've already hit the first criteria in a potential reversal.
+We hit a higher time frame fair value gap, 4-hour.
+So now this aqua line marked out here is the next fair value gap that was created on the 5-minute.
+And again, I'll show you guys this on the higher time frame.
+But that's criteria number 2.
+We've created a fair value gap.
+Then the market continued up and eventually just kept going until it swept out the leg that has the M signal in it.
+Both the double break and the M signal.
+So when I go up one here,
+we back it up.
+There's the M signal.
+Here's the high of the leg that contains the M signal.
+So on the 5-minute, we had an M signal.
+And then eventually we hit the 4-hour fair value gap.
+No double break here on the higher time frame, right?
+So what do you get after an M signal?
+First presented fair value gap right here.
+So then, sorry.
+Right there.
+Got a little moved around.
+So first presented fair value gap that we had there.
+Market came back, tapped it.
+And then we had another one-minute fair, a lot of consolidation.
+And then eventually a fair value gap created, I believe, right here.
+That was the first one between candle 1 and candle 3.
+So that's how we get a reversal.
+So even though we had a double break on the lower time frame,
+here we had the M signal.
+First presented fair value gap.
+Market swept out the high, the leg that contains the M in it.
+And then when it came back,
+it bounced off the midpoint, technically.
+Let's just consider this midpoint here.
+So it bounced off of here and then set up to go long.
+So that's how a reversal can happen.
+Those three steps we're looking for.
+Hitting a higher time frame fair value gap,
+right here, sweeping out the leg that has the M in it,
+two, and leaving a five-minute fair value gap.
+So when the market hits it,
+we can then try and see if we're actually going to continue with the 1M setup,
+which is M signal, fair value gap,
+tap, one minute, 30 second to go long.
+Now, if for whatever reason we hit this fair value gap
+and we actually created a bearish one-minute fair value gap right through here,
+then we can see, paint that out,
+and then we can see what the market's going to do there
+and see if it actually wants to continue down to complete that double break.
+And sometimes it can.
+It can continue on to complete that double break on the lower time frame.
+But this is where we would see that battle of the fair value gaps happening
+inside this 5M fair value gap.
+So we would see,
+is it going to bounce off of here and create a bullish fair value gap
+and reverse?
+Or is it going to hit here and create a one-minute bearish fair value gap,
+tap it, and then go short?
+But it would all be decided here.
+But those three criteria bring down our probability
+from between a 70% and 80% chance that the market
+is going to fulfill that double break signal
+and complete that fractal
+to a potential reversal
+and see if it's going to continue with the 5-minute signal,
+which is just a single end.
+There's no double break here.
+So it would all be decided right here at this fair value gap.
+Are we going to punch through it,
+create a bearish fair value gap,
+tap it, and go short?
+Or are we going to bounce off of it like it did,
+create a one-minute, tap it, and then continue?
+And that's the reversal.
+So it's a reversal on the lower time frame,
+but on the higher time frame, 5-minute,
+it's really just an M signal, fair value gap.
+So there's your manipulation drop into a higher time frame
+set up to go long, right?
+So we want to see,
+is it going to fulfill the lower time frame signal
+or is it going to fulfill the higher time frame signal
+on the 5-minute versus the 1-minute?
+But that's how we decide.
+We figure it out right here.
+So here's another thing you could do.
+So since we know that it's going to be most likely decided here,
+if a short setup happens here,
+you can technically take that short setup
+so there was no fair value gap.
+I believe this is the first one right here.
+right in there.
+We had a minor tap.
+Right here.
+And then you can use that setup
+to look for a 30-second and a short
+right back into the 5-minute fair value gap.
+Right?
+So either you can take that short
+as far as the double break
+to the downside on the lower time frame,
+pull back,
+set up,
+back here,
+
+
+
+back here,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+or once again,
+you can look here to see if the market's going to reverse
+and head
+in the direction
+of the M signal on the 5-minute.
+So those are the two plays.
+You could either,
+once again,
+on the lower time frame,
+double break,
+retracement,
+deep, deep retracement here.
+Look for a sell setup
+and you want to take that
+into that first presented fair value gap
+or you wait for the market to tap here
+and look for a potential reversal setup to go long.
+So you could still technically take this short into here,
+but you want to be in a safe trade
+by the time you just skim
+or hit this fair value gap
+because the market, once again,
+could reverse,
+which is exactly what it did here.
