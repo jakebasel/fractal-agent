@@ -33,6 +33,8 @@ from pathlib import Path
 from . import agent, config, jev, learning, store, symbols, telegram_bot
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
+# httpx logs every request URL at INFO; Telegram URLs carry the bot token
+logging.getLogger("httpx").setLevel(logging.WARNING)
 log = logging.getLogger("main")
 
 

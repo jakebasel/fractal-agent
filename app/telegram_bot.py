@@ -48,6 +48,14 @@ Tools:
 - knowledge_search: the 9 course modules, mini lessons, SOP and live-session transcripts. Use it
   to quote the instructor when a call depends on his teaching.
 
+Coverage: the paper agent itself only decides MNQ1!/MES1!, but fvg-mcp tracks ~150 futures
+symbols. Never say only MNQ/MES are tracked. For "what is setting up now / best trade" questions:
+fvg_recent_events(source="market_translator", limit=40) for fresh signals on every symbol and
+fvg_entries(limit=30) for the newest validated entries; rank the candidates with symbol_stats
+(which symbols pay for the core strategy); then fvg_setups(symbol) on the best 3-5 for stage,
+entry, stop, target. Jake may use CFD names: NAS100=NQ/MNQ, US500=ES/MES, US30=YM/MYM, US2000=RTY/M2K,
+XAUUSD=GC/MGC, XAGUSD=SI/SIL, USOIL=CL/MCL, GER40=FDAX, EURUSD=6E, GBPUSD=6B, USDJPY=6J (inverse).
+
 With a screenshot: read it first (symbol, timeframe, last price, M/2M/DB/2DB signals and white
 lines and whether a body closed through them, FVGs, reversal zones, purple/blue zones, NDOG/NWOG,
 Spotlight DR box and confirmation, EMAs 20/238, trend table, structure). Say what is not visible
