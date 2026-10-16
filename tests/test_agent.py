@@ -214,10 +214,15 @@ with TestClient(main.app) as c:
     ok(c.get("/log.csv").status_code == 401, "log.csv needs the token")
     ok(c.get("/log.csv?token=tok").status_code == 200, "log.csv with token")
     ok(c.post("/screenshot?token=tok", content=b"\x89PNGxxxx").json()["ok"], "screenshot upload")
-    r = c.post("/mcp", json={"jsonrpc": "2.0", "id": 1, "method": "tools/call",
-                             "params": {"name": "paper_stats", "arguments": {"days": 7}}},
-               headers={"Accept": "application/json, text/event-stream"})
-    ok(r.status_code == 200 and "paper_book" in r.text, "agent MCP tool paper_stats works")
+    _call = {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+             "params": {"name": "paper_stats", "arguments": {"days": 7}}}
+    _acc = {"Accept": "application/json, text/event-stream"}
+    ok(c.post("/mcp", json=_call, headers=_acc).status_code == 401, "agent MCP closed without the token")
+    ok(c.post("/mcp/wrong", json=_call, headers=_acc).status_code == 401, "agent MCP closed with a wrong path token")
+    r = c.post("/mcp", json=_call, headers={**_acc, "Authorization": "Bearer tok"})
+    ok(r.status_code == 200 and "paper_book" in r.text, "agent MCP tool paper_stats works (bearer)")
+    r = c.post("/mcp/tok", json=_call, headers=_acc)
+    ok(r.status_code == 200 and "paper_book" in r.text, "agent MCP works with the path token")
 
 # 9. new in v2: hard rules in code, news filter, Jev shadow, hypotheses + shadow tests, spend,
 #    dashboard login, multi-window screenshots, strategy report
@@ -560,6 +565,40 @@ ok(sc.get("/api/symbols").status_code == 401, "/api/symbols is closed without lo
 sc.post("/login", data={"password": "pw"}, follow_redirects=False)
 ok(sc.get("/api/symbols?days=7").json()["all"]["n"] == 5, "/api/symbols serves the report after login")
 ok(sc.get("/api/dashboard?days=7").json()["symbols"]["all"]["n"] == 5, "dashboard payload carries the symbol table")
+
+# 21. Telegram Q&A: secret-checked webhook, one chat only, Claude tool loop over the read-only tools
+from app import telegram_bot  # noqa: E402
+SENT, LLM_TURNS = [], []
+config.TELEGRAM_BOT_TOKEN, config.TELEGRAM_CHAT_ID = "123:abc", "42"
+telegram_bot._api = lambda method, **p: SENT.append((method, p)) or {"ok": True}
+
+
+def fake_chat(model, system, messages, tools, max_tokens, effort, purpose):
+    LLM_TURNS.append({"model": model, "tools": [t["name"] for t in tools], "messages": messages})
+    if len(LLM_TURNS) == 1:
+        return {"stop_reason": "tool_use", "content": [
+            {"type": "tool_use", "id": "t1", "name": "symbol_stats", "input": {"days": 7}}]}
+    return {"stop_reason": "end_turn", "content": [{"type": "text", "text": "6A1! pays most: n=3, +4.5R."}]}
+
+
+llm.chat_with_tools = fake_chat
+tc = TestClient(main.app)
+upd = {"update_id": 1, "message": {"chat": {"id": 42}, "text": "which symbol pays?"}}
+ok(tc.post("/telegram", json=upd).status_code == 401, "telegram webhook rejects a missing secret")
+ok(tc.post("/telegram", json={**upd, "update_id": 2, "message": {"chat": {"id": 7}, "text": "hi"}},
+           headers={"X-Telegram-Bot-Api-Secret-Token": telegram_bot.secret()}).status_code == 200
+   and not SENT, "telegram ignores other chats")
+telegram_bot.handle(42, "which symbol pays?")
+ok(LLM_TURNS[0]["model"] == config.TELEGRAM_MODEL and "symbol_stats" in LLM_TURNS[0]["tools"]
+   and "chart_question" in LLM_TURNS[0]["tools"], "telegram uses the Telegram model with the read-only tools")
+_res = LLM_TURNS[1]["messages"][-1]["content"][0]
+ok(_res["type"] == "tool_result" and json.loads(_res["content"])["all"]["n"] == 5, "tool result fed back to the model")
+ok(SENT[-1] == ("sendMessage", {"chat_id": 42, "text": "6A1! pays most: n=3, +4.5R.", "disable_web_page_preview": True}),
+   "answer sent to the chat")
+ok(len(store.kv_get("tg_history:42")) == 2, "conversation kept for follow-ups")
+telegram_bot.handle(42, "/reset")
+ok(store.kv_get("tg_history:42") == [] and SENT[-1][1]["text"] == "Conversation cleared.", "/reset clears it")
+config.TELEGRAM_BOT_TOKEN = config.TELEGRAM_CHAT_ID = ""
 
 print("all tests passed")
 server.should_exit = True

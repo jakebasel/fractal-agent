@@ -6,6 +6,10 @@ set -u
 SEED=/opt/seed; DATA=/opt/data
 mkdir -p "$DATA/trading-review/bin" "$DATA/trading-review/reviews" "$DATA/trading-review/shots" "$DATA/skills/trading-review" "$DATA/skills-agent" "$DATA/memories"
 cp "$SEED/config.yaml" "$DATA/config.yaml"   # config is ours and versioned; memory/skills/sessions persist on the volume
+# the paper agent's /mcp needs the token; the repo is public, so it is added here, not in config.yaml
+AGENT_TOKEN="${AGENT_TOKEN:-}" python3 -c 'import os,sys; p=sys.argv[1]; s=open(p).read()
+open(p,"w").write(s.replace("agent.motivationpro.tech/mcp\"", "agent.motivationpro.tech/mcp/"+os.environ["AGENT_TOKEN"]+"\""))' "$DATA/config.yaml"
+chmod 600 "$DATA/config.yaml"
 cp "$SEED/SOUL.md" "$DATA/SOUL.md"
 cp "$SEED/AGENTS.md" "$DATA/trading-review/AGENTS.md"
 cp "$SEED/PROMPT.md" "$DATA/trading-review/PROMPT.md"

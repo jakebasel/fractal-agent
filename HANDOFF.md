@@ -263,6 +263,19 @@ Not done, needs a decision from Jake:
 - A hypothesis is waiting for approval: "London: whole session" (+4.42R on 4 changed decisions,
   n is small).
 
+## 2026-10-16 — /mcp locked, Telegram Q&A
+
+- `/mcp` was open to anyone (found by calling `tools/list` with no credentials). It now needs
+  `AGENT_TOKEN`: `Authorization: Bearer`, `X-Agent-Token`, `?token=`, or the path form
+  `https://agent.motivationpro.tech/mcp/<AGENT_TOKEN>` (use that for the claude.ai connector).
+  Hermes' `loop.sh` adds the token to its `paper` MCP URL at seed time (the repo is public).
+- Telegram (`app/telegram_bot.py`): Jake asks in a dedicated bot chat; `TELEGRAM_MODEL`
+  (Sonnet 5.5) answers with the same read-only tools as /mcp, purpose `telegram` in the spend log.
+  Env: `TELEGRAM_BOT_TOKEN` (a bot used by nothing else: Telegram gives one webhook per bot),
+  `TELEGRAM_CHAT_ID` (leave empty first; the bot replies with the id to set), optional
+  `TELEGRAM_MAX_PER_DAY` (60), `TELEGRAM_EFFORT` (medium), `PUBLIC_URL`. The webhook registers
+  itself on start-up. `/reset` clears the conversation.
+
 ## VPS screenshot capturer (tv-capture/)
 
 Coolify app `tv-capture` (same project, base directory `/tv-capture`, volume `/data`, domain

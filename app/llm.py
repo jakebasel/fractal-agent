@@ -98,6 +98,19 @@ def _post_anthropic(model: str, messages: list, max_tokens: int, temperature: fl
             "output_config": {"effort": _effort(model)}}
     if system:
         body["system"] = _system_blocks(system)
+    data = _anthropic_call(body, purpose)
+    u = data.get("usage") or {}
+    text = "".join(b.get("text") or "" for b in (data.get("content") or []) if b.get("type") == "text")
+    if not text.strip():
+        why = ("the whole max_tokens budget went to thinking; raise DECISION_MAX_TOKENS or lower "
+               "ANTHROPIC_EFFORT" if data.get("stop_reason") == "max_tokens" else "")
+        raise LLMError(f"{model}: empty reply (stop_reason={data.get('stop_reason')}, usage={u}) {why}".strip())
+    return ("{" + text) if want_json and not text.lstrip().startswith("{") else text
+
+
+def _anthropic_call(body: dict, purpose: str) -> dict:
+    """POST one Messages API request, log its cost, return the raw response."""
+    model = body["model"]
     headers = {"x-api-key": config.ANTHROPIC_API_KEY, "anthropic-version": config.ANTHROPIC_VERSION,
                "content-type": "application/json"}
     t0 = time.time()
@@ -123,12 +136,20 @@ def _post_anthropic(model: str, messages: list, max_tokens: int, temperature: fl
     _log(purpose, data.get("model") or model,
          {"input_tokens": (u.get("input_tokens") or 0) + c_write + c_read,
           "output_tokens": u.get("output_tokens"), "cost": round(cost, 6)}, ms, True)
-    text = "".join(b.get("text") or "" for b in (data.get("content") or []) if b.get("type") == "text")
-    if not text.strip():
-        why = ("the whole max_tokens budget went to thinking; raise DECISION_MAX_TOKENS or lower "
-               "ANTHROPIC_EFFORT" if data.get("stop_reason") == "max_tokens" else "")
-        raise LLMError(f"{model}: empty reply (stop_reason={data.get('stop_reason')}, usage={u}) {why}".strip())
-    return ("{" + text) if want_json and not text.lstrip().startswith("{") else text
+    return data
+
+
+def chat_with_tools(model: str, system: str, messages: list, tools: list, max_tokens: int,
+                    effort: str, purpose: str) -> dict:
+    """One Messages API turn with tool definitions; returns the raw response (content blocks,
+    stop_reason). Anthropic models only."""
+    if not _is_anthropic(model):
+        raise LLMError(f"{model}: tool use needs a claude-* model and ANTHROPIC_API_KEY")
+    body = {"model": model, "max_tokens": max_tokens, "messages": messages, "tools": tools,
+            "output_config": {"effort": effort}}
+    if system:
+        body["system"] = [{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}]
+    return _anthropic_call(body, purpose)
 
 
 def _post(model: str, messages: list, max_tokens: int = 1500, temperature: float = 0.1,

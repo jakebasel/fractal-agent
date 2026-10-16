@@ -30,7 +30,7 @@ from starlette.routing import Route
 
 from pathlib import Path
 
-from . import agent, config, jev, learning, store, symbols
+from . import agent, config, jev, learning, store, symbols, telegram_bot
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 log = logging.getLogger("main")
@@ -669,8 +669,35 @@ async def shot_file(request: Request):
     return PlainTextResponse("not found", status_code=404)
 
 
-app = mcp.streamable_http_app()
-app.router.routes.extend([
+class _McpGate:
+    """/mcp needs the agent token: `Authorization: Bearer <token>`, `X-Agent-Token`, `?token=`, or
+    the path form /mcp/<token> for clients that only take a URL (claude.ai connectors, Hermes)."""
+
+    def __init__(self, inner):
+        self.inner = inner
+
+    async def __call__(self, scope, receive, send):
+        path = scope.get("path", "") if scope["type"] == "http" else ""
+        if path == "/mcp" or path.startswith("/mcp/"):
+            headers = {k.decode().lower(): v.decode() for k, v in scope.get("headers", [])}
+            tok = path[5:].strip("/") if path.startswith("/mcp/") else ""
+            auth = headers.get("authorization", "")
+            if not tok and auth.lower().startswith("bearer "):
+                tok = auth[7:].strip()
+            if not tok:
+                tok = headers.get("x-agent-token", "")
+            if not tok:
+                from urllib.parse import parse_qs
+                tok = (parse_qs(scope.get("query_string", b"").decode()).get("token") or [""])[0]
+            if not (config.AGENT_TOKEN and tok and hmac.compare_digest(tok.encode(), config.AGENT_TOKEN.encode())):
+                await JSONResponse({"error": "unauthorized"}, status_code=401)(scope, receive, send)
+                return
+            scope = {**scope, "path": "/mcp", "raw_path": b"/mcp"}
+        await self.inner(scope, receive, send)
+
+
+_app = mcp.streamable_http_app()
+_app.router.routes.extend([
     Route("/health", health),
     Route("/screenshot", screenshot, methods=["POST"]),
     Route("/capture_status", capture_status, methods=["POST"]),
@@ -691,7 +718,9 @@ app.router.routes.extend([
     Route("/api/reviews", post_review, methods=["POST"]),
     Route("/api/reviews/reopen", reopen_reviews, methods=["POST"]),
     Route("/shot/{name}", shot_file),
+    Route("/telegram", telegram_bot.webhook, methods=["POST"]),
 ])
+app = _McpGate(_app)
 
 # ---- background loop ---------------------------------------------------------------------
 _stop = threading.Event()
@@ -699,3 +728,5 @@ if os.environ.get("RUN_LOOP", "1") == "1":
     store.db()
     threading.Thread(target=agent.run_forever, args=(_stop,), daemon=True, name="agent").start()
     log.info("agent loop started: symbols=%s paper_only=True", config.SYMBOLS)
+    if config.TELEGRAM_BOT_TOKEN:
+        threading.Thread(target=telegram_bot.register_webhook, daemon=True, name="tg-webhook").start()
