@@ -356,6 +356,15 @@ ok(scanner.scan(fvg, cr, "x.jpg", _dt2(2026, 10, 7, 9, 41, tzinfo=ET)) is None, 
 config.DAILY_BUDGET_USD = 0.000001
 ok(store.over_budget() and learning.run_shadow() == 0, "budget guard pauses shadow tests")
 ok(learning.assess_next() is False, "budget guard pauses hypothesis assessments")
+_titles = {h["title"]: h for h in store.hypotheses()}
+ok(all(t in _titles for t in ("Second play same asset reduced", "DB keeps the retracement requirement",
+                              "DB fails only with a reversal zone", "London obligation with own NY setup"))
+   and _titles["DB fails only with a reversal zone"]["source"] == "instructor-conflict",
+   "the 4 instructor-vs-rulebook conflicts are tracked as hypotheses")
+from app import prompts  # noqa: E402
+_rows = [r for r in store.decisions(limit=50) if r["decision"] in ("TAKE", "SKIP")]
+ok("earlier_entries_same_symbol_same_session" in json.loads(prompts.shadow_user(_rows[0], [])),
+   "shadow test sees earlier same-session entries on the symbol")
 _h = store.hypotheses("testing")[0]
 _a = learning.assess(_h)
 ok(_a["recommendation"] == "adopt" and learning.hypothesis_result(_h)["assessment"]["theory"].startswith("§2.6"),

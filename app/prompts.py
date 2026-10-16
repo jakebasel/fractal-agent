@@ -371,8 +371,16 @@ def shadow_user(row, hyps) -> str:
                    "entry_at": store.to_et(row["entry_at"])}}
     if isinstance(setup, dict):
         setup.pop("course_passages", None)
+    day = store.to_et(row["entry_at"])[:10]
+    earlier = [{"entry_id": r["entry_id"], "entry_at_et": store.to_et(r["entry_at"]), "decision": r["decision"],
+                "direction": r["direction"], "stop": r["stop"], "outcome": r["outcome"],
+                "closed_at_et": store.to_et(r["closed_at"]) if r["closed_at"] else None}
+               for r in store.decisions(limit=200, symbol=row["symbol"])
+               if r["entry_id"] != row["entry_id"] and r["entry_at"] < row["entry_at"]
+               and store.to_et(r["entry_at"])[:10] == day and r["session"] == row["session"]]
     return json.dumps({
         "setup": setup,
+        "earlier_entries_same_symbol_same_session": earlier[:6],
         "actual": {"decision": row["decision"], "grade": row["grade"], "size": row["size"],
                    "hard_rule": row["hard_rule"], "reasons": j(row["reasons"]),
                    "play": row["play"]},

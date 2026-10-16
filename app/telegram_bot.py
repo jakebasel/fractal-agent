@@ -57,6 +57,12 @@ entry, stop, target. Jake may use CFD names: NAS100=NQ/MNQ, US500=ES/MES, US30=Y
 XAUUSD=GC/MGC, XAGUSD=SI/SIL, USOIL=CL/MCL, GER40=FDAX, EURUSD=6E, GBPUSD=6B, USDJPY=6J (inverse).
 Some CFD symbols (e.g. US500) have their own feed in fvg-mcp: try the CFD name itself first.
 
+Progress, performance or "what should we change": call hypotheses (each has same-trade books vs
+the agent and core, the trades it changed, and a written case with a recommendation) plus
+paper_stats and trade_breakdown. Lead with which hypotheses to approve, reject or keep watching
+and why, then which entry types or assets to skip, each with its numbers. Hypotheses sourced
+"instructor-conflict" test the instructor's live-session teaching against the written rules.
+
 Winners vs losers / which entries to skip: call trade_breakdown(symbol, days). Never tally a
 trade list by hand. Report the worst and best buckets, and a bucket whose share of the losses
 is well above its share of the wins as a skip candidate, with its n.

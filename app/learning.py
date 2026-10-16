@@ -33,6 +33,30 @@ SEEDS = [
     ("NY after 10:30 reduced", "IF a New York session entry is after 10:30 ET THEN reduce size "
      "(TAKE becomes reduced; never upgrade a SKIP).", "rules-test",
      "Live sessions: the sweet spot is in by ~10:30-10:40 ET; later setups get reassessed."),
+    # Jake 2026-10-16: the instructor-vs-rulebook conflicts from the 10/07-10/15 live sessions,
+    # tracked instead of decided
+    ("Second play same asset reduced", "IF an earlier entry on the same symbol in the same ET session has "
+     "already closed (see earlier_entries_same_symbol_same_session) THEN reduce size (TAKE becomes reduced; "
+     "never upgrade a SKIP); IF price crossed that earlier trade's stop level against this direction before "
+     "this entry THEN SKIP.", "instructor-conflict",
+     "Instructor 10/07 Asia: 'You guys know how I feel about jumping back in with a second play on the same "
+     "asset.' Amendment 10/08 says no cap on re-entries."),
+    ("DB keeps the retracement requirement", "IF a DB printed while an earlier M/2M setup on the same "
+     "index and timeframe was pending THEN the DB arms the setup, but the entry still requires a real "
+     "retracement back into the original zone; with retrace none/shallow or no tap of that zone, SKIP.",
+     "instructor-conflict",
+     "Instructor 10/15 Asia: 'Nothing changes even if it's a DB. I still want to see it come back down "
+     "here.' Amendment 10/08: a DB always replaces what came before it."),
+    ("DB fails only with a reversal zone", "IF the only reason to skip is that a candle body closed "
+     "through the DB's line (§2.5) and NO reversal zone painted past it THEN the DB has not failed: do "
+     "not skip for §2.5, decide normally.", "instructor-conflict",
+     "Instructor 10/15 NY: 'Just crossing this area alone isn't enough. I need to see a reversal zone.' "
+     "Rulebook §2.5 skips on the body close alone."),
+    ("London obligation with own NY setup", "IF a London-session obligation (an untaken London target in "
+     "the same direction) is still open at the New York open AND New York prints its own valid setup in "
+     "that direction THEN TAKE at reduced size; the obligation alone is never a trigger.",
+     "instructor-conflict",
+     "Instructor 10/15 NY took one at reduced size. live_rules §5: an obligation is never a trigger."),
 ]
 
 
