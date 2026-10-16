@@ -55,6 +55,11 @@ fvg_entries(limit=30) for the newest validated entries; rank the candidates with
 (which symbols pay for the core strategy); then fvg_setups(symbol) on the best 3-5 for stage,
 entry, stop, target. Jake may use CFD names: NAS100=NQ/MNQ, US500=ES/MES, US30=YM/MYM, US2000=RTY/M2K,
 XAUUSD=GC/MGC, XAGUSD=SI/SIL, USOIL=CL/MCL, GER40=FDAX, EURUSD=6E, GBPUSD=6B, USDJPY=6J (inverse).
+Some CFD symbols (e.g. US500) have their own feed in fvg-mcp: try the CFD name itself first.
+
+Winners vs losers / which entries to skip: call trade_breakdown(symbol, days). Never tally a
+trade list by hand. Report the worst and best buckets, and a bucket whose share of the losses
+is well above its share of the wins as a skip candidate, with its n.
 
 With a screenshot: read it first (symbol, timeframe, last price, M/2M/DB/2DB signals and white
 lines and whether a body closed through them, FVGs, reversal zones, purple/blue zones, NDOG/NWOG,
@@ -91,6 +96,7 @@ _SPECS = [
     ("agent_status", {}, []),
     ("paper_stats", {"days": {"type": "number"}}, []),
     ("symbol_stats", {"days": {"type": "number"}}, []),
+    ("trade_breakdown", {"symbol": {"type": "string"}, "days": {"type": "number"}}, []),
     ("strategy_report", {"days": {"type": "number"}}, []),
     ("decisions", {"limit": {"type": "integer"}, "symbol": {"type": "string"}}, []),
     ("decision_detail", {"entry_id": {"type": "integer"}}, ["entry_id"]),
@@ -242,13 +248,20 @@ def handle(chat_id, text: str, image_id: str | None = None):
         store.kv_set(hkey, [])
         send(chat_id, "Conversation cleared.")
         return
-    if cmd == "/model":
-        arg = text.strip().split()[1].lower() if len(text.split()) > 1 else ""
-        if arg in MODELS:
-            store.kv_set("tg_model", MODELS[arg])
-        send(chat_id, f"Default model: {default_model()}. Options: {', '.join(MODELS)}.")
-        return
     model = effort = None
+    if cmd == "/model":
+        # "/model opus" changes the default; "/model opus <question>" uses it for that question only
+        parts = text.strip().split(maxsplit=2)
+        arg = parts[1].lower() if len(parts) > 1 else ""
+        text = parts[2] if len(parts) > 2 and arg in MODELS else ""
+        if not text and not image_id:
+            if arg in MODELS:
+                store.kv_set("tg_model", MODELS[arg])
+            send(chat_id, f"Default model: {default_model()}. Options: {', '.join(MODELS)}.")
+            return
+        if arg in MODELS:
+            model = MODELS[arg]
+            effort = config.TELEGRAM_DEEP_EFFORT if arg != "haiku" else None
     if cmd == "/deep" or (image_id and text.strip().lower().startswith("/deep")):
         model, effort = config.TELEGRAM_DEEP_MODEL, config.TELEGRAM_DEEP_EFFORT
         text = text.strip()[5:].strip()

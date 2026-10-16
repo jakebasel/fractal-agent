@@ -20,4 +20,5 @@ Live sessions:
   (`.claude/skills/live-session/SKILL.md`): it files the transcript, labels his calls in
   `labels/instructor_calls_<mon>_<year>.json` (served by the `instructor_calls` MCP tool) and adds
   new rules to `rules/live_rules.md`. `wispr_ingested.json` lists what has been pulled.
+  Ingested so far: 2026-10-07 NY (FOMC), 10-07 Asia, 10-08 NY, 10-15 NY, 10-15 Asia (live_rules §16-20).
   Their rules are distilled in `rules/live_rules.md`.

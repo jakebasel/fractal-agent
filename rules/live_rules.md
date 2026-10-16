@@ -155,6 +155,41 @@ Pulled from the 12 live-session transcripts. Live sessions are newer than the co
 - Journal every trade, win or loss.
 - "Don't take any trades in this room until you have watched all the videos."
 
+## 17. 2026-10-07 live session (Asia evening, US30 freebie)
+- No 1m logic unless price tapped the zone you planned: "I can't build the 1-minute logic off this. It didn't hit the zone I was looking for."
+- At the zone, want a candle BODY close inside and an immediate rebalance; wick-only touches invite a stop hunt.
+- The 1m is only justified while price sits inside the zone (e.g. the blue zone); back-and-forth chop on the 1m means push up to the 5m and wait for a 5m FVG (or a cross plus a reversal zone, also on the 5m).
+- Secure (roll / partials) the moment price touches the target FVG, not its midpoint: "Second we hit a fair value gap." A breakeven "freebie" lets you keep looking.
+- A short started after price has already dropped a long way is a downgrade ("not a fan, given how low it dropped").
+- The 21:00 ET candle ("6 o'clock" on his Pacific clock) is usually a displacement candle: it moves fast.
+
+## 18. 2026-10-08 live session (NY, false M, double-break theory)
+- Weak pair skipping the first presented FVG on the way up is a bearish sign: "they can drop it later and probably further." Prefer following the stronger pair.
+- Price runs before the 30s tap: no late entry. It must come back, tap and print a NEW 30s FVG; the target stays the same. "Never let your enemy decide your path."
+- A disrespected 5m FVG is not reused: wait for a new 5m FVG or for the next session.
+- A bearish 5m FVG printing through a reversal gap/zone means the higher-timeframe M is being respected.
+- After a 4H midpoint has been hit, be cautious: the market can come inches from a 4H and drop.
+- Setups can form up to 30 minutes either side of the live window; keep watching. Keep a second chart (futures and CFD) of the same index: a tap missed on one feed can show on the other.
+- UNTESTED theory, not a rule (do not trade it): "If the double break candle itself hits a blue zone or a purple zone and creates a fair value gap, then maybe that can be used as the 5-minute fair value gap... it needs a lot more testing."
+
+## 19. 2026-10-15 live session (NY, purple and blue zone signals)
+- Purple zones are mainly Asia/London magnets, blue zones mainly New York; a zone layered with the NDOG is a highly magnetic target, but a signal setup is still required. High-impact news can pull price away.
+- After a DB, the retracement must stay between the DB line and the reversal area: "It has to be right to that point and no more further than that." A close past it is reversal territory.
+- Reversal zone invalidation: an opposite FVG on the zone's own timeframe prints through it. If FVGs then print both ways, void it ("same reason as a 2DB"). With two zones, start with the closest; prefer one with a blue zone.
+- Fractal conflict: a 5m single M waiting for its 5m FVG plus a 1m DB the other way - a 1m body close through the DB line with a reversal zone can create the 5m FVG. Body close, not a wick. When the 30s and 1m signal together, defer to the 1m.
+- Consolidation = 5+ candles deadlocked in one range (candles still taking the prior high/low are moving). More than 10 minutes of it: look at another asset.
+- Roll the stop the moment a DB prints, even one in your favour: "now the probabilities are against you."
+- Do not use a blue zone when a bigger, more important zone sits right under it; do not use a 1m FVG that sits at the target.
+- No countertrend scalp of the expected retracement after a DB; aim for the session's main directional move.
+- Price ran far from the 5m FVG and came back: require a new 1m FVG. Combining two 30s FVGs uses the one compromise = reduced size.
+- Process: no more than an hour per session and 15 minutes marking up; set a TradingView alert at the zone/FVG midpoint and walk away.
+
+## 20. 2026-10-15 live session (Asia evening, PPI day runaway setups)
+- Runaway: price hits the target without tapping your entry, then comes back. Check where it rejected (midpoint, or room to go deeper), then require a NEW 1m FVG off the return and a 30s FVG off that; never jump straight into the old 30s. "It's already hit the target, and this is an area where it could reverse."
+- CPI/PPI affects US-related assets only (e.g. not Japan 225).
+- US oil: he avoids it ("ever since the Iran war, it's just too chaotic"); if reading oil, Brent (UKOIL) is the divergence pair.
+- An M on every timeframe down to the 30s with no DB is a clean read (said once; weak booster).
+
 ## 15. Mindset
 - Built on human psychology: they play both sides.
 - A directional bias is only one part; entry, R:R and risk management matter as much.

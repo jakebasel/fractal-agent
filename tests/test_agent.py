@@ -631,6 +631,12 @@ LLM_TURNS.clear()
 telegram_bot.handle(42, "and now?")
 ok(LLM_TURNS[0]["model"] == "claude-opus-5-5", "/model changes the default")
 telegram_bot.handle(42, "/model haiku")
+LLM_TURNS.clear()
+telegram_bot.handle(42, "/model opus what beats what on US500?")
+ok(LLM_TURNS[0]["model"] == "claude-opus-5-5" and LLM_TURNS[0]["messages"][-1]["content"] == "what beats what on US500?"
+   and telegram_bot.default_model() == "claude-haiku-5-5", "/model <name> <question> uses it for that question only")
+ok(main.trade_breakdown("6A1!", 7)["all"]["n"] == 3 and main.trade_breakdown(None, 7)["worst_buckets"] is not None,
+   "trade_breakdown splits winners vs losers per symbol")
 ok(telegram_bot._image_file_id({"photo": [{"file_id": "s", "file_size": 10}, {"file_id": "b", "file_size": 99}]}) == "b",
    "largest photo size is used")
 config.TELEGRAM_BOT_TOKEN = config.TELEGRAM_CHAT_ID = ""

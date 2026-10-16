@@ -90,6 +90,15 @@ def symbol_stats(days: float = 7) -> dict:
 
 
 @mcp.tool()
+def trade_breakdown(symbol: str | None = None, days: float = 14) -> dict:
+    """Winners vs losers for the core strategy on one symbol (e.g. US500, MNQ1!) or all symbols:
+    every entry feature (direction, 1m/5m, M/2M/DB, session, ET hour, weekday, retracement,
+    cascade, signal sequence) with n, win%, avg R, total R, max DD and its share of the wins vs
+    the losses, plus the best and worst buckets. Use it to find which entries to skip."""
+    return symbols.breakdown(symbol, days)
+
+
+@mcp.tool()
 def decisions(limit: int = 25, symbol: str | None = None) -> list[dict]:
     """Most recent reviewed setups, newest first: decision, grade, size, reasons, outcome, R,
     lesson. Times in ET."""

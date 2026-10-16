@@ -1,189 +1,1364 @@
 {
-  "sessions": [
+ "sessions": [
+  {
+   "file": "Live Session 2026-10-07 FOMC minutes day.txt",
+   "title": "FOMC Day Market Analysis (Wispr Flow recording)",
+   "date": "2026-10-07",
+   "year_assumed": 2026,
+   "session_type": "newyork",
+   "session_et": "09:53-11:01",
+   "instruments": [
+    "NAS100",
+    "US500",
+    "US30"
+   ],
+   "summary": "New York session on the FOMC-minutes day (release 14:00 ET; he says '11:00' on his Pacific clock). Choppy pre-news action, reduced lot size announced up front. US30 printed the only 5m double break down early; he waited for a Spotlight bearish confirmation or a proper retracement. US500 (weaker pair) then printed a 5m DB; he took a NAS sell anyway at reduced size, rolled on the first closure, and was wicked out at break-even. Later a US30 short off a 30s FVG and closure: rolled at the red dotted line (past the implied dealing range), told the room to take 50% and reduce to a 10% flyer before the Spotlight bearish confirmation printed; the confirmation printed and a retracement followed. His own broker was frozen so he could not take profit himself. Post-mortem: the NAS sell should not have been taken because a fresh DB means a 70-80% retracement into the range and the stronger pair retraces deeper. He also reviewed the prior day's Asia US30 trade (stop hunts on the 30s): an immediate rebalance is the entry and its line can never be moved; either demand a closure over the same old 30s line or take a new 30s FVG off the new leg (tap + close); his error was using the rebalance's entry without its FVG. Order block rule: when the DB leg is a single candle with no FVG, the candle's midpoint stands in for the 5m FVG step. Advised staying out of the PM session.",
+   "events": [
     {
-      "file": "Live Session 2026-10-07 FOMC minutes day.txt",
-      "title": "FOMC Day Market Analysis (Wispr Flow recording)",
-      "date": "2026-10-07",
-      "year_assumed": 2026,
-      "session_type": "newyork",
-      "session_et": "09:53-11:01",
-      "instruments": ["NAS100", "US500", "US30"],
-      "summary": "New York session on the FOMC-minutes day (release 14:00 ET; he says '11:00' on his Pacific clock). Choppy pre-news action, reduced lot size announced up front. US30 printed the only 5m double break down early; he waited for a Spotlight bearish confirmation or a proper retracement. US500 (weaker pair) then printed a 5m DB; he took a NAS sell anyway at reduced size, rolled on the first closure, and was wicked out at break-even. Later a US30 short off a 30s FVG and closure: rolled at the red dotted line (past the implied dealing range), told the room to take 50% and reduce to a 10% flyer before the Spotlight bearish confirmation printed; the confirmation printed and a retracement followed. His own broker was frozen so he could not take profit himself. Post-mortem: the NAS sell should not have been taken because a fresh DB means a 70-80% retracement into the range and the stronger pair retraces deeper. He also reviewed the prior day's Asia US30 trade (stop hunts on the 30s): an immediate rebalance is the entry and its line can never be moved; either demand a closure over the same old 30s line or take a new 30s FVG off the new leg (tap + close); his error was using the rebalance's entry without its FVG. Order block rule: when the DB leg is a single candle with no FVG, the candle's midpoint stands in for the 5m FVG step. Advised staying out of the PM session.",
-      "events": [
-        {
-          "seq": 1,
-          "clock_et": "09:55",
-          "instrument": "US30",
-          "timeframe": "5m",
-          "action": "WAIT",
-          "direction": "short",
-          "setup": "US30 is the only index with a 5m double break to the downside; no 5m FVG yet",
-          "signal": "DB",
-          "price_levels": [],
-          "reasons": [
-            "need either a bearish confirmation from Spotlight or a proper reversal setup / retracement into a 5m FVG",
-            "FOMC minutes day: erratic price action before the release"
-          ],
-          "confluences": ["5m DB", "Spotlight opening gap as target"],
-          "result": "n/a",
-          "result_detail": "No entry at this point.",
-          "quote": "US 30 is the only one that's given us a double break to the downside, so I'd need to see either a bearish confirmation from Spotlight or a proper reversal setup. Retracement. Five-minute fair value gap.",
-          "discretionary": false
-        },
-        {
-          "seq": 2,
-          "clock_et": null,
-          "instrument": "all",
-          "timeframe": null,
-          "action": "RULE",
-          "direction": null,
-          "setup": "Red-folder news day (FOMC minutes): reduced lot size or stay out; check the economic calendar every morning",
-          "signal": null,
-          "price_levels": [],
-          "reasons": ["erratic price action before the release", "volatility rises approaching the release"],
-          "confluences": [],
-          "result": "n/a",
-          "result_detail": "",
-          "quote": "On a day like this, while we have FOMC meeting minutes at 11:00, always proceed with caution. Or stay out completely. So anything that we do would be a reduced lot size. ... Forex Factory. Economic calendar. You got to check it every morning.",
-          "discretionary": false
-        },
-        {
-          "seq": 3,
-          "clock_et": null,
-          "instrument": "US500",
-          "timeframe": "5m",
-          "action": "SKIP",
-          "direction": null,
-          "setup": "M signal with no 5m FVG behind it",
-          "signal": "M",
-          "price_levels": [],
-          "reasons": ["no 5m fair value gap = false M model", "no room (wedged under the DB reversal area / 4H)"],
-          "confluences": [],
-          "result": "n/a",
-          "result_detail": "Dropped the setup.",
-          "quote": "We don't have a 5-minute fair value gap either, so it is a false M model. This would be the perfect place to drop it. ... I need a fair value gap. Even if it's a 30-second fair value gap, I need something from this.",
-          "discretionary": false
-        },
-        {
-          "seq": 4,
-          "clock_et": "10:20",
-          "instrument": "NAS100",
-          "timeframe": "30s",
-          "action": "TAKE",
-          "direction": "short",
-          "setup": "NAS sell at reduced lot size right after US500 (the weaker pair) printed a fresh 5m double break; US30 still had no 5m FVG",
-          "signal": "DB (on the weaker pair)",
-          "price_levels": [],
-          "reasons": ["liked the room to the downside", "would have to roll as soon as price reached the 1m gap / 4H"],
-          "confluences": ["US500 5m DB", "4H FVG below as target area for US500"],
-          "result": "breakeven",
-          "result_detail": "Rolled the stop on the first closure; price climbed back, he considered moving the stop up to stay safe, then was wicked out at break-even. Post-mortem: should not have entered - a fresh DB means a 70-80% retracement into the range and the stronger pair retraces deeper.",
-          "quote": "Reduced lot size. Looking at Nas for a potential setup, but I'd have to roll as soon as we hit this. ... I'll take Nas for a sell. ... Oh, it just wicked me out. Out. ... Once that double break happened, we knew a retracement was coming, and obviously the stronger pair was going to retrace deeper. ... It's not a question of securing yourself. Shouldn't have entered.",
-          "discretionary": true
-        },
-        {
-          "seq": 5,
-          "clock_et": "10:38",
-          "instrument": "US30",
-          "timeframe": "30s",
-          "action": "WAIT",
-          "direction": "short",
-          "setup": "US30 left and tapped a 1m FVG; looking for a short but the 30s candle closed back inside at the last second",
-          "signal": null,
-          "price_levels": [],
-          "reasons": ["no closure over the series yet", "one more chance only, otherwise back to NAS"],
-          "confluences": ["1m FVG tap", "Spotlight bearish-confirmation territory ahead"],
-          "result": "n/a",
-          "result_detail": "Waited one candle.",
-          "quote": "Looking at US 30 for a potential setup short here. ... oh wait, no, sorry, just close back in. Literally at the last second. That's one that we had to wait. ... I'm only going to give this one chance.",
-          "discretionary": false
-        },
-        {
-          "seq": 6,
-          "clock_et": "10:41",
-          "instrument": "US30",
-          "timeframe": "30s",
-          "action": "TAKE",
-          "direction": "short",
-          "setup": "US30 sell: 30s FVG printed, closure over the series; roll at the red dotted line (past the implied dealing range); target the 4H below",
-          "signal": "DB",
-          "price_levels": [],
-          "reasons": ["30s FVG and a big closure", "US30 telling the most consistent story", "roll as soon as price crosses the DR edge"],
-          "confluences": ["5m DB", "1m FVG", "30s FVG", "Spotlight DR edge", "4H FVG target"],
-          "result": "win",
-          "result_detail": "Rolled the stop at the red dotted line; told the room to take 50% and reduce to a 10% flyer before the Spotlight bearish confirmation printed; the confirmation printed and a retracement followed; price reached the 4H. His own broker was frozen so he could not take profit himself.",
-          "quote": "I'll do US 30 sell. I got to roll here, though. ... That's when we are past the implied dealing range. ... Feel free to take 50 off the table. Secure yourself. ... reduce your position down to 10%. Let the 10% ride, because there could be a retracement coming. ... That's the spotlight confirmation. That could cause a retracement. I would leave a 10 flyer and/or just close off your position here.",
-          "discretionary": false
-        },
-        {
-          "seq": 7,
-          "clock_et": null,
-          "instrument": "all",
-          "timeframe": "5m",
-          "action": "RULE",
-          "direction": null,
-          "setup": "A fresh 5m double break = 70-80% chance of a retracement back into the range; never enter against it",
-          "signal": "DB",
-          "price_levels": [],
-          "reasons": ["the stronger pair retraces deeper before the drop"],
-          "confluences": [],
-          "result": "n/a",
-          "result_detail": "",
-          "quote": "The second a double break happens. 70 to 80% chance you're going to get a retracement back into the range.",
-          "discretionary": false
-        },
-        {
-          "seq": 8,
-          "clock_et": null,
-          "instrument": "all",
-          "timeframe": "5m",
-          "action": "RULE",
-          "direction": null,
-          "setup": "Order block: when the DB leg is a single candle with no FVG, measure that candle and use its midpoint as the 5m FVG step; build the 1m/30s logic off it",
-          "signal": "DB",
-          "price_levels": [],
-          "reasons": ["there was no fair value gap in the double break leg", "he counts only the candle, not the 3-candle area"],
-          "confluences": [],
-          "result": "n/a",
-          "result_detail": "",
-          "quote": "I took that candle's entire measurement to see if we came back into the midpoint. And then built logic off of that 1 minute 30 seconds. So I used that as a 5-minute fair value gap.",
-          "discretionary": false
-        },
-        {
-          "seq": 9,
-          "clock_et": null,
-          "instrument": "US30",
-          "timeframe": "30s",
-          "action": "RULE",
-          "direction": "short",
-          "setup": "Review of the prior day's Asia US30 trade (repeated 30s stop hunts): an immediate rebalance is the entry and that line cannot be moved; after a sweep either demand a closure over the same old 30s line or take a NEW 30s FVG off the new leg (tap + close). His error: used the rebalance's entry without its FVG",
-          "signal": null,
-          "price_levels": [],
-          "reasons": ["closure over a series of candles is the entry", "if you change the fair value gap you get a new entry; if you keep it, the entry and tap do not change"],
-          "confluences": [],
-          "result": "n/a",
-          "result_detail": "Following the logic would have given the drop at either of two later closures.",
-          "quote": "If you get an immediate rebalance, you can't move that. ... From now on, if you get a sweep, you can't move your entry. But you can change your fair value gap. ... I used the immediate rebalance without using its fair value gap. I used its entry. ... Entry should have been closure under here if I was still using this fair value gap.",
-          "discretionary": false
-        },
-        {
-          "seq": 10,
-          "clock_et": "11:00",
-          "instrument": "all",
-          "timeframe": null,
-          "action": "RULE",
-          "direction": null,
-          "setup": "Journal every trade win or loss; stay out of the PM session on the FOMC-minutes day; new members watch all videos before trading in the room",
-          "signal": null,
-          "price_levels": [],
-          "reasons": ["volatility rises into the release", "memory recall is as important as pattern recognition"],
-          "confluences": [],
-          "result": "n/a",
-          "result_detail": "",
-          "quote": "I'd stay away from the PM session today, guys. ... Probably shouldn't have even traded the New York session, but I saw a decent pattern setup. ... Always go back to every single trade, win or lose. Make sure you're journaling it.",
-          "discretionary": false
-        }
-      ]
+     "seq": 1,
+     "clock_et": "09:55",
+     "instrument": "US30",
+     "timeframe": "5m",
+     "action": "WAIT",
+     "direction": "short",
+     "setup": "US30 is the only index with a 5m double break to the downside; no 5m FVG yet",
+     "signal": "DB",
+     "price_levels": [],
+     "reasons": [
+      "need either a bearish confirmation from Spotlight or a proper reversal setup / retracement into a 5m FVG",
+      "FOMC minutes day: erratic price action before the release"
+     ],
+     "confluences": [
+      "5m DB",
+      "Spotlight opening gap as target"
+     ],
+     "result": "n/a",
+     "result_detail": "No entry at this point.",
+     "quote": "US 30 is the only one that's given us a double break to the downside, so I'd need to see either a bearish confirmation from Spotlight or a proper reversal setup. Retracement. Five-minute fair value gap.",
+     "discretionary": false
+    },
+    {
+     "seq": 2,
+     "clock_et": null,
+     "instrument": "all",
+     "timeframe": null,
+     "action": "RULE",
+     "direction": null,
+     "setup": "Red-folder news day (FOMC minutes): reduced lot size or stay out; check the economic calendar every morning",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "erratic price action before the release",
+      "volatility rises approaching the release"
+     ],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "",
+     "quote": "On a day like this, while we have FOMC meeting minutes at 11:00, always proceed with caution. Or stay out completely. So anything that we do would be a reduced lot size. ... Forex Factory. Economic calendar. You got to check it every morning.",
+     "discretionary": false
+    },
+    {
+     "seq": 3,
+     "clock_et": null,
+     "instrument": "US500",
+     "timeframe": "5m",
+     "action": "SKIP",
+     "direction": null,
+     "setup": "M signal with no 5m FVG behind it",
+     "signal": "M",
+     "price_levels": [],
+     "reasons": [
+      "no 5m fair value gap = false M model",
+      "no room (wedged under the DB reversal area / 4H)"
+     ],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "Dropped the setup.",
+     "quote": "We don't have a 5-minute fair value gap either, so it is a false M model. This would be the perfect place to drop it. ... I need a fair value gap. Even if it's a 30-second fair value gap, I need something from this.",
+     "discretionary": false
+    },
+    {
+     "seq": 4,
+     "clock_et": "10:20",
+     "instrument": "NAS100",
+     "timeframe": "30s",
+     "action": "TAKE",
+     "direction": "short",
+     "setup": "NAS sell at reduced lot size right after US500 (the weaker pair) printed a fresh 5m double break; US30 still had no 5m FVG",
+     "signal": "DB (on the weaker pair)",
+     "price_levels": [],
+     "reasons": [
+      "liked the room to the downside",
+      "would have to roll as soon as price reached the 1m gap / 4H"
+     ],
+     "confluences": [
+      "US500 5m DB",
+      "4H FVG below as target area for US500"
+     ],
+     "result": "breakeven",
+     "result_detail": "Rolled the stop on the first closure; price climbed back, he considered moving the stop up to stay safe, then was wicked out at break-even. Post-mortem: should not have entered - a fresh DB means a 70-80% retracement into the range and the stronger pair retraces deeper.",
+     "quote": "Reduced lot size. Looking at Nas for a potential setup, but I'd have to roll as soon as we hit this. ... I'll take Nas for a sell. ... Oh, it just wicked me out. Out. ... Once that double break happened, we knew a retracement was coming, and obviously the stronger pair was going to retrace deeper. ... It's not a question of securing yourself. Shouldn't have entered.",
+     "discretionary": true
+    },
+    {
+     "seq": 5,
+     "clock_et": "10:38",
+     "instrument": "US30",
+     "timeframe": "30s",
+     "action": "WAIT",
+     "direction": "short",
+     "setup": "US30 left and tapped a 1m FVG; looking for a short but the 30s candle closed back inside at the last second",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "no closure over the series yet",
+      "one more chance only, otherwise back to NAS"
+     ],
+     "confluences": [
+      "1m FVG tap",
+      "Spotlight bearish-confirmation territory ahead"
+     ],
+     "result": "n/a",
+     "result_detail": "Waited one candle.",
+     "quote": "Looking at US 30 for a potential setup short here. ... oh wait, no, sorry, just close back in. Literally at the last second. That's one that we had to wait. ... I'm only going to give this one chance.",
+     "discretionary": false
+    },
+    {
+     "seq": 6,
+     "clock_et": "10:41",
+     "instrument": "US30",
+     "timeframe": "30s",
+     "action": "TAKE",
+     "direction": "short",
+     "setup": "US30 sell: 30s FVG printed, closure over the series; roll at the red dotted line (past the implied dealing range); target the 4H below",
+     "signal": "DB",
+     "price_levels": [],
+     "reasons": [
+      "30s FVG and a big closure",
+      "US30 telling the most consistent story",
+      "roll as soon as price crosses the DR edge"
+     ],
+     "confluences": [
+      "5m DB",
+      "1m FVG",
+      "30s FVG",
+      "Spotlight DR edge",
+      "4H FVG target"
+     ],
+     "result": "win",
+     "result_detail": "Rolled the stop at the red dotted line; told the room to take 50% and reduce to a 10% flyer before the Spotlight bearish confirmation printed; the confirmation printed and a retracement followed; price reached the 4H. His own broker was frozen so he could not take profit himself.",
+     "quote": "I'll do US 30 sell. I got to roll here, though. ... That's when we are past the implied dealing range. ... Feel free to take 50 off the table. Secure yourself. ... reduce your position down to 10%. Let the 10% ride, because there could be a retracement coming. ... That's the spotlight confirmation. That could cause a retracement. I would leave a 10 flyer and/or just close off your position here.",
+     "discretionary": false
+    },
+    {
+     "seq": 7,
+     "clock_et": null,
+     "instrument": "all",
+     "timeframe": "5m",
+     "action": "RULE",
+     "direction": null,
+     "setup": "A fresh 5m double break = 70-80% chance of a retracement back into the range; never enter against it",
+     "signal": "DB",
+     "price_levels": [],
+     "reasons": [
+      "the stronger pair retraces deeper before the drop"
+     ],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "",
+     "quote": "The second a double break happens. 70 to 80% chance you're going to get a retracement back into the range.",
+     "discretionary": false
+    },
+    {
+     "seq": 8,
+     "clock_et": null,
+     "instrument": "all",
+     "timeframe": "5m",
+     "action": "RULE",
+     "direction": null,
+     "setup": "Order block: when the DB leg is a single candle with no FVG, measure that candle and use its midpoint as the 5m FVG step; build the 1m/30s logic off it",
+     "signal": "DB",
+     "price_levels": [],
+     "reasons": [
+      "there was no fair value gap in the double break leg",
+      "he counts only the candle, not the 3-candle area"
+     ],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "",
+     "quote": "I took that candle's entire measurement to see if we came back into the midpoint. And then built logic off of that 1 minute 30 seconds. So I used that as a 5-minute fair value gap.",
+     "discretionary": false
+    },
+    {
+     "seq": 9,
+     "clock_et": null,
+     "instrument": "US30",
+     "timeframe": "30s",
+     "action": "RULE",
+     "direction": "short",
+     "setup": "Review of the prior day's Asia US30 trade (repeated 30s stop hunts): an immediate rebalance is the entry and that line cannot be moved; after a sweep either demand a closure over the same old 30s line or take a NEW 30s FVG off the new leg (tap + close). His error: used the rebalance's entry without its FVG",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "closure over a series of candles is the entry",
+      "if you change the fair value gap you get a new entry; if you keep it, the entry and tap do not change"
+     ],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "Following the logic would have given the drop at either of two later closures.",
+     "quote": "If you get an immediate rebalance, you can't move that. ... From now on, if you get a sweep, you can't move your entry. But you can change your fair value gap. ... I used the immediate rebalance without using its fair value gap. I used its entry. ... Entry should have been closure under here if I was still using this fair value gap.",
+     "discretionary": false
+    },
+    {
+     "seq": 10,
+     "clock_et": "11:00",
+     "instrument": "all",
+     "timeframe": null,
+     "action": "RULE",
+     "direction": null,
+     "setup": "Journal every trade win or loss; stay out of the PM session on the FOMC-minutes day; new members watch all videos before trading in the room",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "volatility rises into the release",
+      "memory recall is as important as pattern recognition"
+     ],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "",
+     "quote": "I'd stay away from the PM session today, guys. ... Probably shouldn't have even traded the New York session, but I saw a decent pattern setup. ... Always go back to every single trade, win or lose. Make sure you're journaling it.",
+     "discretionary": false
     }
-  ]
+   ]
+  },
+  {
+   "file": "Live Session 2026-10-07 Asia evening US30 freebie.txt",
+   "title": "Asia Evening Session, US30 Breakeven Freebie (Wispr Flow recording)",
+   "date": "2026-10-07",
+   "year_assumed": 2026,
+   "session_type": "asia",
+   "session_et": "20:40-21:29",
+   "instruments": [
+    "NAS100",
+    "US500",
+    "US30"
+   ],
+   "summary": "Asia session (recording starts after the Spotlight DR set). Spotlight bearish confirmation on the 5m; US30 ran away without retracing and he refused to chase, saying he would go up to the 5m and wait for a 5m FVG; no 1m logic because price had not hit the zone he wanted. US500 printed a 5m DB; the tap back counted as the retracement. He demanded a candle body close plus an immediate rebalance at the zone, because wick-only touches become stop hunts. He flagged the 21:00 ET candle (his '6 o'clock' Pacific) as usually a displacement candle. NAS was preferred as the most consistent story (US30 had an untouched zone above; US500, the stronger pair, had no 5m bearish FVG), but NAS kept closing its 1m FVGs and gave no entry. He took a quick US30 sell off a 1m FVG/closure despite disliking how far it had already dropped, rolled to breakeven and took partials; price reversed on touching a far-left 5m FVG, stop-hunted back to the 1m and stopped him at breakeven ('freebie'). Lesson: secure the second price hits an FVG. He passed on a second US30 play (dislikes re-entering the same asset; price crossed his invalidation high: 'too much instability'). NAS chopped at the blue zone, so he moved up to the 5m needing either a 5m bearish FVG or a cross plus reversal zone up; neither printed before the session ended. No 'validation' teaching in this recording.",
+   "events": [
+    {
+     "seq": 1,
+     "clock_et": null,
+     "instrument": "US30",
+     "timeframe": "5m",
+     "action": "SKIP",
+     "direction": "short",
+     "setup": "Spotlight bearish confirmation on the 5m; US30 ran away without coming back into the range",
+     "signal": "Spotlight",
+     "price_levels": [],
+     "reasons": [
+      "runaway: never retraced into the range",
+      "never chase; if it keeps dropping, go up to the 5m and wait for a 5m FVG"
+     ],
+     "confluences": [
+      "Spotlight bearish confirmation"
+     ],
+     "result": "n/a",
+     "result_detail": "No entry.",
+     "quote": "It was 30, just a runaway. It never actually even came back in yet. ... I'm not going to chase it.",
+     "discretionary": false
+    },
+    {
+     "seq": 2,
+     "clock_et": null,
+     "instrument": "all",
+     "timeframe": "1m",
+     "action": "RULE",
+     "direction": null,
+     "setup": "No 1m logic unless price hit the zone you were looking for",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "the move did not tap the planned zone, so there is no base for the 1m cascade"
+     ],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "",
+     "quote": "I can't build the 1-minute logic off this. It didn't hit the zone I was looking for.",
+     "discretionary": false
+    },
+    {
+     "seq": 3,
+     "clock_et": null,
+     "instrument": "US500",
+     "timeframe": "5m",
+     "action": "WAIT",
+     "direction": "short",
+     "setup": "5m DB; the tap back counts as the retracement; first presented 5m FVG pending",
+     "signal": "DB",
+     "price_levels": [],
+     "reasons": [
+      "retracement counted because price came back and tapped",
+      "if it closes through this FVG, look for a deeper retracement"
+     ],
+     "confluences": [
+      "Spotlight bearish confirmation",
+      "blue zone below"
+     ],
+     "result": "n/a",
+     "result_detail": "No 5m bearish FVG formed on US500 during the session.",
+     "quote": "Double break. So we count this as a retracement because it came back and did tap this. ... If it closes this, then I'll just look for a deeper retracement.",
+     "discretionary": false
+    },
+    {
+     "seq": 4,
+     "clock_et": null,
+     "instrument": "all",
+     "timeframe": null,
+     "action": "RULE",
+     "direction": null,
+     "setup": "At the zone: demand a candle body close plus an immediate rebalance; wicks invite a sweep / stop hunt",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "wick-only touches let them come back, sweep liquidity and stop you out"
+     ],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "",
+     "quote": "I want to see it at least candle close in here, candle body close, and then do an immediate rebalance. Some of this wick stuff allows them to come back and hit this area again and do a liquidity sweep, which we've seen many times, and it becomes a stop hunt.",
+     "discretionary": false
+    },
+    {
+     "seq": 5,
+     "clock_et": "20:55",
+     "instrument": "all",
+     "timeframe": null,
+     "action": "RULE",
+     "direction": null,
+     "setup": "The 21:00 ET candle (his '6 o'clock' Pacific) is usually a displacement candle",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "it moves fast"
+     ],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "",
+     "quote": "We're 5 minutes away from the 6 o'clock candle. It's usually a displacement candle. That means it moves fast.",
+     "discretionary": false
+    },
+    {
+     "seq": 6,
+     "clock_et": null,
+     "instrument": "NAS100",
+     "timeframe": "1m",
+     "action": "WAIT",
+     "direction": "short",
+     "setup": "NAS preferred: most consistent story; US30 has an untouched zone above; US500 (stronger) has no 5m bearish FVG",
+     "signal": "DB",
+     "price_levels": [],
+     "reasons": [
+      "US30 could be run up once more into the untouched zone",
+      "anything under the NAS DB reversal line is still a sell",
+      "won't take wicks; needs at least a 1m FVG"
+     ],
+     "confluences": [
+      "DB reversal line",
+      "new-day opening gap midpoint",
+      "238 EMA"
+     ],
+     "result": "n/a",
+     "result_detail": "NAS closed its 1m FVGs off; no entry.",
+     "quote": "Right now, NAS is telling the most consistent story. ... I don't want to just take these wicks. It's got to give me at least a 1 minute.",
+     "discretionary": false
+    },
+    {
+     "seq": 7,
+     "clock_et": null,
+     "instrument": "US30",
+     "timeframe": "30s",
+     "action": "TAKE",
+     "direction": "short",
+     "setup": "US30 1m FVG after a deep drop, came back to the line, closure, entry; target the midpoint of a far-left 5m FVG",
+     "signal": "DB",
+     "price_levels": [],
+     "reasons": [
+      "closure over the line",
+      "rolled quickly because price had already dropped a lot"
+     ],
+     "confluences": [
+      "Spotlight bearish confirmation",
+      "5m FVG to the left as target"
+     ],
+     "result": "breakeven",
+     "result_detail": "Rolled to breakeven and took partials; price reversed on touching the 5m FVG (did not reach its midpoint), stop-hunted back to the 1m and stopped him at breakeven.",
+     "quote": "I need to see it close, though. Wait for it. I'll take it there. US 30, I'm going to roll quick, though, on this one. ... Wiped me out. Oh well.",
+     "discretionary": true
+    },
+    {
+     "seq": 8,
+     "clock_et": null,
+     "instrument": "all",
+     "timeframe": null,
+     "action": "RULE",
+     "direction": null,
+     "setup": "Secure (roll stop / partials) the second price hits a fair value gap; a breakeven freebie lets you keep looking",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "simply touching an FVG can reverse price"
+     ],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "",
+     "quote": "And that is why we protect ourselves. Second we hit a fair value gap. ... That's the good thing about these freebies. We didn't lose anything here.",
+     "discretionary": false
+    },
+    {
+     "seq": 9,
+     "clock_et": null,
+     "instrument": "NAS100",
+     "timeframe": "5m",
+     "action": "WAIT",
+     "direction": null,
+     "setup": "Back-and-forth at the blue zone on the 1m; move up to the 5m and need a 5m bearish FVG or a cross plus reversal zone up",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "too much back and forth on the 1m",
+      "1m only justified while inside the blue zone",
+      "either path must be on the 5m"
+     ],
+     "confluences": [
+      "blue zone",
+      "DB reversal line"
+     ],
+     "result": "n/a",
+     "result_detail": "Neither printed before the session ended.",
+     "quote": "I either need to see a 5-minute bearish fair value gap, or I need to see it cross this and create a reversal zone to go up. Either way, it's got to be on the 5-minute.",
+     "discretionary": false
+    },
+    {
+     "seq": 10,
+     "clock_et": null,
+     "instrument": "US30",
+     "timeframe": "1m",
+     "action": "SKIP",
+     "direction": "short",
+     "setup": "Second play on US30 after the breakeven stop-out",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "dislikes a second play on the same asset",
+      "price crossed the high he had set as invalidation",
+      "too much instability"
+     ],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "Price then dropped without a valid entry.",
+     "quote": "You guys know how I feel about jumping back in with a second play on the same asset. ... Yeah, just crossed that. I'm not interested. Showing too much instability.",
+     "discretionary": false
+    }
+   ]
+  },
+  {
+   "file": "Live Session 2026-10-08 false M and double-break theory.txt",
+   "title": "False M, runaway indices and the double-break-candle theory (Wispr Flow recording)",
+   "date": "2026-10-08",
+   "year_assumed": 2026,
+   "session_type": "newyork",
+   "session_et": "10:02-11:06",
+   "instruments": [
+    "NAS100",
+    "US500",
+    "US30"
+   ],
+   "summary": "New York session, no trade taken. NAS (weak pair) and US500 ran away after the double break with no pullback; NAS never returned to the first presented FVGs and he would not chase; he called a false M (no FVGs left, crossed the reversal area, immediately rebalanced) and skipped a NAS short for lack of room at the DSD/purple zone. US30 printed its only 5m FVG around 10:32 ET (he says 7:32); price came back into it and a 30s FVG formed under the blue zone, but the 30s was never tapped and US30 dropped to the target (start of the blue zone) without him ('missed it by a hair'); a second US30 chart confirmed no tap. He refused the late entry: it must come back, tap and print a new 30s FVG ('never let your enemy decide your path'). US500 (stronger pair) needs a new 5m FVG through the DB reversal area since the old one was disrespected, otherwise wait for the PM session. Stated an UNTESTED theory to backtest: if the DB candle itself hits a blue or purple zone and leaves an FVG, that FVG may stand in for the 5m FVG (then 1m, 30s). Clarified that on an M the reversal area assists continuation, the only case where the first presented FVG is not required; clearing white lines is for the DB reversal setup. Reported two off-air trades (2026-10-07 post-session reversal-gap long for the M; one this morning before going live), outcomes not stated. Warned of orange-folder news Fri 10-09 at 10:00 ET (consumer sentiment, inflation expectations).",
+   "events": [
+    {
+     "seq": 1,
+     "clock_et": "10:05",
+     "instrument": "NAS100",
+     "timeframe": "1m",
+     "action": "WAIT",
+     "direction": "long",
+     "setup": "NAS (weak pair) after an M whose whole leg, with no FVG, counted as a proper retracement; 4H FVG just set overhead",
+     "signal": "M",
+     "price_levels": [],
+     "reasons": [
+      "would rather follow the stronger pair (US500) back up",
+      "won't use this 1m candle; NAS is already the weak pair",
+      "the DB did not hit the blue zone, so no 1m setup off it"
+     ],
+     "confluences": [
+      "proper retracement (whole leg, no FVG)",
+      "blue zone",
+      "4H FVG above"
+     ],
+     "result": "n/a",
+     "result_detail": "NAS never came back to the first presented FVGs; ran away.",
+     "quote": "Once again, I'd rather follow a stronger pair back up. ... I don't want to use this 1-minute candle. Once again, it's already the weak pair.",
+     "discretionary": false
+    },
+    {
+     "seq": 2,
+     "clock_et": null,
+     "instrument": "all",
+     "timeframe": null,
+     "action": "RULE",
+     "direction": null,
+     "setup": "Weak pair skipping the first presented FVG on the way up is bearish",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "they can drop it later and probably further"
+     ],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "",
+     "quote": "If we're going up and the weak pair doesn't hit the first presented fair value gap, that's a bad sign. That means they can drop it later and probably further.",
+     "discretionary": false
+    },
+    {
+     "seq": 3,
+     "clock_et": "11:06",
+     "instrument": "unknown",
+     "timeframe": null,
+     "action": "TAKE",
+     "direction": "long",
+     "setup": "Reported trade from 2026-10-07: reversal gap for the M, 5-10 min after the live session ended (alert set, tapped, taken)",
+     "signal": "M",
+     "price_levels": [],
+     "reasons": [
+      "after the session he told the room to look for a bearish FVG or a reversal gap",
+      "reversal gap tapped"
+     ],
+     "confluences": [
+      "reversal gap"
+     ],
+     "result": "unknown",
+     "result_detail": "Outcome not stated; he says he 'caught' it and posted it in the Discord trading room. clock_et is approximate and belongs to 2026-10-07.",
+     "quote": "Reversal gap came about 5, 10 minutes after I left... I had my alert set and it tapped it, and I took that one to the upside for the M.",
+     "discretionary": false
+    },
+    {
+     "seq": 4,
+     "clock_et": null,
+     "instrument": "unknown",
+     "timeframe": null,
+     "action": "TAKE",
+     "direction": null,
+     "setup": "Reported trade this morning (2026-10-08) shortly before going live; no details given",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "same setup as last night, all confluences"
+     ],
+     "confluences": [],
+     "result": "unknown",
+     "result_detail": "He says he 'caught' it; no instrument, direction or R given.",
+     "quote": "You can catch a trade right before we go live. That was this morning. ... same setup that I caught this morning, just sticking to the rules.",
+     "discretionary": false
+    },
+    {
+     "seq": 5,
+     "clock_et": null,
+     "instrument": "all",
+     "timeframe": "5m",
+     "action": "RULE",
+     "direction": null,
+     "setup": "HYPOTHESIS, untested: if the DB candle itself hits a blue or purple zone and leaves an FVG, that FVG may stand in for the 5m FVG (then 1m, 30s)",
+     "signal": "DB",
+     "price_levels": [],
+     "reasons": [
+      "blue zones are strong areas the market might not get past",
+      "has seen the DB candle hit the zone several times and price never come back"
+     ],
+     "confluences": [
+      "blue/purple zone",
+      "FVG left by the DB candle"
+     ],
+     "result": "n/a",
+     "result_detail": "Explicitly not a rule yet: 'Got to backtest it. It's just theory right now.' Do not trade it.",
+     "quote": "If the double break candle itself hits a blue zone or a purple zone and creates a fair value gap, then maybe that can be used as the 5-minute fair value gap. 1 minute, 30 second. But it needs a lot more testing.",
+     "discretionary": false
+    },
+    {
+     "seq": 6,
+     "clock_et": null,
+     "instrument": "NAS100",
+     "timeframe": "1m",
+     "action": "SKIP",
+     "direction": "long",
+     "setup": "NAS ran past the first presented 1m FVG midpoint, hit only the second 30s, ran into the 4H",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "never hit the midpoint; not respecting the first areas",
+      "won't chase"
+     ],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "",
+     "quote": "It's just kind of running away, not really respecting the first areas. I'll leave that like that, but I'm not going to chase this now.",
+     "discretionary": false
+    },
+    {
+     "seq": 7,
+     "clock_et": null,
+     "instrument": "unknown",
+     "timeframe": "5m",
+     "action": "WAIT",
+     "direction": null,
+     "setup": "False M: no FVGs left, crossed the reversal area and immediately rebalanced into the range; index already has a DB and just hit a 4H",
+     "signal": "M",
+     "price_levels": [],
+     "reasons": [
+      "false M, no FVGs",
+      "just hit a 4H: see how it reacts",
+      "must stick to the higher-timeframe logic"
+     ],
+     "confluences": [
+      "4H FVG"
+     ],
+     "result": "n/a",
+     "result_detail": "",
+     "quote": "So we have a false M. If we can come back to here, there might be a chance to catch it. Once again, false M, right? No fair value gaps left here.",
+     "discretionary": false
+    },
+    {
+     "seq": 8,
+     "clock_et": null,
+     "instrument": "NAS100",
+     "timeframe": "5m",
+     "action": "SKIP",
+     "direction": "short",
+     "setup": "Weaker pair pumping at the DSD low with a purple zone; short from here",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "no room",
+      "weaker pair: has to come all the way back down",
+      "already hit the midpoint of the 4H; too many short plays already"
+     ],
+     "confluences": [
+      "purple zone",
+      "DSD"
+     ],
+     "result": "n/a",
+     "result_detail": "",
+     "quote": "I don't want to include this because there's no room here. ... Remember, this is the weaker pair. So it has to come all the way back down, or I'm not interested.",
+     "discretionary": false
+    },
+    {
+     "seq": 9,
+     "clock_et": "10:25",
+     "instrument": "NAS100,US500",
+     "timeframe": "5m",
+     "action": "SKIP",
+     "direction": null,
+     "setup": "Both indices running after the double break with no pullback",
+     "signal": "DB",
+     "price_levels": [],
+     "reasons": [
+      "runaway, no pullback after the DB"
+     ],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "",
+     "quote": "Because these two are just runaways right now. I can't jump on a runaway train.",
+     "discretionary": false
+    },
+    {
+     "seq": 10,
+     "clock_et": null,
+     "instrument": "all",
+     "timeframe": "5m",
+     "action": "RULE",
+     "direction": null,
+     "setup": "M signal: a reversal zone painted past the M reversal area can be used to continue the M; the only case where the first presented FVG is not required. Clearing white lines is for the DB reversal setup",
+     "signal": "M",
+     "price_levels": [],
+     "reasons": [
+      "the M reversal area assists the strategy because price is going that way anyway"
+     ],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "",
+     "quote": "The M signal is the only one where the reversal area actually just helps the strategy... That's the only scenario where we don't have to always use the first presented.",
+     "discretionary": false
+    },
+    {
+     "seq": 11,
+     "clock_et": "10:32",
+     "instrument": "US30",
+     "timeframe": "30s",
+     "action": "WAIT",
+     "direction": "short",
+     "setup": "First (only) 5m FVG printed; price came back up into it; under the blue zone on the 30s; 30s FVG printed, waiting for the tap. Target: start of the blue zone below",
+     "signal": "M (higher timeframe)",
+     "price_levels": [],
+     "reasons": [
+      "only FVG printed = good sign it comes back",
+      "bearish FVG through the zone = respecting the HTF M",
+      "need 1m setup, 30s tap and close"
+     ],
+     "confluences": [
+      "first presented 5m FVG",
+      "4H",
+      "reversal gap above DSD high",
+      "blue zone target"
+     ],
+     "result": "n/a",
+     "result_detail": "",
+     "quote": "So I want to either see a 1-minute setup off of this to go short, or it's going to push right through and give us a fair value gap to the upside.",
+     "discretionary": false
+    },
+    {
+     "seq": 12,
+     "clock_et": "10:50",
+     "instrument": "US30",
+     "timeframe": "30s",
+     "action": "SKIP",
+     "direction": "short",
+     "setup": "Same US30 sell: the 30s FVG was never tapped; price dropped straight to the target",
+     "signal": "M (higher timeframe)",
+     "price_levels": [],
+     "reasons": [
+      "no tap of the 30s FVG",
+      "the later 30s FVG was too far below his secure point: too much of a drop",
+      "won't chase; would need a return and a new 30s tap"
+     ],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "Missed by a hair; US30 hit the target without him. Checked a second US30 chart: original 30s never tapped there either. Bias was correct.",
+     "quote": "Even if this little candle here just tapped it and closed, I would have taken it there. Just missed it by a little hair.",
+     "discretionary": false
+    },
+    {
+     "seq": 13,
+     "clock_et": "10:42",
+     "instrument": "all",
+     "timeframe": "30s",
+     "action": "RULE",
+     "direction": null,
+     "setup": "Price runs away before the tap: no late entry; it must come back, tap, and print a new 30s FVG; same target",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "FOMO entries break the process next time",
+      "the run is a trap"
+     ],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "",
+     "quote": "Never let your enemy decide your path. You can come all the way up here and tap here, and I'll look for a new 30-second fair value gap tap and short. Target would still be the same.",
+     "discretionary": false
+    },
+    {
+     "seq": 14,
+     "clock_et": "10:58",
+     "instrument": "US500",
+     "timeframe": "5m",
+     "action": "WAIT",
+     "direction": "long",
+     "setup": "Stronger pair still above the DB reversal area; needs a NEW 5m FVG punching up (the old one was disrespected)",
+     "signal": "DB",
+     "price_levels": [],
+     "reasons": [
+      "already disrespected this 5m, won't reuse it",
+      "otherwise wait for the PM session"
+     ],
+     "confluences": [
+      "DB reversal area",
+      "4H"
+     ],
+     "result": "n/a",
+     "result_detail": "No trade in session.",
+     "quote": "Because it's already disrespected this 5-minute. So I don't want to use the same one. ... Otherwise, I would wait for the PM session.",
+     "discretionary": false
+    },
+    {
+     "seq": 15,
+     "clock_et": null,
+     "instrument": "all",
+     "timeframe": null,
+     "action": "RULE",
+     "direction": null,
+     "setup": "Setups cluster up to 30 minutes either side of the live session; keep watching",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "yesterday's trade came after, today's before the session"
+     ],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "",
+     "quote": "You can catch a trade right before we go live... You got to be watching constantly, but it's only 30 minutes in both directions.",
+     "discretionary": false
+    },
+    {
+     "seq": 16,
+     "clock_et": null,
+     "instrument": "all",
+     "timeframe": null,
+     "action": "RULE",
+     "direction": null,
+     "setup": "Keep a CFD contract and a second chart for comparison/divergence; a tap missed on one feed may show on another",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "futures and CFDs can show different FVGs"
+     ],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "",
+     "quote": "Even for divergence purposes... I'll throw a CFD contract in your favorites. Always do a comparison.",
+     "discretionary": false
+    }
+   ]
+  },
+  {
+   "file": "Live Session 2026-10-15 Purple and blue zone signals.txt",
+   "title": "Purple and Blue Zone Signals (Wispr Flow recording)",
+   "date": "2026-10-15",
+   "year_assumed": 2026,
+   "session_type": "newyork",
+   "session_et": "09:58-11:13",
+   "instruments": [
+    "USOIL",
+    "US30",
+    "US500",
+    "NAS100"
+   ],
+   "summary": "New York session on PPI day; no trades taken, mostly teaching. Purple zones are primarily Asia/London magnets, blue zones primarily NY; a zone layered with the NDOG is a highly magnetic target but still needs a signal setup (not 100% with high-impact news). Reversal areas: crossing one without a reversal zone painting is like a false M (original signal can still complete); after an M a cross is wanted, after a DB the retracement must stay between the DB line and the reversal area, a close past it means flip. Reversal zone invalidation: an opposite FVG on the zone's timeframe printing through it; FVGs both ways = void; with two zones start with the closest (prefer one with a blue zone). Fractal conflict play: a 1m DB crossing its line with a reversal zone can create the missing 5m FVG after a 5m M. Defer to the higher timeframe when 30s and 1m signal together. Consolidation = 5+ deadlocked candles; over 10 minutes means look at another asset. Max 1 hour per session, mark-up under 15 minutes, then a TradingView alert at the zone/FVG midpoint. Roll the stop the second a DB hits. No countertrend scalps of the post-DB retracement. Skipped a prior-session oil play (CPI day; would have won) and a late US index setup (PPI day): 'Do not be trading any US-related assets on PPI day, CPI day.' Zeus: same models on D/4H/15m, monthly FVG target, max 10% per stock / 20% per sector. Schedule: newbie session moves to Saturday 12:00 ET this week; today's Asia session is a Q&A at 8 PM ET.",
+   "events": [
+    {
+     "seq": 1,
+     "clock_et": null,
+     "instrument": "all",
+     "timeframe": null,
+     "action": "RULE",
+     "direction": null,
+     "setup": "Purple zones are mainly Asia/London magnets and blue zones mainly NY; a zone layered with the NDOG is a highly magnetic target",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "after a signal, price pulls back to the zone (Oct 6 Asia/London, NY open examples)",
+      "not 100%: high-impact news can pull price away"
+     ],
+     "confluences": [
+      "purple zone",
+      "blue zone",
+      "NDOG"
+     ],
+     "result": "n/a",
+     "result_detail": "",
+     "quote": "Especially if they're layered on top of each other, this becomes a highly magnetic place you can target.",
+     "discretionary": false
+    },
+    {
+     "seq": 2,
+     "clock_et": null,
+     "instrument": "all",
+     "timeframe": "5m",
+     "action": "RULE",
+     "direction": null,
+     "setup": "Crossing a signal's reversal area without a reversal zone painting is like a false M; the original signal can still be satisfied",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "crossing the line alone is not enough"
+     ],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "",
+     "quote": "Just crossing this area alone isn't enough. I need to see a reversal zone.",
+     "discretionary": false
+    },
+    {
+     "seq": 3,
+     "clock_et": null,
+     "instrument": "USOIL",
+     "timeframe": "5m",
+     "action": "SKIP",
+     "direction": null,
+     "setup": "Prior-session oil play: missed Spotlight, 1m ran away, 5m FVG painted, price ran far and came back, new 1m FVG, two 30s FVGs combined (compromise means reduced lot)",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "CPI day",
+      "second 30s FVG = compromise, reduced lot"
+     ],
+     "confluences": [
+      "5m FVG",
+      "new 1m FVG"
+     ],
+     "result": "n/a",
+     "result_detail": "Not taken. He says it did exactly what was expected (would have won).",
+     "quote": "If it hadn't been CPI day, I would have taken that oil trade.",
+     "discretionary": false
+    },
+    {
+     "seq": 4,
+     "clock_et": null,
+     "instrument": "all",
+     "timeframe": null,
+     "action": "RULE",
+     "direction": null,
+     "setup": "After an M, a cross of the M line is wanted. After a DB, the retracement must stay between the DB line and the reversal area; a close past it means reversal territory, so flip",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "M = market wants opposite; DB = continuation, want retracement not reversal"
+     ],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "",
+     "quote": "Now we know. It has to be right to that point and no more further than that.",
+     "discretionary": false
+    },
+    {
+     "seq": 5,
+     "clock_et": null,
+     "instrument": "USOIL",
+     "timeframe": "1m",
+     "action": "WAIT",
+     "direction": "short",
+     "setup": "5m single M (waiting for 5m bearish FVG) plus 1m DB up (fractal conflict); a 1m close through the DB line with a reversal zone could create the 5m bearish FVG",
+     "signal": "M",
+     "price_levels": [],
+     "reasons": [
+      "need a candle close above the DB line, not a wick",
+      "30s DB at the same time as the 1m: defer to the higher timeframe"
+     ],
+     "confluences": [
+      "blue zone midpoint"
+     ],
+     "result": "n/a",
+     "result_detail": "No entry.",
+     "quote": "So under the microscope on the 1 minute, we're doing one move. But on the higher time frame, it might be completing a different move.",
+     "discretionary": false
+    },
+    {
+     "seq": 6,
+     "clock_et": null,
+     "instrument": "US30",
+     "timeframe": "5m",
+     "action": "WAIT",
+     "direction": null,
+     "setup": "5m reversal zone painted against a DB: respect means long; a 5m bearish FVG printing through it (disrespect) means follow the DB short",
+     "signal": "DB",
+     "price_levels": [],
+     "reasons": [
+      "blue zone nearby, could just take off"
+     ],
+     "confluences": [
+      "reversal zone",
+      "blue zone"
+     ],
+     "result": "n/a",
+     "result_detail": "No entry.",
+     "quote": "So if I get a 5 minute bearish fair value gap that prints through here, it's disrespected it.",
+     "discretionary": false
+    },
+    {
+     "seq": 7,
+     "clock_et": null,
+     "instrument": "all",
+     "timeframe": null,
+     "action": "RULE",
+     "direction": null,
+     "setup": "Reversal zone invalidation: an opposite FVG on the zone's own timeframe prints through it. If FVGs then print both ways, void it. With two zones, start with the closest (prefer one with a blue zone)",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "too many directional signals, same reason he voids a 2DB"
+     ],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "",
+     "quote": "If I get a bearish fair value gap and then I get a bullish fair value gap, I'm done.",
+     "discretionary": false
+    },
+    {
+     "seq": 8,
+     "clock_et": null,
+     "instrument": "all",
+     "timeframe": null,
+     "action": "RULE",
+     "direction": null,
+     "setup": "Consolidation means 5+ candles deadlocked inside one range (not each candle taking the prior high/low). More than 10 minutes is too much: look at another asset",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "candles sweeping prior highs are still moving on a smaller timeframe"
+     ],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "",
+     "quote": "If you see anything lasting past, honestly, 10 minutes of consolidation, that's too much consolidation.",
+     "discretionary": false
+    },
+    {
+     "seq": 9,
+     "clock_et": null,
+     "instrument": "all",
+     "timeframe": null,
+     "action": "RULE",
+     "direction": null,
+     "setup": "Spend no more than 1 hour per session and no more than 15 minutes marking up; then set a TradingView alert at the midpoint of the FVG or zone and walk away",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "every zone has a midpoint for a reason"
+     ],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "",
+     "quote": "So no more than an hour per session, whichever session.",
+     "discretionary": false
+    },
+    {
+     "seq": 10,
+     "clock_et": null,
+     "instrument": "US30",
+     "timeframe": "1m",
+     "action": "RULE",
+     "direction": "long",
+     "setup": "DB to the upside with a bullish Spotlight confirmation about to print; roll the stop the moment a DB hits",
+     "signal": "DB",
+     "price_levels": [],
+     "reasons": [
+      "after a DB the odds favour a retracement"
+     ],
+     "confluences": [
+      "blue zone",
+      "Spotlight bullish confirmation"
+     ],
+     "result": "n/a",
+     "result_detail": "He was trying to catch the move on the 1m/30s but did not report an entry.",
+     "quote": "That's where you'd want to roll your stop the second a DB hits. Because now the probabilities are against you.",
+     "discretionary": false
+    },
+    {
+     "seq": 11,
+     "clock_et": null,
+     "instrument": "all",
+     "timeframe": null,
+     "action": "RULE",
+     "direction": null,
+     "setup": "Don't use a blue zone when a bigger, more important zone sits right under it; don't use a 1m FVG that sits at the target",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "",
+     "quote": "I don't like using blue zones if there's a bigger zone right under, a more important zone.",
+     "discretionary": false
+    },
+    {
+     "seq": 12,
+     "clock_et": null,
+     "instrument": "all",
+     "timeframe": null,
+     "action": "SKIP",
+     "direction": null,
+     "setup": "Countertrend scalp of the expected retracement after a DB",
+     "signal": "DB",
+     "price_levels": [],
+     "reasons": [
+      "retracement depth unknown",
+      "the session's directional move is the biggest, so aim for it",
+      "risk of a loss plus missing the real move"
+     ],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "",
+     "quote": "It doesn't make any sense to take a move in the opposite direction of the direction that we're possibly looking for, unless it's a reversal.",
+     "discretionary": false
+    },
+    {
+     "seq": 13,
+     "clock_et": null,
+     "instrument": "stocks (Zeus)",
+     "timeframe": "D",
+     "action": "RULE",
+     "direction": null,
+     "setup": "Zeus uses the same models on D/4H/15m, targets the monthly FVG, and signals override good earnings (Palantir). Max 10% per stock and 20% per sector; avoid 7-10 day holds",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "investing in strong companies: stop loss less likely"
+     ],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "",
+     "quote": "Instead of a 4-hour fair value gap as our target for Zeus, we look at a monthly.",
+     "discretionary": false
+    },
+    {
+     "seq": 14,
+     "clock_et": "11:00",
+     "instrument": "US index (unclear)",
+     "timeframe": "1m",
+     "action": "SKIP",
+     "direction": null,
+     "setup": "DB then retracement at a tapped 4H midpoint; two reversal zones, a 1m one tapped; would build a 30s FVG off it, and target a blue zone if price punched through the DST high",
+     "signal": "DB",
+     "price_levels": [],
+     "reasons": [
+      "PPI day: no US-related assets"
+     ],
+     "confluences": [
+      "reversal zone",
+      "4H FVG already tapped",
+      "DST high"
+     ],
+     "result": "n/a",
+     "result_detail": "Not taken.",
+     "quote": "Do not be trading any US-related assets on PPI day, CPI day. It's just not smart.",
+     "discretionary": false
+    }
+   ]
+  },
+  {
+   "file": "Live Session 2026-10-15 PPI day runaway setups.txt",
+   "title": "PPI Day Runaway Setups (Wispr Flow recording)",
+   "date": "2026-10-15",
+   "year_assumed": 2026,
+   "session_type": "asia",
+   "session_et": "19:55-20:34",
+   "instruments": [
+    "US30",
+    "NAS100",
+    "US500",
+    "USOIL",
+    "UKOIL"
+   ],
+   "summary": "Evening/Asia session on the PPI release day; everything demo because he does not trade CPI/PPI weeks ('probabilities are decreased') and price may still be reeling from PPI. Teaching point: on a runaway (price hits the target without tapping the entry, then returns) check where it rejected (midpoint or room to go deeper) and require a NEW 1m FVG off the return, then a 30s off that; never jump straight into the 30s. NAS and US30 M signals ran off without tapping any 30s FVG; US30 2M long back to the only FVG (purple zone/NDOG between) turned into a DB ('nothing changes even if it's a DB') and never came back. NAS tapped the first presented FVG then ripped through the 5m FVG and printed a DB. US oil 1m DB short walkthrough off the purple zone (roll past the candle-body high, target the 1m purple zone) collapsed through the roll level, not entered live; he avoids US oil since the Iran war and his broker only has Brent with a ~$800 spread. Brent named as oil's divergence pair. CPI/PPI affects US-related assets only. US500 stronger pair, no DB down by the end. No trades taken. Clock times not recoverable from the transcript (null).",
+   "events": [
+    {
+     "seq": 1,
+     "clock_et": null,
+     "instrument": "all",
+     "timeframe": "1m",
+     "action": "RULE",
+     "direction": null,
+     "setup": "Runaway: price hits the target without tapping the entry, then comes back",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "check where it hit the target and where it rejected (midpoint, or room to go deeper)",
+      "target already hit = area where it could reverse; protect yourself",
+      "require a NEW 1m FVG off the return, then a 30s FVG off that; do not jump straight into the old 30s"
+     ],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "Teaching point at the session start.",
+     "quote": "I want to see a 1-minute fair value gap form off of this to see if it's respecting it, and then a 30-second off of that, and then push down from there.",
+     "discretionary": false
+    },
+    {
+     "seq": 2,
+     "clock_et": null,
+     "instrument": "NAS100",
+     "timeframe": "5m",
+     "action": "WAIT",
+     "direction": "short",
+     "setup": "M signal; 1m FVG painted; waiting to see if the 5m FVG stays open",
+     "signal": "M",
+     "price_levels": [],
+     "reasons": [
+      "5m FVG must stay open at the candle close",
+      "demo only (PPI week)"
+     ],
+     "confluences": [
+      "Asia opening gap"
+     ],
+     "result": "n/a",
+     "result_detail": "Ran off without tapping the first 30s FVG or any later one.",
+     "quote": "Didn't even tap us in. Just ran off.",
+     "discretionary": false
+    },
+    {
+     "seq": 3,
+     "clock_et": null,
+     "instrument": "US30",
+     "timeframe": "1m",
+     "action": "WAIT",
+     "direction": "short",
+     "setup": "M signal down; looking for a 1m entry",
+     "signal": "M",
+     "price_levels": [],
+     "reasons": [
+      "needed a 1m FVG tap, never came back"
+     ],
+     "confluences": [
+      "purple zone",
+      "NDOG"
+     ],
+     "result": "n/a",
+     "result_detail": "Went straight to the purple zone/NDOG leaving a trail of FVGs; no entry.",
+     "quote": "I was looking for a 1-minute entry to go in that direction. Just didn't give it to us.",
+     "discretionary": false
+    },
+    {
+     "seq": 4,
+     "clock_et": null,
+     "instrument": "all",
+     "timeframe": null,
+     "action": "RULE",
+     "direction": null,
+     "setup": "CPI/PPI week: demo only; the news affects US-related assets only",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "probabilities are decreased",
+      "price may still be reeling from PPI in the evening session",
+      "CPI/PPI = inflation data, moves US assets (Japan 225 question)"
+     ],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "All trades this session were demo.",
+     "quote": "Once again, guys, I don't even trade this week on CPI and PPI weeks. Probabilities are decreased.",
+     "discretionary": false
+    },
+    {
+     "seq": 5,
+     "clock_et": null,
+     "instrument": "US30",
+     "timeframe": "5m",
+     "action": "WAIT",
+     "direction": "long",
+     "setup": "2M; return to the only FVG created, between purple zone and NDOG; later turned into a DB",
+     "signal": "2M",
+     "price_levels": [],
+     "reasons": [
+      "M signal on every timeframe down to the 30s, no DB (liked this)",
+      "a DB does not change the plan: still needs price to come back to the FVG",
+      "next liquidity = PM session highs, then the purple zone above"
+     ],
+     "confluences": [
+      "purple zone",
+      "NDOG",
+      "PM session highs as target"
+     ],
+     "result": "n/a",
+     "result_detail": "US30 made a run to the purple zone and never came back; no entry.",
+     "quote": "Remember, nothing changes even if it's a DB. I still want to see it come back down here.",
+     "discretionary": false
+    },
+    {
+     "seq": 6,
+     "clock_et": null,
+     "instrument": "NAS100",
+     "timeframe": "5m",
+     "action": "WAIT",
+     "direction": null,
+     "setup": "Returned to the first presented FVG and tapped, then ripped through the 5m FVG and printed a DB",
+     "signal": "DB",
+     "price_levels": [],
+     "reasons": [
+      "chaotic post-news action"
+     ],
+     "confluences": [
+      "first presented FVG"
+     ],
+     "result": "n/a",
+     "result_detail": "No entry.",
+     "quote": "So NAS just kind of ripped right through this 5-minute fair value gap.",
+     "discretionary": false
+    },
+    {
+     "seq": 7,
+     "clock_et": null,
+     "instrument": "USOIL",
+     "timeframe": "1m",
+     "action": "SKIP",
+     "direction": "short",
+     "setup": "1m DB down; hit the 1m FVG off the purple zone, 30s FVG printed; walkthrough only",
+     "signal": "DB",
+     "price_levels": [],
+     "reasons": [
+      "PPI week: demo only",
+      "market may still be reeling from PPI",
+      "US oil too chaotic since the Iran war",
+      "his broker only has Brent with a ~$800 spread at opening"
+     ],
+     "confluences": [
+      "purple zone"
+     ],
+     "result": "n/a",
+     "result_detail": "Plan: roll once price cleared the candle-body high, target the 1m purple zone. Price collapsed past the roll level (hypothetical win; not entered live).",
+     "quote": "There's even a small percentage chance that market is still reeling off of news from PPI. I don't want to be a part of it.",
+     "discretionary": false
+    },
+    {
+     "seq": 8,
+     "clock_et": null,
+     "instrument": "USOIL",
+     "timeframe": "1m",
+     "action": "WAIT",
+     "direction": "short",
+     "setup": "No 5m FVG; reversal zone disrespected; waiting for a retest tap, then a drop",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "needs a tap before entry"
+     ],
+     "confluences": [
+      "reversal zone"
+     ],
+     "result": "n/a",
+     "result_detail": "Never tapped; printed a DB down. Runaway, no entry.",
+     "quote": "Let's see if it comes back up here and taps here and then drops. Nope. Didn't want to tap.",
+     "discretionary": false
+    },
+    {
+     "seq": 9,
+     "clock_et": null,
+     "instrument": "UKOIL",
+     "timeframe": "1m",
+     "action": "SKIP",
+     "direction": null,
+     "setup": "Brent as the divergence pair for US oil: reversal gap, 1m FVG, 30s touched",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "30s touched but no entry trigger; ran right through",
+      "demo week"
+     ],
+     "confluences": [
+      "divergence"
+     ],
+     "result": "n/a",
+     "result_detail": "Said this is the oil chart he would trade if he traded oil.",
+     "quote": "This is the one I would have been trading regardless if I chose to trade oil.",
+     "discretionary": false
+    },
+    {
+     "seq": 10,
+     "clock_et": null,
+     "instrument": "US500",
+     "timeframe": "5m",
+     "action": "WAIT",
+     "direction": "short",
+     "setup": "Stronger pair respecting the zone; no DB down",
+     "signal": null,
+     "price_levels": [],
+     "reasons": [
+      "no DB to the downside yet",
+      "watching respect/disrespect of the zone"
+     ],
+     "confluences": [],
+     "result": "n/a",
+     "result_detail": "Session ended with no entry.",
+     "quote": "Still no DB to the downside, though.",
+     "discretionary": false
+    }
+   ]
+  }
+ ]
 }
