@@ -1,39 +1,82 @@
-"""Telegram Q&A: Jake asks a question in the bot chat, Claude answers it with the agent's read-only
-tools (the same functions the /mcp connector serves). Paper only: no tool here can place an order.
+"""Telegram Q&A: Jake asks a question or posts a chart screenshot in the bot chat; Claude answers
+with the rulebook in its prompt and two read-only tool sets: the paper agent's own (the same
+functions /mcp serves: stats, decisions, lessons, hypotheses, course + live-session search) and
+fvg-mcp's (live setups, entries, Market Translator events, FVGs, trade history), prefixed fvg_.
+Paper only: no tool here can place an order.
 
 Telegram -> POST /telegram (secret header) -> a thread runs the tool loop -> sendMessage.
 Only TELEGRAM_CHAT_ID gets answers; with it unset the bot replies with the chat id to set."""
+import base64
 import hashlib
 import hmac
 import json
 import logging
 import threading
+import time
 from datetime import datetime
 
 import httpx
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from . import config, llm, store
+from . import config, llm, prompts, store
+from .mcp_client import FVG
 
 log = logging.getLogger("telegram")
 
-MAX_ROUNDS = 8
+MAX_ROUNDS = 10
 TOOL_RESULT_CHARS = 30000
+FVG_PREFIX = "fvg_"
+FVG_TOOLS_TTL_S = 600
+MAX_IMAGE_BYTES = 8_000_000
 _lock = threading.Lock()
+_fvg_cache = {"at": 0.0, "tools": []}
 
-SYSTEM = """You are Jake's trading analyst for the Fractal Agent: a PAPER-only AI filter on top of his
-fvg-mcp rules engine (Fractal Effects strategy: Market Translator signals, FVG cascade 5m->1m->30s,
-1:3 targets, mainly MNQ1!/MES1!). Jake asks from Telegram on his phone.
+SYSTEM = """You are Jake's trading analyst for the Fractal Effects futures strategy (Market Translator
+and Spotlight indicators; FVG cascade 5m->1m->30s; 1:3 targets). Jake asks from Telegram on his
+phone, sometimes with a TradingView screenshot.
 
-Answer from the tools, never from memory: pull the numbers first. How to answer:
-- Bottom line first, then the few facts that support it. Short. Plain text only (no markdown,
-  no tables, no asterisks); short lines and simple dashes are fine.
-- Any results figure carries n, win%, avg R, total R and max drawdown, and names the window.
-- Times in ET. Say when n is too small to trust (under ~30 trades).
-- Tips must be grounded: cite the rule section, lesson, hypothesis result or trade ids behind
-  them. Rule changes are proposals only; Jake approves them on the dashboard.
-- This system never places orders. Do not tell Jake to enter or exit a live trade."""
+Your sources, in priority order on a conflict: amendments > rulebook > live-session rules (all
+three are below) > course and live-session passages (knowledge_search, instructor_calls) >
+lessons and reviews from past paper trades.
+
+Tools:
+- The paper agent: paper_stats, symbol_stats, strategy_report, decisions, decision_detail,
+  lessons, hypotheses, reviews, pending_setups, spotted_setups, chart_question, api_spend.
+- The live rules engine (fvg-mcp, tools prefixed fvg_): live setups, engine entries, Market
+  Translator signals, active FVGs, confluence, trade history per symbol.
+- knowledge_search: the 9 course modules, mini lessons, SOP and live-session transcripts. Use it
+  to quote the instructor when a call depends on his teaching.
+
+With a screenshot: read it first (symbol, timeframe, last price, M/2M/DB/2DB signals and white
+lines and whether a body closed through them, FVGs, reversal zones, purple/blue zones, NDOG/NWOG,
+Spotlight DR box and confirmation, EMAs 20/238, trend table, structure). Say what is not visible
+instead of guessing. Then check the live engine for that symbol (fvg_ setups / recent events) and
+judge it against the rules: which play this is, must-haves present or missing, boosters, hard
+rules, grade, where it is invalidated, what has to happen next before it is valid.
+
+How to answer:
+- Bottom line first, then the facts behind it. Short. Plain text only (no markdown, no tables,
+  no asterisks); short lines and dashes are fine.
+- Results figures carry n, win%, avg R, total R and max drawdown, and name the window. Say when n
+  is too small to trust (under ~30).
+- Times in ET. Cite rule sections (e.g. §2.6), trade ids or the course module behind a tip.
+- Rule changes are proposals; Jake approves them on the dashboard. This system is paper only:
+  describe what the rules say about a setup, never tell Jake to place, size or exit a live order.
+
+=== RULES ===
+--- amendments.md ---
+{amendments}
+--- rulebook.md ---
+{rulebook}
+--- live_rules.md ---
+{live_rules}"""
+
+
+def system_prompt() -> str:
+    return SYSTEM.format(amendments=prompts._read("amendments.md"), rulebook=prompts._read("rulebook.md"),
+                         live_rules=prompts._read("live_rules.md"))
+
 
 # (tool name, input schema properties, required); descriptions come from the functions' docstrings
 _SPECS = [
@@ -62,19 +105,43 @@ def _functions() -> dict:
     return {name: getattr(main, name) for name, _, _ in _SPECS}
 
 
+def _fvg_tools() -> list:
+    """fvg-mcp's tool list (its MCP is read-only), cached; empty if it is unreachable."""
+    if time.time() - _fvg_cache["at"] < FVG_TOOLS_TTL_S:
+        return _fvg_cache["tools"]
+    try:
+        tools = FVG().list_tools()
+    except Exception as e:
+        log.warning("fvg-mcp tools/list failed: %s", e)
+        tools = _fvg_cache["tools"]
+    _fvg_cache.update(at=time.time(), tools=tools)
+    return tools
+
+
 def tool_defs() -> list:
     fns = _functions()
-    return [{"name": name, "description": " ".join((fns[name].__doc__ or name).split()),
-             "input_schema": {"type": "object", "properties": props, "required": req}}
-            for name, props, req in _SPECS]
+    out = [{"name": name, "description": " ".join((fns[name].__doc__ or name).split()),
+            "input_schema": {"type": "object", "properties": props, "required": req}}
+           for name, props, req in _SPECS]
+    for t in _fvg_tools():
+        schema = t.get("inputSchema") or {"type": "object", "properties": {}}
+        out.append({"name": FVG_PREFIX + t["name"],
+                    "description": "Live rules engine (fvg-mcp): " + " ".join((t.get("description") or t["name"]).split())[:1000],
+                    "input_schema": {"type": "object", "properties": schema.get("properties") or {},
+                                     "required": schema.get("required") or []}})
+    return out
 
 
 def run_tool(name: str, args: dict) -> str:
-    fn = _functions().get(name)
-    if not fn:
-        return json.dumps({"error": f"unknown tool {name}"})
     try:
-        out = json.dumps(fn(**(args or {})), default=str)
+        if name.startswith(FVG_PREFIX):
+            res = FVG().call(name[len(FVG_PREFIX):], **(args or {}))
+        else:
+            fn = _functions().get(name)
+            if not fn:
+                return json.dumps({"error": f"unknown tool {name}"})
+            res = fn(**(args or {}))
+        out = json.dumps(res, default=str)
     except Exception as e:
         return json.dumps({"error": f"{type(e).__name__}: {str(e)[:300]}"})
     return out if len(out) <= TOOL_RESULT_CHARS else out[:TOOL_RESULT_CHARS] + " ...[truncated]"
@@ -87,6 +154,16 @@ def secret() -> str:
 def _api(method: str, **params) -> dict:
     r = httpx.post(f"https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/{method}", json=params, timeout=20)
     return r.json()
+
+
+def _download(file_id: str) -> bytes:
+    info = _api("getFile", file_id=file_id)
+    path = (info.get("result") or {}).get("file_path")
+    if not path:
+        raise RuntimeError(f"getFile failed: {info.get('description')}")
+    r = httpx.get(f"https://api.telegram.org/file/bot{config.TELEGRAM_BOT_TOKEN}/{path}", timeout=30)
+    r.raise_for_status()
+    return r.content
 
 
 def register_webhook():
@@ -104,12 +181,13 @@ def send(chat_id, text: str):
         _api("sendMessage", chat_id=chat_id, text=text[i:i + 4000], disable_web_page_preview=True)
 
 
-def answer(question: str, history: list) -> str:
-    """The tool loop. history: past {"role", "content": str} turns, oldest first."""
+def answer(question, history: list) -> str:
+    """The tool loop. question: text, or content blocks (image + text). history: past
+    {"role", "content": str} turns, oldest first."""
     messages = history + [{"role": "user", "content": question}]
-    tools = tool_defs()
+    tools, system = tool_defs(), system_prompt()
     for _ in range(MAX_ROUNDS):
-        data = llm.chat_with_tools(config.TELEGRAM_MODEL, SYSTEM, messages, tools, max_tokens=16000,
+        data = llm.chat_with_tools(config.TELEGRAM_MODEL, system, messages, tools, max_tokens=16000,
                                    effort=config.TELEGRAM_EFFORT, purpose="telegram")
         content = data.get("content") or []
         calls = [b for b in content if b.get("type") == "tool_use"]
@@ -126,12 +204,21 @@ def _today_key() -> str:
     return "tg_count:" + datetime.now(config.ET).strftime("%Y-%m-%d")
 
 
-def handle(chat_id, text: str):
+def _image_file_id(msg: dict) -> str | None:
+    if msg.get("photo"):
+        return max(msg["photo"], key=lambda p: p.get("file_size") or p.get("width", 0) * p.get("height", 0))["file_id"]
+    doc = msg.get("document") or {}
+    if str(doc.get("mime_type", "")).startswith("image/"):
+        return doc["file_id"]
+    return None
+
+
+def handle(chat_id, text: str, image_id: str | None = None):
     hkey = f"tg_history:{chat_id}"
-    cmd = text.strip().split()[0].lower() if text.strip() else ""
+    cmd = text.strip().split()[0].lower() if text.strip() and not image_id else ""
     if cmd in ("/start", "/help"):
-        send(chat_id, "Ask me about the paper agent: today's results, which symbols pay, why a trade "
-                      "was skipped, open hypotheses, what the rules say. /reset clears the conversation.")
+        send(chat_id, "Ask me about the paper agent or the live engine, or send a chart screenshot "
+                      "(add a question as the caption). /reset clears the conversation.")
         return
     if cmd == "/reset":
         store.kv_set(hkey, [])
@@ -148,15 +235,28 @@ def handle(chat_id, text: str):
     except Exception:
         pass
     history = store.kv_get(hkey) or []
+    text = text[:4000]
     try:
-        reply = answer(text[:4000], history)
+        if image_id:
+            img = _download(image_id)
+            if len(img) > MAX_IMAGE_BYTES:
+                send(chat_id, "That image is too large. Send it as a photo instead of a file.")
+                return
+            media = "image/png" if img[:4] == b"\x89PNG" else "image/jpeg"
+            question = [{"type": "image", "source": {"type": "base64", "media_type": media,
+                                                     "data": base64.b64encode(img).decode()}},
+                        {"type": "text", "text": text or "Analyse this chart against the rules."}]
+        else:
+            question = text
+        reply = answer(question, history)
     except Exception as e:
         log.exception("telegram answer failed")
         send(chat_id, f"Error answering: {str(e)[:300]}")
         return
     send(chat_id, reply)
     keep = max(0, config.TELEGRAM_HISTORY)
-    store.kv_set(hkey, (history + [{"role": "user", "content": text[:4000]},
+    asked = ("[screenshot] " if image_id else "") + text
+    store.kv_set(hkey, (history + [{"role": "user", "content": asked},
                                    {"role": "assistant", "content": reply[:4000]}])[-keep:] if keep else [])
 
 
@@ -176,8 +276,9 @@ async def webhook(request: Request):
             return JSONResponse({"ok": True})
         store.kv_set("tg_last_update", uid)
     msg = update.get("message") or {}
-    chat_id, text = (msg.get("chat") or {}).get("id"), msg.get("text") or ""
-    if chat_id is None or not text:
+    chat_id = (msg.get("chat") or {}).get("id")
+    text, image_id = msg.get("text") or msg.get("caption") or "", _image_file_id(msg)
+    if chat_id is None or not (text or image_id):
         return JSONResponse({"ok": True})
     if not config.TELEGRAM_CHAT_ID:
         threading.Thread(target=send, args=(chat_id, f"Your chat id is {chat_id}. Set TELEGRAM_CHAT_ID to it "
@@ -186,5 +287,5 @@ async def webhook(request: Request):
         return JSONResponse({"ok": True})
     if str(chat_id) != config.TELEGRAM_CHAT_ID:
         return JSONResponse({"ok": True})
-    threading.Thread(target=handle, args=(chat_id, text), daemon=True, name="tg-answer").start()
+    threading.Thread(target=handle, args=(chat_id, text, image_id), daemon=True, name="tg-answer").start()
     return JSONResponse({"ok": True})

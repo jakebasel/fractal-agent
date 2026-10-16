@@ -574,7 +574,7 @@ telegram_bot._api = lambda method, **p: SENT.append((method, p)) or {"ok": True}
 
 
 def fake_chat(model, system, messages, tools, max_tokens, effort, purpose):
-    LLM_TURNS.append({"model": model, "tools": [t["name"] for t in tools], "messages": messages})
+    LLM_TURNS.append({"model": model, "tools": [t["name"] for t in tools], "messages": list(messages)})
     if len(LLM_TURNS) == 1:
         return {"stop_reason": "tool_use", "content": [
             {"type": "tool_use", "id": "t1", "name": "symbol_stats", "input": {"days": 7}}]}
@@ -598,6 +598,20 @@ ok(SENT[-1] == ("sendMessage", {"chat_id": 42, "text": "6A1! pays most: n=3, +4.
 ok(len(store.kv_get("tg_history:42")) == 2, "conversation kept for follow-ups")
 telegram_bot.handle(42, "/reset")
 ok(store.kv_get("tg_history:42") == [] and SENT[-1][1]["text"] == "Conversation cleared.", "/reset clears it")
+_names = [t["name"] for t in telegram_bot.tool_defs()]
+ok("fvg_entries" in _names and "fvg_setups" in _names, f"fvg-mcp tools offered with the fvg_ prefix ({len(_names)} tools)")
+ok(isinstance(json.loads(telegram_bot.run_tool("fvg_entries", {"symbol": "MNQ1!", "limit": 2})), list),
+   "fvg_ tool call goes to fvg-mcp")
+ok("rulebook.md ---" in telegram_bot.system_prompt() and "Hard rules" in telegram_bot.system_prompt(),
+   "rulebook is in the Telegram system prompt")
+LLM_TURNS.clear()
+telegram_bot._download = lambda fid: b"\x89PNG fake"
+telegram_bot.handle(42, "", image_id="photo1")
+_q = LLM_TURNS[0]["messages"][-1]["content"]
+ok(_q[0]["type"] == "image" and _q[0]["source"]["media_type"] == "image/png" and "Analyse" in _q[1]["text"],
+   "screenshot goes to the model as an image with a default question")
+ok(telegram_bot._image_file_id({"photo": [{"file_id": "s", "file_size": 10}, {"file_id": "b", "file_size": 99}]}) == "b",
+   "largest photo size is used")
 config.TELEGRAM_BOT_TOKEN = config.TELEGRAM_CHAT_ID = ""
 
 print("all tests passed")

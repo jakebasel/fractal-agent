@@ -88,6 +88,17 @@ class FVG:
             raise MCPError(f"{name}: {msg['error']}")
         return _unwrap(msg.get("result") or {})
 
+    def list_tools(self) -> list:
+        payload = {"jsonrpc": "2.0", "id": next(_ids), "method": "tools/list"}
+        resp = self.http.post(self.url, json=payload, headers={
+            "Accept": "application/json, text/event-stream", "Content-Type": "application/json"})
+        if resp.status_code >= 400:
+            raise MCPError(f"tools/list: HTTP {resp.status_code} {resp.text[:200]}")
+        msg = _parse_body(resp)
+        if "error" in msg:
+            raise MCPError(f"tools/list: {msg['error']}")
+        return (msg.get("result") or {}).get("tools") or []
+
     # convenience wrappers -------------------------------------------------------------------
     def archived_prices(self, symbol, day) -> list:
         """[(ms, price), ...] for one archived UTC day, sorted, null timestamps dropped. The tool
