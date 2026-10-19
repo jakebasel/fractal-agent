@@ -656,6 +656,30 @@ ok(main.trade_breakdown("6A1!", 7)["all"]["n"] == 3 and main.trade_breakdown(Non
    "trade_breakdown splits winners vs losers per symbol")
 ok(telegram_bot._image_file_id({"photo": [{"file_id": "s", "file_size": 10}, {"file_id": "b", "file_size": 99}]}) == "b",
    "largest photo size is used")
+
+# 21b. Zoom Trade Alerts relay: Zoom messages queue for the Mac instead of reaching the model
+ok(telegram_bot.is_zoom_message("https://us06web.zoom.us/j/123?pwd=x")
+   and telegram_bot.is_zoom_message("/stop") and telegram_bot.is_zoom_message("/last 5")
+   and not telegram_bot.is_zoom_message("which symbol pays?")
+   and not telegram_bot.is_zoom_message("https://www.tradingview.com/x/abc"),
+   "Zoom links and Zoom commands route to the Mac; questions and other links don't")
+store.kv_set("zoom_last_poll", time.time())
+SENT.clear()
+LLM_TURNS.clear()
+telegram_bot.zoom_enqueue({"chat": {"id": 42}, "text": "/join"})
+ok(telegram_bot.is_zoom_message("https://meet.google.com/abc-def"), "the link after a bare /join goes to the Mac")
+telegram_bot.zoom_enqueue({"chat": {"id": 42}, "text": "https://meet.google.com/abc-def"})
+ok(not telegram_bot.is_zoom_message("https://www.tradingview.com/x/abc"), "only ONE follow-up link is taken")
+ok(not SENT and not LLM_TURNS, "queued Zoom messages never reach the model or reply while the Mac is up")
+ok(tc.get("/zoom/inbox").status_code == 401, "zoom inbox rejects a missing token")
+_inbox = tc.get("/zoom/inbox?after=0", headers={"X-Zoom-Token": telegram_bot.zoom_token()}).json()
+ok([i["message"]["text"] for i in _inbox["items"]][-2:] == ["/join", "https://meet.google.com/abc-def"],
+   "zoom inbox returns queued messages in order")
+ok(tc.get(f"/zoom/inbox?after={_inbox['seq']}", headers={"X-Zoom-Token": telegram_bot.zoom_token()}).json()["items"] == [],
+   "zoom inbox returns nothing past the cursor")
+store.kv_set("zoom_last_poll", 0)
+telegram_bot.zoom_enqueue({"chat": {"id": 42}, "text": "/status"})
+ok(SENT and "isn't running on the Mac" in SENT[-1][1]["text"], "warns when the Mac app isn't polling")
 config.TELEGRAM_BOT_TOKEN = config.TELEGRAM_CHAT_ID = ""
 
 print("all tests passed")

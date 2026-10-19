@@ -11,6 +11,7 @@ import hashlib
 import hmac
 import json
 import logging
+import re
 import threading
 import time
 from datetime import datetime
@@ -171,6 +172,65 @@ def secret() -> str:
     return hashlib.sha256(("telegram|" + config.TELEGRAM_BOT_TOKEN).encode()).hexdigest()[:48]
 
 
+# ---- Zoom Trade Alerts relay (2026-10-20) ------------------------------------------------
+# Jake deleted the Zoom bot and asked for its commands on this one. This bot receives by
+# webhook, and Telegram allows a bot only one delivery mode, so the Mac (zoom-trade-alerts)
+# can't poll getUpdates for it. Instead Zoom messages are queued here and the Mac pulls
+# them from GET /zoom/inbox; it still SENDS transcripts and alerts straight to Telegram.
+ZOOM_CMDS = {"/join", "/listen", "/stop", "/leave", "/live", "/livetext", "/transcript",
+             "/last", "/record", "/recordings", "/status", "/test"}
+ZOOM_LINK_RE = re.compile(r"(?:https?://)?[\w.-]*zoom(?:gov)?\.(?:us|com)/[^\s<>\"')]+", re.I)
+ANY_LINK_RE = re.compile(r"https?://[^\s<>\"']+", re.I)
+ZOOM_QUEUE_MAX = 50
+ZOOM_MAC_STALE_S = 30        # no inbox poll for this long = the Mac app isn't running
+_zoom_lock = threading.Lock()
+
+
+def zoom_token() -> str:
+    """Shared with the Mac without a new secret: both sides hold the bot token."""
+    return hashlib.sha256(("zoom|" + config.TELEGRAM_BOT_TOKEN).encode()).hexdigest()[:48]
+
+
+def is_zoom_message(text: str) -> bool:
+    t = (text or "").strip()
+    if not t:
+        return False
+    if t.split()[0].lower().split("@")[0] in ZOOM_CMDS or ZOOM_LINK_RE.search(t):
+        return True
+    # "/join" with no link makes the Mac ask for one; the reply is any link (Meet, YouTube...)
+    return bool(ANY_LINK_RE.search(t)) and time.time() < float(store.kv_get("zoom_wait_link_until") or 0)
+
+
+def zoom_enqueue(msg: dict) -> None:
+    text = (msg.get("text") or msg.get("caption") or "").strip()
+    with _zoom_lock:
+        seq = int(store.kv_get("zoom_seq") or 0) + 1
+        queue = (store.kv_get("zoom_queue") or [])[-(ZOOM_QUEUE_MAX - 1):]
+        queue.append({"seq": seq, "at": time.time(), "message": msg})
+        store.kv_set("zoom_seq", seq)
+        store.kv_set("zoom_queue", queue)
+        if text.lower().startswith("/join") and not ANY_LINK_RE.search(text):
+            store.kv_set("zoom_wait_link_until", time.time() + 300)
+        elif ANY_LINK_RE.search(text):
+            store.kv_set("zoom_wait_link_until", 0)
+    if time.time() - float(store.kv_get("zoom_last_poll") or 0) > ZOOM_MAC_STALE_S:
+        send(msg["chat"]["id"], "Zoom Trade Alerts isn't running on the Mac. Double-click start.command "
+                                "there; it'll pick this up if you start it within 15 minutes.")
+
+
+async def zoom_inbox(request: Request):
+    got = request.headers.get("x-zoom-token", "")
+    if not config.TELEGRAM_BOT_TOKEN or not hmac.compare_digest(got.encode(), zoom_token().encode()):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    try:
+        after = int(request.query_params.get("after") or 0)
+    except ValueError:
+        after = 0
+    store.kv_set("zoom_last_poll", time.time())
+    items = [x for x in (store.kv_get("zoom_queue") or []) if x["seq"] > after]
+    return JSONResponse({"items": items, "seq": int(store.kv_get("zoom_seq") or 0)})
+
+
 def _api(method: str, **params) -> dict:
     r = httpx.post(f"https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/{method}", json=params, timeout=20)
     return r.json()
@@ -248,7 +308,9 @@ def handle(chat_id, text: str, image_id: str | None = None):
         send(chat_id, "Ask me about the paper agent or the live engine, or send a chart screenshot "
                       "(add a question as the caption).\n/deep <question> - one answer from the stronger "
                       f"model ({config.TELEGRAM_DEEP_MODEL})\n/model haiku|sonnet|opus - change the default "
-                      f"(now {default_model()})\n/reset - clear the conversation")
+                      f"(now {default_model()})\n/reset - clear the conversation\n\n"
+                      "Zoom (runs on the Mac): paste a Zoom link, or /join, /listen, /stop, /leave, "
+                      "/live, /last 5, /record, /recordings, /status, /test")
         return
     if cmd == "/reset":
         store.kv_set(hkey, [])
@@ -336,6 +398,9 @@ async def webhook(request: Request):
                          daemon=True).start()
         return JSONResponse({"ok": True})
     if str(chat_id) != config.TELEGRAM_CHAT_ID:
+        return JSONResponse({"ok": True})
+    if not image_id and is_zoom_message(text):
+        threading.Thread(target=zoom_enqueue, args=(msg,), daemon=True, name="tg-zoom").start()
         return JSONResponse({"ok": True})
     threading.Thread(target=handle, args=(chat_id, text, image_id), daemon=True, name="tg-answer").start()
     return JSONResponse({"ok": True})

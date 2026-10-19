@@ -730,6 +730,7 @@ _app.router.routes.extend([
     Route("/api/reviews/reopen", reopen_reviews, methods=["POST"]),
     Route("/shot/{name}", shot_file),
     Route("/telegram", telegram_bot.webhook, methods=["POST"]),
+    Route("/zoom/inbox", telegram_bot.zoom_inbox),
 ])
 app = _McpGate(_app)
 
