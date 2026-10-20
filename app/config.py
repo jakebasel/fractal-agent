@@ -148,7 +148,9 @@ PUBLIC_URL = _env("PUBLIC_URL", "https://agent.motivationpro.tech").rstrip("/") 
 # Telegram Q&A: Jake asks in the chat, this model answers with the agent's read-only tools
 TELEGRAM_MODEL = _env("TELEGRAM_MODEL", "claude-haiku-5-5")         # default; /model changes it
 TELEGRAM_EFFORT = _env("TELEGRAM_EFFORT", "low")
-TELEGRAM_DEEP_MODEL = _env("TELEGRAM_DEEP_MODEL", "claude-sonnet-5-5")   # /deep <question>
+TELEGRAM_DEEP_MODEL = _env("TELEGRAM_DEEP_MODEL", "claude-sonnet-5-5")
+# reference library (app/library.py): who writes each live session's digest
+LIBRARY_DIGEST_MODEL = _env("LIBRARY_DIGEST_MODEL", "claude-sonnet-5-5")   # /deep <question>
 TELEGRAM_DEEP_EFFORT = _env("TELEGRAM_DEEP_EFFORT", "medium")
 TELEGRAM_MAX_PER_DAY = int(_env("TELEGRAM_MAX_PER_DAY", "60"))     # questions per ET day
 TELEGRAM_HISTORY = int(_env("TELEGRAM_HISTORY", "8"))               # past messages kept for follow-ups

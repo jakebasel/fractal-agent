@@ -194,11 +194,23 @@ def rules_text(which: str = "all") -> dict:
 
 
 @mcp.tool()
-def knowledge_search(query: str, k: int = 6) -> list[dict]:
-    """Search the course transcripts, mini lessons, SOP and live-session transcripts (BM25) for
-    the passages most relevant to `query`; the same index the decider uses."""
-    from . import knowledge
-    return knowledge.index().search(query[:400], k=max(1, min(int(k), 12)))
+def knowledge_search(query: str, k: int = 6, kind: str | None = None, since: str | None = None) -> list[dict]:
+    """Search the reference library: the course, mini lessons and SOP, every live-session
+    transcript and its digest, plus the agents' own trade lessons and Hermes reviews. Each hit
+    says where and when it was said. kind narrows it (course | live_session | digest | lesson |
+    review); since = 'YYYY-MM-DD' keeps only newer material. The decider searches the same."""
+    from . import knowledge, library
+    k = max(1, min(int(k), 12))
+    hits = library.search(query[:400], k=k, kind=kind, since=since)
+    return hits or knowledge.index().search(query[:400], k=k)
+
+
+@mcp.tool()
+def session_digests(days: float = 30, limit: int = 20) -> list[dict]:
+    """Digests of the recorded live sessions, newest first: summary, topics, the instructor's
+    trade calls and teachings with ET times, and any rule proposals filed from them."""
+    from . import library
+    return library.session_digests(days=days, limit=max(1, min(int(limit), 50)))
 
 
 def _review_packet(r) -> dict:
@@ -364,6 +376,31 @@ def _authed(request: Request) -> bool:
         return False   # closed until a token is configured
     tok = request.query_params.get("token") or request.headers.get("x-agent-token", "")
     return hmac.compare_digest(tok.encode(), config.AGENT_TOKEN.encode())
+
+
+async def library_ingest(request: Request):
+    """The Zoom tool on the Hub posts each finished live-session transcript here (agent token).
+    ?title=&at=&source= ; body = the transcript text. Digesting runs in the background."""
+    if not _authed(request):
+        return PlainTextResponse("unauthorized", status_code=401)
+    from . import library
+    text = (await request.body()).decode("utf-8", "ignore")
+    if len(text.strip()) < 200:
+        return JSONResponse({"ok": False, "error": "transcript too short to keep"}, status_code=400)
+    qp = request.query_params
+    source = (qp.get("source") or "").strip()[:200] or "live:" + hashlib.sha1(text.encode()).hexdigest()[:16]
+    title, at = (qp.get("title") or source)[:200], (qp.get("at") or store.now_utc())[:40]
+    threading.Thread(target=library.ingest_session, args=(source, title, at, text),
+                     daemon=True, name="library-ingest").start()
+    return JSONResponse({"ok": True, "source": source, "queued": True})
+
+
+async def library_search(request: Request):
+    if not _authed(request):
+        return PlainTextResponse("unauthorized", status_code=401)
+    q = request.query_params
+    return JSONResponse({"hits": knowledge_search(q.get("q", ""), int(q.get("k") or 8), q.get("kind"),
+                                                  q.get("since"))})
 
 
 async def health(request: Request):
@@ -731,6 +768,8 @@ _app.router.routes.extend([
     Route("/shot/{name}", shot_file),
     Route("/telegram", telegram_bot.webhook, methods=["POST"]),
     Route("/zoom/inbox", telegram_bot.zoom_inbox),
+    Route("/library/ingest", library_ingest, methods=["POST"]),
+    Route("/library/search", library_search),
 ])
 app = _McpGate(_app)
 

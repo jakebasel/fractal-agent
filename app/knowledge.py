@@ -154,4 +154,12 @@ def passages_for(context: dict, k: int | None = None) -> list[dict]:
     k = k or config.KNOWLEDGE_PASSAGES
     if k <= 0:
         return []
-    return index().search(query_for(context), k=k)
+    q = query_for(context)
+    try:   # the reference library: course + every live session and digest (lessons reach the
+        from . import library   # decider separately, via prompts._lessons_block)
+        hits = library.search(q, k=k, kinds=("course", "live_session", "digest"))
+        if hits:
+            return hits
+    except Exception:
+        pass
+    return index().search(q, k=k)

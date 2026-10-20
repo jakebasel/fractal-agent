@@ -629,6 +629,12 @@ def tick(fvg: FVG):
         learning.assess_next()
     except Exception as e:
         log.warning("hypothesis assessment failed: %s", e)
+    ph.start("library")
+    try:   # course files + new lessons / Hermes reviews into the reference library
+        from . import library
+        library.sync_if_due()
+    except Exception as e:
+        log.warning("library sync failed: %s", e)
     ph.start("csv")
     if changed:
         store.write_csv_file()

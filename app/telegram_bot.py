@@ -46,8 +46,10 @@ Tools:
   lessons, hypotheses, reviews, pending_setups, spotted_setups, chart_question, api_spend.
 - The live rules engine (fvg-mcp, tools prefixed fvg_): live setups, engine entries, Market
   Translator signals, active FVGs, confluence, trade history per symbol.
-- knowledge_search: the 9 course modules, mini lessons, SOP and live-session transcripts. Use it
-  to quote the instructor when a call depends on his teaching.
+- knowledge_search: the reference library -- the 9 course modules, mini lessons, SOP, every live-
+  session transcript and digest, and the agents' own lessons and Hermes reviews. Each hit says
+  when it was said; quote it with the date. Use it to quote the instructor when a call depends on
+  his teaching. session_digests: what each recent live session covered, his calls and teachings.
 
 Coverage: the paper agent itself only decides {agent_symbols} (the Fusion Markets CFDs
 on Jake's chart layout), but fvg-mcp tracks ~150 futures and CFD symbols. Never say only those are tracked. For "what is setting up now / best trade" questions:
@@ -114,7 +116,10 @@ _SPECS = [
     ("pending_setups", {}, []),
     ("spotted_setups", {"limit": {"type": "integer"}}, []),
     ("rules_text", {"which": {"type": "string", "enum": ["all", "amendments", "rulebook", "live_rules"]}}, []),
-    ("knowledge_search", {"query": {"type": "string"}, "k": {"type": "integer"}}, ["query"]),
+    ("knowledge_search", {"query": {"type": "string"}, "k": {"type": "integer"},
+                          "kind": {"type": "string", "enum": ["course", "live_session", "digest", "lesson", "review"]},
+                          "since": {"type": "string"}}, ["query"]),
+    ("session_digests", {"days": {"type": "number"}, "limit": {"type": "integer"}}, []),
     ("instructor_calls", {}, []),
     ("chart_question", {"entry_id": {"type": "integer"}, "question": {"type": "string"},
                         "at": {"type": "string", "enum": ["decision", "exit"]}}, ["entry_id", "question"]),

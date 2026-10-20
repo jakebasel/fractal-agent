@@ -691,5 +691,52 @@ telegram_bot.zoom_enqueue({"chat": {"id": 42}, "text": "/status"})
 ok(SENT and "isn't running on the Mac" in SENT[-1][1]["text"], "warns when the Mac app isn't polling")
 config.TELEGRAM_BOT_TOKEN = config.TELEGRAM_CHAT_ID = ""
 
+# 22. Reference library: one searchable store of course, live sessions, digests, lessons, reviews
+from app import library  # noqa: E402
+_session = ("[10:04:06] Okay so when I'm looking at the purple zone in Asia, I want price to sweep it first.\n"
+            "[10:05:10] If the double break prints after the sweep, that is the DB continuation I take.\n" * 6)
+_id, _new = library.add_document("live_session", "test:s1", "Live 10/14 AM", "2026-10-14T14:00:00", _session)
+ok(_new and not library.add_document("live_session", "test:s1", "Live 10/14 AM", "2026-10-14T14:00:00", _session)[1],
+   "library stores a session once (same text = no re-index)")
+_hits = library.search("purple zone sweep", k=3, kind="live_session", since="2026-10-01")
+ok(_hits and _hits[0]["source"] == "test:s1" and "[10:04:06]" in _hits[0]["text"] and _hits[0]["at"].startswith("2026-10-14"),
+   "library search finds the session, keeps the timestamp and the date")
+ok(library.search("db", k=3) and library.search("DB'; DROP TABLE x --", k=3) is not None,
+   "trading shorthand expands (DB -> double break) and punctuation can't break the query")
+ok(not library.search("purple zone", k=3, kind="course") or all(h["kind"] == "course" for h in library.search("purple zone", k=3, kind="course")),
+   "kind filter narrows results")
+_n_sync = library.sync_internal()
+ok(_n_sync > 0 and library.count().get("course", 0) > 0, f"course files and lessons sync into the library ({library.count()})")
+_orig_post = llm._post
+
+
+def _digest_post(model, messages, max_tokens=1500, temperature=0.1, purpose="other"):
+    if purpose == "library_digest":
+        assert model == config.LIBRARY_DIGEST_MODEL and "RULEBOOK" in messages[0]["content"]
+        return json.dumps({"title": "Asia purple sweep then DB", "summary": "He traded the Asia sweep.",
+                           "topics": ["purple zone", "DB"], "trade_calls": [{"time": "10:05", "instrument": "NAS",
+                           "side": "long", "what": "DB continuation after sweep", "outcome": "+3R"}],
+                           "teachings": [{"time": "10:04", "point": "sweep the purple zone first"}],
+                           "rule_proposals": [{"title": "Sweep before DB", "rule": "IF Asia purple swept THEN TAKE DB",
+                                               "quote": "I want price to sweep it first", "time": "10:04"}]})
+    return _orig_post(model, messages, max_tokens, temperature, purpose)
+
+
+llm._post = _digest_post
+_h_before = len(store.hypotheses(["testing", "queued", "approved", "rejected"]))
+_res = library.ingest_session("test:s2", "Live 10/14 PM", "2026-10-14T20:43:00", _session + "[20:50:00] new part\n")
+ok(_res["digest"] and _res["digest"]["title"] == "Asia purple sweep then DB", "a new session gets a digest")
+ok(library.search("sweep the purple zone first", kind="digest", k=2), "the digest itself is searchable")
+ok(len(store.hypotheses(["testing", "queued", "approved", "rejected"])) >= _h_before, "rule proposals filed (or matched) as hypotheses")
+ok(main.session_digests(days=3650)[0]["trade_calls"][0]["outcome"] == "+3R", "session_digests MCP tool returns the calls")
+llm._post = _orig_post
+_lc = TestClient(main.app)
+ok(_lc.post("/library/ingest?title=x", content=b"x" * 500).status_code == 401, "library ingest needs the agent token")
+ok(_lc.post("/library/ingest?title=x", content=b"short", headers={"X-Agent-Token": "tok"}).status_code == 400,
+   "library ingest rejects near-empty transcripts (test runs)")
+ok(_lc.get("/library/search?q=purple+zone", headers={"X-Agent-Token": "tok"}).json()["hits"],
+   "library search endpoint answers with the token")
+ok(any(h.get("kind") for h in main.knowledge_search("purple zone sweep")), "knowledge_search (Telegram/Claude/Hermes) reads the library")
+
 print("all tests passed")
 server.should_exit = True

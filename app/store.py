@@ -530,7 +530,7 @@ def support_hypothesis(hid, entry_id):
     if not h:
         return
     ids = json.loads(h["entry_ids"] or "[]")
-    if entry_id not in ids:
+    if entry_id and entry_id not in ids:      # 0 = support from a live session, no trade
         ids.append(entry_id)
     with _lock:
         db().execute("UPDATE hypotheses SET support=support+1, entry_ids=? WHERE id=?",
