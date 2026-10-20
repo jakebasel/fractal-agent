@@ -50,6 +50,10 @@ UI_PORT = int(os.environ.get("UI_PORT", "8080"))
 # "--type=renderer" pattern would also kill Jake's own Chrome. The VPS image keeps its
 # browsers under /ms-playwright, the Mac under ~/Library/Caches/ms-playwright.
 PW_PROC = "ms-playwright"
+# ...and even that is too broad on the Hub, which runs other Playwright projects. The kill
+# sweep exists only for the VPS's CPU limit; the Hub sets KILL_LEFTOVERS=0 and relies on
+# ctx.close().
+KILL_LEFTOVERS = os.environ.get("KILL_LEFTOVERS", "1") == "1"
 QUALITY = int(os.environ.get("JPEG_QUALITY", "75"))
 W, H = (int(x) for x in os.environ.get("TV_VIEWPORT", "2560x1440").lower().split("x"))
 COOKIE_FILE = DATA / "cookies.json"
@@ -166,6 +170,8 @@ def kill_leftover_renderers():
     so neither CPU throttling, the lifecycle freeze nor parking on about:blank stopped it.
     In FRESH_PAGE mode every capture uses a new tab that is closed afterwards, and any
     renderer still alive after that is a leftover: kill it. Browser, GPU and zygote stay."""
+    if not KILL_LEFTOVERS:
+        return
     try:
         subprocess.run(["pkill", "-9", "-f", "--", f"{PW_PROC}.*--type=renderer"], check=False)
     except Exception:
@@ -340,6 +346,8 @@ def kill_leftover_chrome():
     day the VPS was carrying ~94 chrome processes (and <defunct> zombies) from this one
     container, which is what tripped Hostinger's CPU limitation. The container runs nothing
     else, so killing every chrome process here is safe."""
+    if not KILL_LEFTOVERS:
+        return
     try:
         subprocess.run(["pkill", "-9", "-f", f"{PW_PROC}/chromium"], check=False)
     except Exception:
