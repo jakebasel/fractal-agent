@@ -390,8 +390,9 @@ async def library_ingest(request: Request):
     qp = request.query_params
     source = (qp.get("source") or "").strip()[:200] or "live:" + hashlib.sha1(text.encode()).hexdigest()[:16]
     title, at = (qp.get("title") or source)[:200], (qp.get("at") or store.now_utc())[:40]
+    notify = qp.get("notify", "1") != "0"     # backlog imports pass notify=0
     threading.Thread(target=library.ingest_session, args=(source, title, at, text),
-                     daemon=True, name="library-ingest").start()
+                     kwargs={"notify": notify}, daemon=True, name="library-ingest").start()
     return JSONResponse({"ok": True, "source": source, "queued": True})
 
 

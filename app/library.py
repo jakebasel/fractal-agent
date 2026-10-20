@@ -226,7 +226,22 @@ def digest(doc_id: int) -> dict:
     return d
 
 
-def ingest_session(source: str, title: str, at: str, text: str, run_digest: bool = True) -> dict:
+def digest_text(title: str, d: dict) -> str:
+    """The digest as a Telegram message."""
+    lines = [f"📚 {d.get('title') or title}", "", d.get("summary") or ""]
+    if d.get("trade_calls"):
+        lines += ["", "Calls:"] + [f"• {x.get('time')} {x.get('instrument')} {x.get('side')}: {x.get('what')}"
+                                   + (f" → {x.get('outcome')}" if x.get("outcome") else "") for x in d["trade_calls"]]
+    if d.get("teachings"):
+        lines += ["", "Teachings:"] + [f"• {x.get('time')} {x.get('point')}" for x in d["teachings"][:8]]
+    if d.get("rule_proposals"):
+        lines += ["", "Filed as rule proposals (need your Approve on the dashboard):"] + \
+                 [f"• {p.get('title')}: {p.get('rule')}" for p in d["rule_proposals"][:3]]
+    return "\n".join(lines)
+
+
+def ingest_session(source: str, title: str, at: str, text: str, run_digest: bool = True,
+                   notify: bool = False) -> dict:
     doc_id, changed = add_document("live_session", source, title, at, text)
     out = {"doc_id": doc_id, "changed": changed, "digest": None}
     if run_digest and changed:
@@ -235,6 +250,12 @@ def ingest_session(source: str, title: str, at: str, text: str, run_digest: bool
         except Exception as e:
             log.exception("digest failed for %s", source)
             out["digest_error"] = f"{type(e).__name__}: {e}"[:300]
+    if notify and out["digest"] and config.TELEGRAM_BOT_TOKEN and config.TELEGRAM_CHAT_ID:
+        try:
+            from . import telegram_bot
+            telegram_bot.send(config.TELEGRAM_CHAT_ID, digest_text(title, out["digest"]))
+        except Exception as e:
+            log.warning("digest message failed: %s", e)
     return out
 
 
