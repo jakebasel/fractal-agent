@@ -42,6 +42,14 @@ TV_LAYOUT = os.environ.get("TV_LAYOUT", "One TradingView window with four charts
                            "top-left MNQ 5-minute, top-right MNQ 1-minute, bottom-left MES 5-minute, "
                            "bottom-right MES 1-minute.")   # Jake's "10.7 - Fractal test" layout
 EVERY = int(os.environ.get("CAPTURE_EVERY_S", "30"))
+# 2026-10-20: also runs on the Mac Mini Hub (launchd), where it has CPU to spare. KIND labels
+# its screenshots for the agent (each kind keeps its own layout text); UI_PORT avoids clashes.
+KIND = os.environ.get("CAPTURE_KIND", "vps")
+UI_PORT = int(os.environ.get("UI_PORT", "8080"))
+# Cleanup must only ever hit Playwright's own Chromium: on the Hub a bare "chrome" or
+# "--type=renderer" pattern would also kill Jake's own Chrome. The VPS image keeps its
+# browsers under /ms-playwright, the Mac under ~/Library/Caches/ms-playwright.
+PW_PROC = "ms-playwright"
 QUALITY = int(os.environ.get("JPEG_QUALITY", "75"))
 W, H = (int(x) for x in os.environ.get("TV_VIEWPORT", "2560x1440").lower().split("x"))
 COOKIE_FILE = DATA / "cookies.json"
@@ -159,7 +167,7 @@ def kill_leftover_renderers():
     In FRESH_PAGE mode every capture uses a new tab that is closed afterwards, and any
     renderer still alive after that is a leftover: kill it. Browser, GPU and zygote stay."""
     try:
-        subprocess.run(["pkill", "-9", "-f", "--", "--type=renderer"], check=False)
+        subprocess.run(["pkill", "-9", "-f", "--", f"{PW_PROC}.*--type=renderer"], check=False)
     except Exception:
         pass
 
@@ -268,7 +276,7 @@ def capture_set(ctx, pages) -> int:
                 kill_leftover_renderers()
             if i == 0:
                 PREVIEW.write_bytes(img)
-            q = urllib.parse.urlencode({"batch": batch, "part": i, "kind": "vps", "layout": TV_LAYOUT})
+            q = urllib.parse.urlencode({"batch": batch, "part": i, "kind": KIND, "layout": TV_LAYOUT})
             agent("POST", f"/screenshot?{q}", body=img, ctype="image/jpeg")
             sent += 1
         return sent
@@ -297,7 +305,7 @@ def capture_set(ctx, pages) -> int:
             log("stray-page sweep failed:", str(e)[:120])
         if i == 0:
             PREVIEW.write_bytes(img)
-        q = urllib.parse.urlencode({"batch": batch, "part": i, "kind": "vps", "layout": TV_LAYOUT})
+        q = urllib.parse.urlencode({"batch": batch, "part": i, "kind": KIND, "layout": TV_LAYOUT})
         agent("POST", f"/screenshot?{q}", body=img, ctype="image/jpeg")
         sent += 1
     return sent
@@ -333,7 +341,7 @@ def kill_leftover_chrome():
     container, which is what tripped Hostinger's CPU limitation. The container runs nothing
     else, so killing every chrome process here is safe."""
     try:
-        subprocess.run(["pkill", "-9", "-f", "chrome-linux/chrome"], check=False)
+        subprocess.run(["pkill", "-9", "-f", f"{PW_PROC}/chromium"], check=False)
     except Exception:
         pass
     try:                                 # reap zombies if we are the parent
@@ -506,12 +514,12 @@ class UI(BaseHTTPRequestHandler):
 
 
 def serve():
-    ThreadingHTTPServer(("0.0.0.0", 8080), UI).serve_forever()
+    ThreadingHTTPServer(("0.0.0.0", UI_PORT), UI).serve_forever()
 
 
 if __name__ == "__main__":
     if not AGENT_TOKEN:
         print("AGENT_TOKEN missing", file=sys.stderr); sys.exit(1)
     threading.Thread(target=serve, daemon=True).start()
-    log(f"capturing {len(TV_PAGES)} page(s) every {EVERY}s at {W}x{H}; UI on :8080")
+    log(f"capturing {len(TV_PAGES)} page(s) every {EVERY}s at {W}x{H}; UI on :{UI_PORT}, kind={KIND}")
     run()
