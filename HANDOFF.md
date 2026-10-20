@@ -287,6 +287,27 @@ Not done, needs a decision from Jake:
   trades, counter-evidence, a recommendation (adopt / reject / keep watching). Redone when new
   changed trades settle or every `REASSESS_HOURS`. Jake still clicks Approve.
 
+## 2026-10-20 — reference library, CFD symbols, capture on the Mac Mini Hub
+
+- **Symbols:** the agent trades NAS100, US500, US30 (Fusion Markets CFDs, Jake's choice). Chart
+  panels and trades are matched with `config.sym_key` (a 3-letter prefix broke US500/US30).
+- **Reference library** (`app/library.py`, tables `library_docs` + FTS5 `library_fts` in agent.db
+  on /data): course files, every live-session transcript, each session's digest, every lesson and
+  Hermes review. `knowledge_search` (MCP, Telegram, the decider's course passages) searches it;
+  `session_digests` lists session digests. Lessons/reviews sync every 5 min from the agent loop.
+- **Live sessions arrive automatically:** the Zoom tool on the Mac Mini Hub
+  (`~/Coding/zoom-trade-alerts`) posts each finished transcript (>= 2 KB) to
+  `POST /library/ingest` (agent token) on `/stop`. A Sonnet digest (`LIBRARY_DIGEST_MODEL`,
+  ~4¢/session) pulls out summary, calls, teachings and up to 3 rule proposals, filed as
+  hypotheses (Approve still required), and messages the digest to Jake Trade Help.
+  Backlog Oct 8-14 (6 sessions) imported with `notify=0`. Not yet in: the 10/07 Asia and 10/08
+  NY Wispr recordings, and fvg-mcp's `transcripts` table.
+- **Chart capture moved to the Mac Mini Hub** (launchd `com.jake.tv-capture`, every 15 s,
+  2560x1440, kind `hub`, two layouts: KpsgBddj = 5-min, Igwdvwuf = 1-min; the vision prompt reads
+  each chart's timeframe from its header). The VPS `tv-capture` app is stopped, not deleted.
+  The capture keeps layouts open: after editing a layout, restart it
+  (`launchctl kickstart -k gui/$(id -u)/com.jake.tv-capture` on the Hub).
+
 ## VPS screenshot capturer (tv-capture/)
 
 Coolify app `tv-capture` (same project, base directory `/tv-capture`, volume `/data`, domain
