@@ -197,8 +197,8 @@ def sanity_check(chart_read, entry: dict) -> tuple[float | None, str]:
     levels at all? Returns (score 0..1 or None if nothing to compare, note)."""
     if not chart_read or not isinstance(chart_read, dict):
         return None, "no read"
-    sym = (entry.get("symbol") or "")[:3].upper()
-    charts = [c for c in chart_read.get("charts") or [] if (c.get("symbol") or "").upper() == sym]
+    sym = config.sym_key(entry.get("symbol"))
+    charts = [c for c in chart_read.get("charts") or [] if config.sym_key(c.get("symbol")) == sym]
     if not charts:
         return 0.0, f"{sym} not found on screen"
     price = entry.get("entry")

@@ -16,9 +16,21 @@ RULES_DIR = Path(_env("RULES_DIR", str(Path(__file__).resolve().parent.parent / 
 
 # --- the rules engine (fvg-mcp), read-only ---------------------------------------------
 FVG_MCP_URL = _env("FVG_MCP_URL", "https://fvg.motivationpro.tech/mcp")
-SYMBOLS = [s.strip() for s in _env("SYMBOLS", "MNQ1!,MES1!").split(",") if s.strip()]
-# the index each symbol is compared with for divergence (stronger/weaker pair)
-PAIR = {"MNQ1!": "MES1!", "MES1!": "MNQ1!", "NQ1!": "ES1!", "ES1!": "NQ1!"}
+# 2026-10-20 (Jake): the agent follows the Fusion Markets CFDs his TradingView layout shows
+# (NAS100, US500, US30) instead of MNQ/MES. SYMBOLS overrides this per deploy.
+SYMBOLS = [s.strip() for s in _env("SYMBOLS", "NAS100,US500,US30").split(",") if s.strip()]
+# the index each symbol is compared with for divergence (stronger/weaker pair, rulebook §4
+# "sister pair"): NAS vs S&P is the course's pair; the Dow is compared with the S&P.
+PAIR = {"NAS100": "US500", "US500": "NAS100", "US30": "US500",
+        "MNQ1!": "MES1!", "MES1!": "MNQ1!", "NQ1!": "ES1!", "ES1!": "NQ1!"}
+
+
+def sym_key(s) -> str:
+    """How a symbol is named on a chart panel: MNQ1! -> MNQ, NAS100 -> NAS100, US30 -> US30.
+    Chart reads and trade symbols are matched on this (a 3-letter prefix made US500 and US30
+    unmatchable)."""
+    s = str(s or "").upper().strip()
+    return s[:-2] if s.endswith("1!") else s.rstrip("!")
 POLL_SECONDS = int(_env("POLL_SECONDS", "15"))
 # only review entries this fresh; older ones (e.g. after a restart) are logged as missed
 MAX_ENTRY_AGE_S = int(_env("MAX_ENTRY_AGE_S", "300"))
@@ -95,8 +107,10 @@ AGENT_TOKEN = _env("AGENT_TOKEN")             # shared secret for /screenshot an
 SCREENSHOT_MAX_AGE_S = int(_env("SCREENSHOT_MAX_AGE_S", "180"))
 SCREEN_LAYOUT = _env(
     "SCREEN_LAYOUT",
-    "Two TradingView windows side by side: 5-minute charts on the LEFT, 1-minute charts on "
-    "the RIGHT. Each window shows MNQ (Nasdaq micro) and MES (S&P micro), possibly MYM (Dow).",
+    "One TradingView window with three charts side by side (Fusion Markets CFDs): LEFT NAS100 "
+    "(US 100 Cash CFD) 5-minute, MIDDLE US500 (US 500 Index) 5-minute, RIGHT US30 (Dow Jones) "
+    "1-minute. Each shows Market Translator signals (M, DB labels), white lines, zones, EMAs and a "
+    "Timeframe/Trend table.",
 )
 
 # --- news filter (rule 2.2): high-impact USD events from the public weekly calendar ---------

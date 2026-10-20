@@ -93,7 +93,7 @@ Return one JSON object:
 {{
   "charts": [   // one per visible chart panel
     {{
-      "symbol": "MNQ" | "MES" | "MYM" | "other",
+      "symbol": {chart_symbols} | "other",
       "timeframe": "5m" | "1m" | "unknown",
       "last_price": number | null,
       "signals": [ {{"label": "M"|"2M"|"DB"|"2DB", "side": "above_price"|"below_price",
@@ -120,7 +120,8 @@ Return one JSON object:
 
 def vision_prompt(layout: str | None = None) -> str:
     """`layout` overrides SCREEN_LAYOUT (an uploader can describe its own images, see /screenshot)."""
-    return VISION_PROMPT.format(layout=layout or config.SCREEN_LAYOUT)
+    return VISION_PROMPT.format(layout=layout or config.SCREEN_LAYOUT,
+                                chart_symbols=" | ".join(f'"{config.sym_key(x)}"' for x in config.SYMBOLS))
 
 
 DECISION_SYSTEM = """You are the AI review layer of a PAPER-trading system for the Fractal
@@ -309,7 +310,7 @@ the same direction (check `engine_armed`).
 Amendments (highest priority), rulebook §5 and plays:
 {reversal}
 
-Reply with ONE JSON object: {{"setups": [{{"symbol": "MNQ1!"|"MES1!",
+Reply with ONE JSON object: {{"setups": [{{"symbol": {symbols},
 "play": "<1m|5m> <M|2M|DB|2DB> <kind>" with kind one of {plays} (e.g. "5m DB reversal set up", "1m M continuation"),
 "direction": "bull"|"bear", "stage": "forming"|"ready"|"entered", "entry": number|null,
 "stop": number|null, "target": number|null, "confidence": 0.0-1.0,
@@ -321,7 +322,8 @@ def scan_system() -> str:
     rb = _read("rulebook.md")
     i = rb.find("## 5.")
     return SCAN_SYSTEM.format(reversal=_read("amendments.md") + "\n" + (rb[i:] if i >= 0 else rb[-3000:]),
-                              plays=json.dumps(list(PLAY_KINDS)))
+                              plays=json.dumps(list(PLAY_KINDS)),
+                              symbols="|".join(f'"{x}"' for x in config.SYMBOLS))
 
 
 def scan_user(chart_read, armed, now) -> str:

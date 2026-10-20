@@ -338,6 +338,15 @@ sc, note = scanner.sanity_check(cr, {"symbol": "MNQ1!", "entry": 100.0})
 ok(sc == 1.0 and "within" in note, f"vision sanity: price matches ({note})")
 sc, note = scanner.sanity_check(cr, {"symbol": "MES1!", "entry": 50.0})
 ok(sc == 0.0, "vision sanity: symbol not on screen")
+# CFD names (10/20): a 3-letter prefix made "US500"/"US30" read as "US5"/"US3" and never match
+cr_cfd = {"charts": [{"symbol": "US500", "timeframe": "5m", "last_price": 7713.6, "white_lines": []},
+                     {"symbol": "US30", "timeframe": "1m", "last_price": 52433.6, "white_lines": []}]}
+ok("within" in scanner.sanity_check(cr_cfd, {"symbol": "US500", "entry": 7714.0})[1]
+   and "within" in scanner.sanity_check(cr_cfd, {"symbol": "US30", "entry": 52430.0})[1]
+   and scanner.sanity_check(cr_cfd, {"symbol": "NAS100", "entry": 29527.0})[0] == 0.0,
+   "vision sanity matches CFD names exactly (US500 vs US30 vs NAS100)")
+ok(config.sym_key("MNQ1!") == "MNQ" and config.sym_key("ZW!") == "ZW" and config.sym_key("US30") == "US30",
+   "sym_key folds continuous-contract suffixes only")
 from datetime import datetime as _dt2  # noqa: E402
 import zoneinfo  # noqa: E402
 ET = zoneinfo.ZoneInfo("America/New_York")

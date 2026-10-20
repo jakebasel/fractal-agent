@@ -49,8 +49,8 @@ Tools:
 - knowledge_search: the 9 course modules, mini lessons, SOP and live-session transcripts. Use it
   to quote the instructor when a call depends on his teaching.
 
-Coverage: the paper agent itself only decides MNQ1!/MES1!, but fvg-mcp tracks ~150 futures
-symbols. Never say only MNQ/MES are tracked. For "what is setting up now / best trade" questions:
+Coverage: the paper agent itself only decides {agent_symbols} (the Fusion Markets CFDs
+on Jake's chart layout), but fvg-mcp tracks ~150 futures and CFD symbols. Never say only those are tracked. For "what is setting up now / best trade" questions:
 fvg_recent_events(source="market_translator", limit=40) for fresh signals on every symbol and
 fvg_entries(limit=30) for the newest validated entries; rank the candidates with symbol_stats
 (which symbols pay for the core strategy); then fvg_setups(symbol) on the best 3-5 for stage,
@@ -95,7 +95,8 @@ How to answer:
 
 def system_prompt() -> str:
     return SYSTEM.format(amendments=prompts._read("amendments.md"), rulebook=prompts._read("rulebook.md"),
-                         live_rules=prompts._read("live_rules.md"))
+                         live_rules=prompts._read("live_rules.md"),
+                         agent_symbols=", ".join(config.SYMBOLS))
 
 
 # (tool name, input schema properties, required); descriptions come from the functions' docstrings
