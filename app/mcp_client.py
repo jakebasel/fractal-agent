@@ -74,13 +74,13 @@ class FVG:
         self.url = url or config.FVG_MCP_URL
         self.http = client or httpx.Client(timeout=30)
 
-    def call(self, name: str, **arguments):
+    def call(self, name: str, _timeout: float | None = None, **arguments):
         payload = {"jsonrpc": "2.0", "id": next(_ids), "method": "tools/call",
                    "params": {"name": name, "arguments": arguments}}
         resp = self.http.post(self.url, json=payload, headers={
             "Accept": "application/json, text/event-stream",
             "Content-Type": "application/json",
-        })
+        }, timeout=_timeout if _timeout is not None else httpx.USE_CLIENT_DEFAULT)
         if resp.status_code >= 400:
             raise MCPError(f"{name}: HTTP {resp.status_code} {resp.text[:200]}")
         msg = _parse_body(resp)
@@ -104,7 +104,8 @@ class FVG:
         """{"candles": [{t,o,h,l,c,complete,at_et}], "last_tick_age_min", ...}: 4H (240) or
         daily (1440) candles on the trading session (CFDs 17:00 ET, futures 18:00 ET),
         archive plus today's live tape."""
-        res = self.call("htf_candles", symbol=symbol, minutes=minutes, days=days)
+        # a cold fvg-mcp reads each archived day from R2 once (~1 min for a month), then caches
+        res = self.call("htf_candles", _timeout=120, symbol=symbol, minutes=minutes, days=days)
         return res if isinstance(res, dict) else {}
 
     def archived_prices(self, symbol, day) -> list:
