@@ -1,10 +1,12 @@
-"""Higher-timeframe fair value gaps computed from fvg-mcp's archived price tape (no vision
-model, no LLM). Rule 2.8 (don't enter long deeper into an overhead 4H FVG / short into one
-below) and Reversal Set Up criterion 1 (price reached a 4H or daily FVG) need these, and they
-are usually off-screen.
+"""Higher-timeframe fair value gaps from fvg-mcp's price tape (no vision model, no LLM).
+Rule 2.8 (don't enter long deeper into an overhead 4H FVG / short into one below) and Reversal
+Set Up criterion 1 (price reached a 4H or daily FVG) need these, and they are usually off-screen.
 
-The archive holds whole UTC days; the current day is only archived after it ends, so today's
-4H candles are missing. The context says how fresh the data is so the model can say "unknown".
+2026-10-20: candles come from fvg-mcp's htf_candles tool -- archive PLUS today's live tape,
+bucketed on the trading session like TradingView (CFDs 17:00 ET, CME futures 18:00 ET). The old
+path (archived_prices, 3 UTC days, UTC buckets) never saw today and drew 4H candles that were
+not the ones on Jake's chart, so every decision read the feed as stale. It stays as the
+fallback for an fvg-mcp build without the tool.
 """
 import logging
 import time
@@ -14,8 +16,9 @@ from . import config
 
 log = logging.getLogger("htf")
 _cache: dict = {}   # symbol -> {"at": ts, "fvgs": [...], "through": "YYYY-MM-DD"}
-TTL_S = 3600
-DAYS = 3
+TTL_S = 900
+DAYS = 3            # fallback path only
+DAYS_4H, DAYS_1D = 10, 30
 
 
 def candles(ticks, minutes: int) -> list:
@@ -69,25 +72,48 @@ def _fetch(fvg, symbol: str):
     return ticks, through
 
 
+def _strip(gaps, keep):
+    return [{k: v for k, v in g.items() if k != "filled"} | {"at_et": _et(g["at_ms"])}
+            for g in gaps if not g["filled"]][-keep:]
+
+
+def _from_tool(fvg, symbol: str):
+    r4 = fvg.htf_candles(symbol, 240, DAYS_4H)
+    r1 = fvg.htf_candles(symbol, 1440, DAYS_1D)
+    c4, c1 = r4.get("candles") or [], r1.get("candles") or []
+    if not c4:
+        return None
+    age = r4.get("last_tick_age_min")
+    return {
+        "4h": _strip(fvgs_of(c4, "4h"), 8), "1d": _strip(fvgs_of(c1, "1d"), 4),
+        "through": "live", "age_h": round(age / 60, 1) if age is not None else None,
+        "candles_4h": len(c4), "candles_1d": len(c1),
+        "note": (f"session-anchored like TradingView ({r4.get('anchor_et')} ET open), "
+                 f"{DAYS_4H}d of 4H and {DAYS_1D}d of daily, including today's forming candle"),
+    }
+
+
 def htf_fvgs(fvg, symbol: str) -> dict:
-    """{"4h": [...open gaps...], "1d": [...], "through": day, "age_h": hours since the last tick}"""
+    """{"4h": [...open gaps...], "1d": [...], "through": day|"live", "age_h": hours since the last tick}"""
     c = _cache.get(symbol)
     if c and time.time() - c["at"] < TTL_S:
         return c["out"]
-    ticks, through = _fetch(fvg, symbol)
-    if not ticks:
-        out = {"4h": [], "1d": [], "through": None, "age_h": None, "note": "no archived prices"}
-    else:
-        c4, c1d = candles(ticks, 240), candles(ticks, 1440)
-        last_ms = ticks[-1][0]
-        out = {
-            "4h": [{k: v for k, v in g.items() if k != "filled"} | {"at_et": _et(g["at_ms"])}
-                   for g in fvgs_of(c4, "4h") if not g["filled"]][-8:],
-            "1d": [{k: v for k, v in g.items() if k != "filled"} | {"at_et": _et(g["at_ms"])}
-                   for g in fvgs_of(c1d, "1d") if not g["filled"]][-4:],
-            "through": through, "age_h": round((time.time() * 1000 - last_ms) / 3600_000, 1),
-            "note": "from fvg-mcp's archived tape; today's candles are missing until the day is archived",
-        }
+    out = None
+    try:
+        out = _from_tool(fvg, symbol)
+    except Exception as e:
+        log.warning("htf_candles %s: %s (falling back to archived_prices)", symbol, e)
+    if out is None:
+        ticks, through = _fetch(fvg, symbol)
+        if not ticks:
+            out = {"4h": [], "1d": [], "through": None, "age_h": None, "note": "no price data"}
+        else:
+            out = {
+                "4h": _strip(fvgs_of(candles(ticks, 240), "4h"), 8),
+                "1d": _strip(fvgs_of(candles(ticks, 1440), "1d"), 4),
+                "through": through, "age_h": round((time.time() * 1000 - ticks[-1][0]) / 3600_000, 1),
+                "note": "fallback: archived tape only, UTC buckets; today's candles are missing",
+            }
     _cache[symbol] = {"at": time.time(), "out": out}
     return out
 

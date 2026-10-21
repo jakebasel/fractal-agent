@@ -127,7 +127,7 @@ def build_context(fvg: FVG, entry: dict, detail: dict, chart_read, shot_age) -> 
                               "at": _et(_iso_to_dt(detail["signal_at"])) if detail.get("signal_at") else None},
             "signal_sequence": [x.get("text") for x in detail.get("mt_seq", [])],
             "config": detail.get("mt_cfg"), "two_m": detail.get("two_m"),
-            "retrace_quality": detail.get("retrace"), "tap_depth": detail.get("tap_depth"),
+            "retrace_quality": _retrace_label(entry, detail), "tap_depth": detail.get("tap_depth"),
             "fvg_gaps_in_chain": detail.get("fvg_gaps"),
             "gaps_invalidated_on_the_way": len(detail.get("invalidations") or []),
             "stages": [{k: st.get(k) for k in ("tf", "top", "bot", "close_level")}
@@ -144,6 +144,22 @@ def build_context(fvg: FVG, entry: dict, detail: dict, chart_read, shot_age) -> 
         "screenshot_age_s": round(shot_age, 1) if shot_age is not None else None,
         "htf_fvgs": _htf(fvg, sym, entry.get("entry")),
     }
+
+
+def _retrace_label(entry: dict, detail: dict) -> str | None:
+    """The engine grades retracement quality for DB signals only (§2.6). A null there is not
+    missing evidence: on an M / 2M the stages show the tap, and a DB entry only exists after the
+    retracement completed and a new same-direction gap printed (db_after_retrace). Saying so
+    stops the model from grading a null as a missing must-have (30 of 62 C skips 10/13-10/20)."""
+    r = detail.get("retrace")
+    if r:
+        return r
+    if rules_code._is_db(entry, detail):
+        return ("not graded; the engine enters a DB only after the retracement into the DB leg "
+                "completed and a NEW same-direction gap printed, so it is satisfied")
+    return ("not graded: the engine's quality test is DB-only (§2.6). On an M / 2M the retracement "
+            "is the pullback into the first presented FVG, and the stages show it was tapped, so "
+            "the must-have is met unless the chart shows otherwise")
 
 
 def _htf(fvg: FVG, sym: str, price) -> dict | None:

@@ -743,5 +743,26 @@ ok("error" not in _cn and _cn.get("images", 0) >= 1 and "screenshot_age_s" in _c
 ok("chart_now" in [t["name"] for t in telegram_bot.tool_defs()] and "NEW gap in" in telegram_bot.system_prompt().replace("\n", " ")
    or "NEW gap" in telegram_bot.system_prompt(), "Telegram has chart_now and the DB-after-retracement rule")
 
+
+# 2026-10-20: HTF candles from fvg-mcp's htf_candles tool (archive + today), not the archive alone
+class _HtfFVG:
+    def htf_candles(self, symbol, minutes, days):
+        cs = [{"t": i * minutes * 60_000, "o": o, "h": h, "l": l, "c": c, "complete": True}
+              for i, (o, h, l, c) in enumerate([(100, 101, 99, 100), (100, 108, 100, 107), (107, 110, 104, 109)])]
+        return {"candles": cs, "anchor_et": "17:00", "last_tick_age_min": 3}
+    def archived_prices(self, symbol, day):
+        raise AssertionError("fallback used although htf_candles answered")
+htf._cache.clear()
+_hh = htf.htf_fvgs(_HtfFVG(), "NAS100")
+ok(_hh["through"] == "live" and _hh["4h"] and _hh["4h"][0]["dir"] == "bull" and _hh["age_h"] < 1,
+   "HTF gaps come from the live session-anchored candles")
+htf._cache.clear()
+ok(agent._retrace_label({"mt_text": "M"}, {"mt_cfg": "M"}).startswith("not graded")
+   and "satisfied" in agent._retrace_label({"mt_text": "Double Break"}, {"mt_cfg": "DB"})
+   and agent._retrace_label({}, {"retrace": "deep"}) == "deep",
+   "a null retracement grade is labelled, never shown as missing")
+ok("never by itself a SKIP" in prompts.DECISION_SYSTEM and "Missing data is a downgrade" in open("rules/amendments.md").read(),
+   "missing data downgrades instead of forcing a skip")
+
 print("all tests passed")
 server.should_exit = True

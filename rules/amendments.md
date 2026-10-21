@@ -91,3 +91,15 @@ it from 2026-10-20: a DB arm only enters from its after-retracement hunt.
 When a DB's retracement has run into a reversal zone instead, check the Reversal Set Up (§5)
 for the other side before calling the DB direction (same example: a long off the printed
 reversal gap).
+
+## 2026-10-20 — Missing data is a downgrade, never a skip by itself (Jake)
+Overrides §3's "C = a must-have missing -> SKIP" where "missing" only means the data is absent,
+stale or could not be verified (no chart read, an old screenshot, an empty HTF feed, a field the
+engine does not fill, a news calendar that did not load). That is a B: TAKE at reduced size and
+list it under "unknowns". C / SKIP needs EVIDENCE that a must-have FAILS (the chart or the
+engine shows no tap, no foothold, a third compromise, 1:3 does not fit) or a hard rule (§2)
+firing. Jake 2026-10-20: "stop missing data from forcing a skip" -- 62 of 62 skips 10/13-10/20
+were C, half of them on a retracement field the engine only fills for DB signals.
+Retracement on an M / 2M: the engine's quality grade is DB-only, so a null there is NOT missing
+evidence. The M's retracement is the pullback into the first presented FVG, which the stages
+show. A DB entry only exists after the retracement completed and a new same-direction gap printed.

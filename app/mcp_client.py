@@ -100,6 +100,13 @@ class FVG:
         return (msg.get("result") or {}).get("tools") or []
 
     # convenience wrappers -------------------------------------------------------------------
+    def htf_candles(self, symbol, minutes, days) -> dict:
+        """{"candles": [{t,o,h,l,c,complete,at_et}], "last_tick_age_min", ...}: 4H (240) or
+        daily (1440) candles on the trading session (CFDs 17:00 ET, futures 18:00 ET),
+        archive plus today's live tape."""
+        res = self.call("htf_candles", symbol=symbol, minutes=minutes, days=days)
+        return res if isinstance(res, dict) else {}
+
     def archived_prices(self, symbol, day) -> list:
         """[(ms, price), ...] for one archived UTC day, sorted, null timestamps dropped. The tool
         returns {"bars": [[ms, px], ...]} (older builds returned the list itself)."""

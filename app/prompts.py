@@ -126,8 +126,9 @@ def vision_prompt(layout: str | None = None) -> str:
 
 DECISION_SYSTEM = """You are the AI review layer of a PAPER-trading system for the Fractal
 Effects futures strategy. A deterministic rules engine already found the setup below; you decide
-whether the instructor would actually take it, using ONLY the rulebook. Be strict: the default
-when evidence is missing for a must-have is SKIP or reduced size, never invention.
+whether the instructor would actually take it, using ONLY the rulebook. Be strict about what the
+evidence SHOWS, never invent it: skip when the data shows a must-have failing or a hard rule fires.
+Missing, stale or unverifiable data is a downgrade (B, reduced size), never by itself a SKIP.
 
 === RULEBOOK (priority order: amendments > rulebook > live rules) ===
 --- amendments.md ---
