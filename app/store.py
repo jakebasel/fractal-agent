@@ -139,6 +139,13 @@ CREATE TABLE IF NOT EXISTS core_trades (
     exec TEXT, synced_at TEXT
 );
 CREATE INDEX IF NOT EXISTS core_trades_sym ON core_trades(symbol, entry_bar);
+CREATE TABLE IF NOT EXISTS forward_trades (    -- app/forward.py: the frozen paper forward test
+    entry_id INTEGER PRIMARY KEY,    -- fvg-mcp trade id
+    name TEXT, symbol TEXT, entry_bar INTEGER, et TEXT, slot_session TEXT, slot_day TEXT,
+    dir TEXT, sig TEXT, mt_tf TEXT, decision TEXT, reason TEXT, entry REAL, stop REAL, lots INTEGER,
+    r REAL, outcome TEXT, scoring TEXT, net_usd REAL, decided_at TEXT
+);
+CREATE INDEX IF NOT EXISTS forward_slot ON forward_trades(name, slot_session, slot_day, decision);
 """
 
 # columns added after v1; ALTERed into an existing database at start-up

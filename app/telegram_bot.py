@@ -127,6 +127,7 @@ _SPECS = [
                           "kind": {"type": "string", "enum": ["course", "live_session", "digest", "lesson", "review"]},
                           "since": {"type": "string"}}, ["query"]),
     ("session_digests", {"days": {"type": "number"}, "limit": {"type": "integer"}}, []),
+    ("forward_test", {}, []),
     ("chart_now", {"question": {"type": "string"}}, ["question"]),
     ("instructor_calls", {}, []),
     ("chart_question", {"entry_id": {"type": "integer"}, "question": {"type": "string"},

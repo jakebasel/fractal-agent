@@ -634,6 +634,13 @@ def tick(fvg: FVG):
         symbols.sync_if_due(fvg)
     except Exception as e:
         log.warning("core trades sync failed: %s", e)
+    ph.start("forward")
+    try:   # the frozen micro forward test (app/forward.py): mechanical, no LLM calls
+        from . import forward
+        forward.sync_if_due(fvg)
+        forward.maybe_report()
+    except Exception as e:
+        log.warning("forward test failed: %s", e)
     ph.start("learning")
     learning.promote_queued()
     try:

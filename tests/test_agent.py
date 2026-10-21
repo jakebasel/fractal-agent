@@ -764,5 +764,61 @@ ok(agent._retrace_label({"mt_text": "M"}, {"mt_cfg": "M"}).startswith("not grade
 ok("never by itself a SKIP" in prompts.DECISION_SYSTEM and "Missing data is a downgrade" in open("rules/amendments.md").read(),
    "missing data downgrades instead of forcing a skip")
 
+
+# 2026-10-21: the frozen micro forward test (app/forward.py)
+from app import forward  # noqa: E402
+_FT_COLS = ["id", "symbol", "dir", "sig", "mt_tf", "entry_bar", "entry", "stop", "r", "outcome", "scoring",
+            "session", "in_window", "nd", "retrace", "n_inv"]
+def _ft_ms(*a):
+    return int(datetime(*a, tzinfo=config.ET).timestamp() * 1000)
+_FT_ROWS = [  # Thu 10/22 ET; MNQ stop 10 pts -> 0.75% of $100k = $750 -> 37 -> 36 micros
+    [9001, "MNQ1!", "bull", "M", "1m", _ft_ms(2026, 10, 22, 9, 40), 100.0, 90.0, 2.5, "2R + runner", "on_time", "newyork", True, False, None, 0],
+    [9002, "MES1!", "bull", "DB", "1m", _ft_ms(2026, 10, 22, 9, 45), 100.0, 98.0, -1.0, "stopped", "on_time", "newyork", True, False, "shallow", 0],
+    [9003, "MYM1!", "bear", "M", "1m", _ft_ms(2026, 10, 22, 9, 50), 100.0, 80.0, -1.0, "stopped", "on_time", "newyork", True, False, None, 4],
+    [9004, "MES1!", "bear", "M", "1m", _ft_ms(2026, 10, 22, 10, 5), 100.0, 98.0, -1.0, "stopped", "on_time", "newyork", True, False, None, 0],
+    [9005, "MNQ1!", "bull", "M", "1m", _ft_ms(2026, 10, 22, 10, 30), 100.0, 90.0, 2.5, "2R + runner", "on_time", "newyork", True, False, None, 0],
+    [9006, "MNQ1!", "bull", "M", "5m", _ft_ms(2026, 10, 22, 5, 0), 100.0, 90.0, 2.5, "2R + runner", "on_time", "london", True, False, None, 0],
+    [9007, "MNQ1!", "bull", "M", "1m", _ft_ms(2026, 10, 22, 12, 40), 100.0, 90.0, 2.5, "2R + runner", "on_time", "nypm", False, False, None, 0],
+    [9008, "MNQ1!", "bull", "M", "1m", _ft_ms(2026, 10, 21, 23, 0), 100.0, 90.0, None, None, "unscored", "asia", True, False, None, 0],
+    [9009, "MNQ1!", "bull", "M", "1m", _ft_ms(2026, 10, 22, 0, 30), 100.0, 90.0, 1.0, "2R, BE", "on_time", "asia", False, False, None, 0],
+    [9010, "MNQ1!", "bull", "M", "1m", _ft_ms(2026, 10, 20, 9, 40), 100.0, 90.0, 2.5, "2R + runner", "on_time", "newyork", True, False, None, 0],
+]
+class _FtFVG:
+    def call(self, name, **kw):
+        assert name == "trade_history"
+        return {"cols": _FT_COLS, "rows": [r for r in _FT_ROWS if r[1] == kw.get("symbol")]}
+NEWS["events"] = []
+forward.sync(_FtFVG())
+_ft = {r["entry_id"]: dict(r) for r in store.db().execute("SELECT * FROM forward_trades").fetchall()}
+ok(9010 not in _ft, "forward test ignores entries before its start date")
+ok(_ft[9001]["decision"] == "take" and _ft[9001]["lots"] == 36, "forward test takes a clean NY entry at 0.75% risk (36 MNQ)")
+ok(_ft[9002]["decision"] == "skip" and "shallow" in _ft[9002]["reason"], "forward test skips a shallow-retracement DB")
+ok(_ft[9003]["decision"] == "skip" and "invalidated" in _ft[9003]["reason"], "forward test skips 3+ invalidated gaps")
+ok(_ft[9004]["decision"] == "take" and _ft[9005]["decision"] == "skip" and "already this session" in _ft[9005]["reason"],
+   "forward test caps NY at 2 trades across the three micros")
+ok(_ft[9006]["decision"] == "skip" and "london" in _ft[9006]["reason"], "forward test skips London")
+ok(_ft[9007]["decision"] == "skip" and "window" in _ft[9007]["reason"], "forward test skips outside the session window")
+ok(forward.slot(datetime.fromtimestamp(_ft_ms(2026, 10, 22, 0, 30) / 1000, timezone.utc)) == ("asia", "2026-10-21"),
+   "an after-midnight Asia entry belongs to the evening it opened")
+_net1 = 2.5 * 36 * 10 * 2.0 - 36 * (1.60 + 0.25 * 2.0)
+ok(abs(_ft[9001]["net_usd"] - _net1) < 0.01 and _ft[9008]["net_usd"] is None, "forward test nets fees, leaves open trades open")
+forward.sync(_FtFVG())
+ok(store.db().execute("SELECT COUNT(*) n FROM forward_trades").fetchone()["n"] == 9, "forward test decides each entry once")
+_rep = forward.report()
+ok(_rep["taken"] == 3 and _rep["scored"] == 2 and _rep["open"] == 1
+   and abs(_rep["total_pct"] - round(100 * (_net1 + (-1.0 * 74 * 2 * 5.0 - 74 * (1.60 + 0.25 * 5.0))) / 100000, 2)) < 0.011
+   and "month_dd_within_5pct" in _rep["pass"], "forward report: trades, open, total %, pass mark")
+ok("Forward test" in forward.report_text(_rep) and "Pass mark" in forward.report_text(_rep), "forward report reads as text")
+_sent = []
+_orig_send = telegram_bot.send
+telegram_bot.send = lambda chat, text: _sent.append(text)
+config.TELEGRAM_BOT_TOKEN, config.TELEGRAM_CHAT_ID = config.TELEGRAM_BOT_TOKEN or "x", config.TELEGRAM_CHAT_ID or "1"
+ok(not forward.maybe_report(datetime(2026, 10, 22, 17, 0, tzinfo=config.ET)), "no forward report on a Thursday")
+ok(forward.maybe_report(datetime(2026, 10, 23, 16, 45, tzinfo=config.ET)) and _sent, "forward report goes out Friday after 4:30 PM ET")
+ok(not forward.maybe_report(datetime(2026, 10, 24, 10, 0, tzinfo=config.ET)), "one forward report a week")
+telegram_bot.send = _orig_send
+ok("forward_test" in [t["name"] for t in telegram_bot.tool_defs()] and main.forward_test()["name"] == forward.NAME,
+   "Telegram and MCP can read the forward test")
+
 print("all tests passed")
 server.should_exit = True

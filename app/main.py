@@ -239,6 +239,15 @@ def knowledge_search(query: str, k: int = 6, kind: str | None = None, since: str
 
 
 @mcp.tool()
+def forward_test() -> dict:
+    """The paper forward test of the micro setup (MNQ/MES/MYM; Asia, NY, NY PM; max 2 trades a
+    session; session windows, no shallow/none-retracement DBs, no 3+ invalidated gaps, 2h after
+    red-folder news; 0.75% risk): weekly %, month-to-date %, monthly drawdown, pass mark, skips."""
+    from . import forward
+    return forward.report()
+
+
+@mcp.tool()
 def session_digests(days: float = 30, limit: int = 20) -> list[dict]:
     """Digests of the recorded live sessions, newest first: summary, topics, the instructor's
     trade calls and teachings with ET times, and any rule proposals filed from them."""
