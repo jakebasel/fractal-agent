@@ -181,6 +181,39 @@ def chart_question(entry_id: int, question: str, at: str = "decision") -> dict:
 
 
 @mcp.tool()
+def chart_now(question: str) -> dict:
+    """Look at the LIVE charts: the newest screenshot set from the Mac Mini Hub (every 15 s; the
+    5-minute layout then the 1-minute layout, NAS100 / US500 / US30) and answer `question` from
+    what is visible -- white lines, reversal zones/gaps, FVGs, zones, Spotlight, signals. Use it
+    before recommending a current setup. One vision call; paused when over the daily budget."""
+    if store.over_budget():
+        return {"error": "over the daily budget; try later"}
+    shots = store.latest_screenshot_set()
+    if not shots:
+        return {"error": "no screenshots received yet"}
+    age = (datetime.now(timezone.utc) - datetime.fromisoformat(shots[-1]["received_at"])).total_seconds()
+    folder = config.DATA_DIR / "shots"
+    try:
+        images = [(folder / r["file"]).read_bytes() for r in shots[:4]]
+    except OSError as e:
+        return {"error": f"screenshot file missing: {e}"}
+    layout = store.kv_get(f"screen_layout:{shots[0]['kind']}") or config.SCREEN_LAYOUT
+    prompt = ("You are reading live TradingView screenshots for a futures/CFD trader using the Fractal "
+              "Effects Market Translator and Spotlight indicators. Layout: " + layout + "\nRead each "
+              "panel's symbol and timeframe from the chart header. Answer the question from what is "
+              "VISIBLE only; say 'not visible' when it is not. Reply with ONE JSON object: "
+              "{\"answer\": \"...\", \"evidence\": [\"what on the chart supports it, naming the panel\"], "
+              "\"confidence\": 0.0-1.0}\n\nQuestion: " + question[:800])
+    try:
+        from . import llm
+        res = llm.read_chart(images, prompt)
+    except Exception as e:
+        return {"error": str(e)[:300]}
+    return {"screenshot_age_s": int(age), "captured_et": store.to_et(shots[-1]["received_at"]),
+            "images": len(images), **res}
+
+
+@mcp.tool()
 def rules_text(which: str = "all") -> dict:
     """The rule files the decider reads: amendments (highest priority), rulebook, live_rules.
     `which` = all | amendments | rulebook | live_rules."""

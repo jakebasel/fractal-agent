@@ -50,6 +50,13 @@ Tools:
   session transcript and digest, and the agents' own lessons and Hermes reviews. Each hit says
   when it was said; quote it with the date. Use it to quote the instructor when a call depends on
   his teaching. session_digests: what each recent live session covered, his calls and teachings.
+- chart_now: look at the LIVE 5m and 1m charts (screenshots every 15 s) for what only the chart
+  shows -- white lines, reversal zones/gaps, FVG positions, Spotlight. Before recommending or
+  rating any CURRENT setup, check it with chart_now; never call a setup valid from engine data
+  alone. DB plays (amendment 2026-10-20): DB -> retracement back into the DB leg -> a NEW gap in
+  the DB direction printed AFTER the retracement -> tap -> lower steps -> close. Retracement done
+  but no new gap = not ready; the gap price retraced into is not the entry gap. When the
+  retracement ran into a reversal zone, also weigh the Reversal Set Up (§5) the other way.
 
 Coverage: the paper agent itself only decides {agent_symbols} (the Fusion Markets CFDs
 on Jake's chart layout), but fvg-mcp tracks ~150 futures and CFD symbols. Never say only those are tracked. For "what is setting up now / best trade" questions:
@@ -120,6 +127,7 @@ _SPECS = [
                           "kind": {"type": "string", "enum": ["course", "live_session", "digest", "lesson", "review"]},
                           "since": {"type": "string"}}, ["query"]),
     ("session_digests", {"days": {"type": "number"}, "limit": {"type": "integer"}}, []),
+    ("chart_now", {"question": {"type": "string"}}, ["question"]),
     ("instructor_calls", {}, []),
     ("chart_question", {"entry_id": {"type": "integer"}, "question": {"type": "string"},
                         "at": {"type": "string", "enum": ["decision", "exit"]}}, ["entry_id", "question"]),

@@ -76,3 +76,18 @@ entry (signal priority above), the signal was under 6 hours old at the entry, an
 leg re-tapped its zone. The fvg-mcp Live Dashboard History (default "core rules only"), the
 Analysis tab and this agent's Symbols tab all apply the same three exclusions, plus the
 standing ones (ND and Gold Strategy are never aggregated with real signals).
+
+## 2026-10-20 — DB plays: a NEW gap after the retracement, on the signal's timeframe (Jake)
+Applies to the 1m and the 5m DB play, either direction. The sequence is:
+DB prints -> price retraces back into the DB leg (its FVG, or past the DB candle when the leg
+has none) -> a NEW FVG in the DB's direction prints on the signal's timeframe AFTER that
+retracement (bearish DB -> new bearish FVG; bullish DB -> new bullish FVG) -> it is tapped ->
+the lower timeframe steps (5m play: 1m, then 30s; 1m play: 30s) -> body close over the series
+-> enter. The gap price retraced INTO is the retracement, not the entry gap, and a gap that
+printed before the retracement finished does not count. Retracement done but no new gap yet =
+not ready, however good the rest looks (Jake 2026-10-20, US30 1m DB short: "the retracement
+has occurred, and we don't have a new bearish ... fair value gap"). fvg-mcp's engine enforces
+it from 2026-10-20: a DB arm only enters from its after-retracement hunt.
+When a DB's retracement has run into a reversal zone instead, check the Reversal Set Up (§5)
+for the other side before calling the DB direction (same example: a long off the printed
+reversal gap).

@@ -737,6 +737,11 @@ ok(_lc.post("/library/ingest?title=x", content=b"short", headers={"X-Agent-Token
 ok(_lc.get("/library/search?q=purple+zone", headers={"X-Agent-Token": "tok"}).json()["hits"],
    "library search endpoint answers with the token")
 ok(any(h.get("kind") for h in main.knowledge_search("purple zone sweep")), "knowledge_search (Telegram/Claude/Hermes) reads the library")
+_cn = main.chart_now("is there a reversal zone on US30?")
+ok("error" not in _cn and _cn.get("images", 0) >= 1 and "screenshot_age_s" in _cn,
+   f"chart_now reads the newest live screenshot set ({ {k: _cn.get(k) for k in ('images', 'error')} })")
+ok("chart_now" in [t["name"] for t in telegram_bot.tool_defs()] and "NEW gap in" in telegram_bot.system_prompt().replace("\n", " ")
+   or "NEW gap" in telegram_bot.system_prompt(), "Telegram has chart_now and the DB-after-retracement rule")
 
 print("all tests passed")
 server.should_exit = True
