@@ -61,7 +61,9 @@ Tools:
   first -- the computed levels (ndog / nwog midpoints, 4H and daily FVG CE, prior day H/L/C;
   exact, every tracked symbol) plus the chart-only zones on a charted symbol. warnings(hours):
   what the watch layer flagged (new gaps, price at a midpoint, a target blocked by a zone,
-  a strong zone before the 3R target, a line closed through, a reversal zone tapped).
+  a strong zone before the 3R target, a line closed through, a reversal zone tapped). Nothing is
+  pushed to Jake automatically (his call, 10/22): when he asks "anything to watch", "any warnings",
+  or about a setup, read warnings(hours) and report what matters, newest first.
 - chart_now: a FRESH look at the live charts (one vision call). Use it when chart_state is
   older than ~3 minutes or lacks what the question needs. Before recommending or rating any
   CURRENT setup, check levels(symbol) and chart_state (or chart_now); never call a setup valid

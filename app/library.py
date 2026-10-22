@@ -295,7 +295,7 @@ def ingest_session(source: str, title: str, at: str, text: str, run_digest: bool
         except Exception as e:
             log.exception("digest failed for %s", source)
             out["digest_error"] = f"{type(e).__name__}: {e}"[:300]
-    if notify and out["digest"] and config.TELEGRAM_BOT_TOKEN and config.TELEGRAM_CHAT_ID:
+    if notify and config.TELEGRAM_PUSH and out["digest"] and config.TELEGRAM_BOT_TOKEN and config.TELEGRAM_CHAT_ID:
         try:
             from . import telegram_bot
             telegram_bot.send(config.TELEGRAM_CHAT_ID, digest_text(title, out["digest"]))

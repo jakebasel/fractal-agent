@@ -363,8 +363,11 @@ the NDOG, the NWOG and the 4H FVGs. Four pieces:
      through";
    - `new_gap` (once per gap, 7-day key), `level_near` (price within `WATCH_NEAR_PCT` = 0.10 %
      of a gap midpoint / zone edge), `line_closed` and `reversal_zone_tapped` (chart diffs).
-   Deduped by key inside `WATCH_COOLDOWN_MIN` (45); pushed to the Telegram chat as one
-   "Watch:" message per run (`WATCH_NOTIFY`, high ones prefixed `!!`). Every warning says
+   Deduped by key inside `WATCH_COOLDOWN_MIN` (45). **Not pushed** (Jake 10/22: "I don't want
+   automatic notifications on the trade help bot, only when I ask"): `TELEGRAM_PUSH` defaults to 0 and
+   gates the watch messages, the session digests and the Friday forward report alike; the bot reads
+   `warnings(hours)` when asked. Set `TELEGRAM_PUSH=1` (and `WATCH_NOTIFY=1`) to push again, as one
+   "Watch:" message per run with the high ones prefixed `!!`. Every warning says
    `[computed]` or `[chart read]`. Treat the first days as a shadow run: chart-sourced warnings
    are only as good as the vision read.
 4. **Tools** (MCP + Telegram): `chart_state(symbol)` = the stored read (no vision call),

@@ -234,7 +234,7 @@ def maybe_report(now: datetime | None = None) -> bool:
     if now.weekday() < 4 or (now.weekday() == 4 and (now.hour, now.minute) < (16, 30)):
         return False
     key = f"{now.isocalendar()[0]}-W{now.isocalendar()[1]:02d}"
-    if store.kv_get("forward_report_week") == key or not (config.TELEGRAM_BOT_TOKEN and config.TELEGRAM_CHAT_ID):
+    if store.kv_get("forward_report_week") == key or not (config.TELEGRAM_PUSH and config.TELEGRAM_BOT_TOKEN and config.TELEGRAM_CHAT_ID):
         return False
     from . import telegram_bot
     telegram_bot.send(config.TELEGRAM_CHAT_ID, report_text())

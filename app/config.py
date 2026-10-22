@@ -137,7 +137,11 @@ CHART_STATE_MINUTES = float(_env("CHART_STATE_MINUTES", "2"))
 CHART_STATE_WINDOWS = _env("CHART_STATE_WINDOWS", "20:00-24:00,02:00-08:00,09:25-12:00,13:30-16:00")
 # app/watch.py: zone / level / chart warnings, code only (no LLM), pushed to Telegram.
 WATCH_SECONDS = int(_env("WATCH_SECONDS", "120"))             # how often the rules run; 0 = off
-WATCH_NOTIFY = _env("WATCH_NOTIFY", "1") == "1"                # message the Telegram chat
+# Jake 2026-10-22: NO automatic messages on Jake Trade Help -- it answers questions only. Warnings,
+# session digests and the Friday forward report are stored and readable through the tools; they
+# are pushed to the chat only when TELEGRAM_PUSH=1 (and, for warnings, WATCH_NOTIFY=1).
+TELEGRAM_PUSH = _env("TELEGRAM_PUSH", "0") == "1"
+WATCH_NOTIFY = _env("WATCH_NOTIFY", "1") == "1"                # message the Telegram chat (needs TELEGRAM_PUSH)
 WATCH_MIN_R_CLEAR = float(_env("WATCH_MIN_R_CLEAR", "2.0"))     # a trade needs this much R before the first obstacle (2R = the partial)
 WATCH_NEAR_PCT = float(_env("WATCH_NEAR_PCT", "0.10"))          # "price is near a level" = within this % of price
 WATCH_COOLDOWN_MIN = float(_env("WATCH_COOLDOWN_MIN", "45"))    # the same warning key is not repeated inside this

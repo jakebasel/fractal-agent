@@ -16,7 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 TMP = tempfile.mkdtemp()
-os.environ.update(DATA_DIR=TMP, RUN_LOOP="0", OPENROUTER_API_KEY="test", AGENT_TOKEN="tok",
+os.environ.update(DATA_DIR=TMP, RUN_LOOP="0", OPENROUTER_API_KEY="test", AGENT_TOKEN="tok", TELEGRAM_PUSH="1",
                   SYMBOLS="MNQ1!,MES1!", MAX_ENTRY_AGE_S="300", DASHBOARD_PASSWORD="pw", BUILTIN_LESSONS="1")
 
 import uvicorn  # noqa: E402
@@ -967,6 +967,12 @@ ok(len(_fresh) == len(_w + _lw) - 1 and len(_sent) == 1 and "Watch:" in _sent[0]
    and any(r["kind"] == "new_gap" for r in store.warnings(1)),
    "emit stores the warnings and pushes ONE Telegram message with the high ones marked; a gap warns once")
 ok(watch.emit(_w + _lw) == [] and len(_sent) == 1, "the same keys inside the cooldown are not repeated")
+# Jake 10/22: no automatic messages on Jake Trade Help -- with TELEGRAM_PUSH off a warning is stored, never sent
+config.TELEGRAM_PUSH = False
+_quiet = watch.emit([dict(_w[0], key="MNQ1!|quiet|test")])
+ok(len(_quiet) == 1 and len(_sent) == 1 and not store.db().execute("SELECT sent FROM warnings WHERE key=?", ("MNQ1!|quiet|test",)).fetchone()["sent"],
+   "TELEGRAM_PUSH off: warnings are stored for the tools, nothing is pushed")
+config.TELEGRAM_PUSH = True
 ok(all(r["sent"] for r in store.warnings(1) if r["kind"] != "new_gap") and main.warnings(1)[0]["at_et"].endswith("ET"),
    "warnings tool lists them, sent, in ET")
 telegram_bot.send = _real_send

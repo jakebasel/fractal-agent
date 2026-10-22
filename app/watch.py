@@ -319,7 +319,7 @@ def emit(warnings: list) -> list:
                                 detail=w.get("detail"))
         w["id"] = wid
         fresh.append(w)
-    if fresh and config.WATCH_NOTIFY and config.TELEGRAM_CHAT_ID:
+    if fresh and config.TELEGRAM_PUSH and config.WATCH_NOTIFY and config.TELEGRAM_CHAT_ID:
         text = "Watch:\n\n" + "\n\n".join(("!! " if w["severity"] == "high" else "- ") + w["text"] for w in fresh)
         try:
             telegram_bot.send(config.TELEGRAM_CHAT_ID, text)
