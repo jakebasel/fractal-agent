@@ -215,6 +215,66 @@ def chart_now(question: str) -> dict:
 
 
 @mcp.tool()
+def chart_state(symbol: str | None = None) -> dict:
+    """The STORED read of the live charts (no vision call): every panel's zones (blue / purple
+    with shade, NDOG/NWOG, DSD), the indicator's HTF chips, reversal zones, white M/DB lines
+    and whether a body closed through them, Spotlight, EMAs, trend table -- as the vision
+    model read the newest Hub screenshot set, refreshed every CHART_STATE_MINUTES inside the
+    session windows. `symbol` filters the panels (NAS100 / US500 / US30). Check `age_s`: use
+    chart_now only when this is stale or lacks what the question needs."""
+    from . import chartstate
+    return chartstate.latest(symbol)
+
+
+@mcp.tool()
+def levels(symbol: str) -> dict:
+    """Everything around the price on one symbol, merged and nearest first: the computed levels
+    from fvg-mcp (ndog / nwog with midpoints, open 4H and daily FVGs with CE, prior day H/L/C;
+    every tracked symbol) plus, on a charted symbol, the chart-only zones from the stored read
+    (blue / purple, DSD, reversal zones, HTF chips). Each says source (data = exact, chart =
+    vision read), strong (dark zone / DSD / HTF gap / reversal zone) and position vs price."""
+    from . import chartstate, watch
+    from .mcp_client import FVG
+    try:
+        ctx = FVG().context(symbol) or {}
+    except Exception as e:
+        ctx = {"error": str(e)[:200]}
+    panels = chartstate.panels(symbol)
+    price = ctx.get("last_price")
+    if price is None:
+        for p in panels:
+            price = p.get("last_price") or price
+    obs = watch.obstacles_from(ctx, panels, price)
+    for o in obs:
+        if price is not None:
+            o["position"] = "at" if o["bottom"] <= price <= o["top"] else ("above" if o["bottom"] > price else "below")
+            o["distance"] = round(0.0 if o["position"] == "at" else (o["bottom"] - price if o["position"] == "above" else price - o["top"]), 4)
+            o["ce_minus_price"] = round(o["ce"] - price, 4)
+    obs.sort(key=lambda o: o.get("distance") if o.get("distance") is not None else 1e18)
+    return {"symbol": symbol, "last_price": price, "price_age_min": ctx.get("price_age_min"),
+            "session": {k: ctx.get(k) for k in ("session_open", "session_high", "session_low")},
+            "levels": obs, "chart_read": bool(panels), "error": ctx.get("error")}
+
+
+@mcp.tool()
+def warnings(hours: float = 12, symbol: str | None = None) -> list[dict]:
+    """The watch layer's warnings (code rules, no model): new opening gaps, price near a
+    midpoint / zone edge, a trade's target blocked by a zone before the 2R partial, a strong
+    zone between the partial and the 3R target, a body close through a white line, a reversal
+    zone tapped. Newest first; `sent` = pushed to Telegram. Times ET."""
+    out = []
+    for r in store.warnings(hours, symbol):
+        d = dict(r)
+        d["at_et"] = store.to_et(d.pop("at"))
+        try:
+            d["detail"] = json.loads(d["detail"]) if d.get("detail") else None
+        except ValueError:
+            pass
+        out.append(d)
+    return out
+
+
+@mcp.tool()
 def rules_text(which: str = "all") -> dict:
     """The rule files the decider reads: amendments (highest priority), rulebook, live_rules.
     `which` = all | amendments | rulebook | live_rules."""

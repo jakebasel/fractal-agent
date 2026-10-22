@@ -89,6 +89,12 @@ to "not_chart" and return no charts for it.
 Report ONLY what is visible. If something is not visible or unreadable, use null / "unknown".
 Do not guess prices you cannot read from the axis.
 
+Colour legend: BLUE zones = the NY session, PURPLE/maroon zones = Asia / London; a DARKER shade
+is a stronger zone. Red / orange / green boxes with a dashed midpoint line are the FVG
+indicator's daily / 4H / 15m context gaps. WHITE horizontal lines are the Market Translator
+M / 2M / DB / 2DB signal lines. GREEN / RED boxes near a white line are reversal zones. Report
+every zone ABOVE and BELOW the last price with its distance, nearest first.
+
 Return one JSON object:
 {{
   "charts": [   // one per visible chart panel
@@ -103,7 +109,12 @@ Return one JSON object:
       "reversal_zones": [ {{"color": "green"|"red", "top": number|null, "bottom": number|null,
                             "price_inside_or_tapped": true|false|null}} ],
       "zones": [ {{"type": "purple"|"maroon"|"blue"|"dark_blue"|"ndog"|"nwog"|"opening_fvg"|"dsd_high"|"dsd_low",
-                   "top": number|null, "bottom": number|null, "relation": "above"|"below"|"price_inside"}} ],
+                   "shade": "light"|"dark"|null,        // darker = stronger (Market Translator); null when it is a line
+                   "top": number|null, "bottom": number|null, "relation": "above"|"below"|"price_inside",
+                   "distance": number|null }} ],      // points from the last price to the zone's nearest edge (0 when inside)
+      "htf_chips": [ {{"tf": "D"|"4H"|"15m", "top": number|null, "bottom": number|null, "ce": number|null,
+                       "relation": "above"|"below"|"price_inside"}} ],   // the FVG indicator's own context zones: red = daily, orange = 4H, green = 15m, dashed line = CE
+      "dsd": {{"high": number|null, "low": number|null}},   // DSD high / low lines if drawn
       "spotlight": {{"dr_box": "red"|"green"|"none"|"unknown", "confirmation": "bull"|"bear"|"none"|"unknown",
                      "both_sides_broken": true|false|null}},
       "ema": {{"price_vs_20": "above"|"below"|"unknown", "price_vs_238": "above"|"below"|"unknown"}},

@@ -137,3 +137,18 @@ class FVG:
     def mt_events(self, symbol, limit=12):
         return self.call("recent_events", symbol=symbol, source="market_translator",
                          limit=limit) or []
+
+    def context(self, symbol) -> dict:
+        """Computed levels for a symbol (fvg-mcp `context`, 2026-10-22): ndog/nwog with midpoints,
+        open 4H/daily FVGs with CE, prior session H/L/C, each with its position vs price."""
+        res = self.call("context", _timeout=120, symbol=symbol)
+        return res if isinstance(res, dict) else {}
+
+    def transcripts(self, since=None, limit=50, id=None) -> dict:
+        kw = {"limit": limit}
+        if since:
+            kw["since"] = since
+        if id is not None:
+            kw["id"] = id
+        res = self.call("transcripts", _timeout=120, **kw)
+        return res if isinstance(res, dict) else {}

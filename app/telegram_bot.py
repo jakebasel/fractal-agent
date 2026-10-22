@@ -55,10 +55,24 @@ Tools:
   "what was his stop", "why did he skip it" -- call it first (minutes=5-15, or search="nas stop"),
   answer from those lines and quote the ET times. Separate what he did live from what he explained
   or recapped. If status is not "live", say when the last line came in.
-- chart_now: look at the LIVE 5m and 1m charts (screenshots every 15 s) for what only the chart
-  shows -- white lines, reversal zones/gaps, FVG positions, Spotlight. Before recommending or
-  rating any CURRENT setup, check it with chart_now; never call a setup valid from engine data
-  alone. DB plays (amendment 2026-10-20): DB -> retracement back into the DB leg -> a NEW gap in
+- chart_state: the STORED read of the live 5m and 1m charts (refreshed every couple of minutes
+  in session, no vision call): zones with shade, DSD, reversal zones, white lines, HTF chips,
+  Spotlight, EMAs, trend table. levels(symbol): everything around the price merged and nearest
+  first -- the computed levels (ndog / nwog midpoints, 4H and daily FVG CE, prior day H/L/C;
+  exact, every tracked symbol) plus the chart-only zones on a charted symbol. warnings(hours):
+  what the watch layer flagged (new gaps, price at a midpoint, a target blocked by a zone,
+  a strong zone before the 3R target, a line closed through, a reversal zone tapped).
+- chart_now: a FRESH look at the live charts (one vision call). Use it when chart_state is
+  older than ~3 minutes or lacks what the question needs. Before recommending or rating any
+  CURRENT setup, check levels(symbol) and chart_state (or chart_now); never call a setup valid
+  from engine data alone.
+  Zone vocabulary: BLUE = NY session zone, PURPLE / maroon = Asia / London zone, DARKER =
+  stronger; red / orange / green boxes with a dashed midpoint = the FVG indicator's daily /
+  4H / 15m context gaps; WHITE lines = M / 2M / DB / 2DB signal lines; green / red boxes =
+  reversal zones; ndog / nwog = new day / new week opening gap (watch the MIDPOINT, Jake
+  10/22), same for the 4H FVG CE. A trade whose 1:3 target runs into a zone before the 2R
+  partial, or into a strong zone (dark blue / dark purple, DSD, an HTF gap against it, a
+  reversal zone) before 3R, is a warning: say the realistic target is the zone edge. DB plays (amendment 2026-10-20): DB -> retracement back into the DB leg -> a NEW gap in
   the DB direction printed AFTER the retracement -> tap -> lower steps -> close. Retracement done
   but no new gap = not ready; the gap price retraced into is not the entry gap. The
   retracement counts only if price taps an FVG inside the DB leg, or -- when the leg has no
@@ -142,6 +156,9 @@ _SPECS = [
     ("session_digests", {"days": {"type": "number"}, "limit": {"type": "integer"}}, []),
     ("forward_test", {}, []),
     ("chart_now", {"question": {"type": "string"}}, ["question"]),
+    ("chart_state", {"symbol": {"type": "string"}}, []),
+    ("levels", {"symbol": {"type": "string"}}, ["symbol"]),
+    ("warnings", {"hours": {"type": "number"}, "symbol": {"type": "string"}}, []),
     ("instructor_calls", {}, []),
     ("live_transcript", {"minutes": {"type": "number"}, "search": {"type": "string"},
                          "session": {"type": "string"}}, []),

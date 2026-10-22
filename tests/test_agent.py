@@ -66,6 +66,32 @@ def trade_history(days: float = 14, symbol: str | None = None) -> dict:
     return {"cols": cols, "rows": rows, "n": len(rows), "note": "fake"}
 
 
+FAKE_TX = [{"id": 1, "name": "live_2026-10-21_ny.txt", "kind": "live_session", "date_label": "2026-10-21",
+            "topics": ["purple zone"], "added_at": "2026-10-21T20:00:00+00:00", "source": "upload",
+            "content": "The purple zone held on the retracement; we took the DB long into the 5m gap. " * 20}]
+
+
+@fake.tool()
+def context(symbol: str) -> dict:
+    now_ms = int(time.time() * 1000)
+    return {"symbol": symbol, "last_price": 100.0, "price_age_min": 1.0,
+            "session_open": 99.0, "session_high": 101.0, "session_low": 98.0,
+            "levels": [{"kind": "ndog", "dir": "up", "top": 101.5, "bottom": 100.5, "ce": 101.0, "at_ms": now_ms,
+                        "at_et": "today 18:00 ET", "position": "above", "distance": 0.5, "ce_minus_price": 1.0},
+                       {"kind": "fvg_4h", "dir": "bear", "top": 124.0, "bottom": 122.0, "ce": 123.0, "at_ms": now_ms,
+                        "at_et": "today 06:00 ET", "position": "above", "distance": 22.0, "ce_minus_price": 23.0}],
+            "note": "fake"}
+
+
+@fake.tool()
+def transcripts(since: str | None = None, kind: str | None = None, limit: int = 20, id: int | None = None) -> dict:
+    if id is not None:
+        return next((dict(t) for t in FAKE_TX if t["id"] == id), {"error": "none"})
+    rows = [{k: v for k, v in t.items() if k != "content"} | {"words": 60} for t in FAKE_TX
+            if not since or t["added_at"] > since]
+    return {"transcripts": rows, "n": len(rows)}
+
+
 def free_port():
     s = socket.socket()
     s.bind(("127.0.0.1", 0))
@@ -889,6 +915,80 @@ ok(len(_sym._good([dict(_g), dict(_g, later_entry=1), dict(_g, later_entry=0)]))
    and "later_entry" in store.CORE_COLS and "One entry per signal" in open("rules/amendments.md").read()
    and "## 2026-10-08 — Re-entries must re-tap" not in open("rules/amendments.md").read(),
    "core book counts only the first entry off a signal")
+
+# 2026-10-22: chart state on a clock, computed levels, the watch layer, transcripts sync
+from app import chartstate, watch, library as _lib  # noqa: E402
+_obs_ctx = fvg.context("MNQ1!")
+ok(_obs_ctx["levels"][0]["kind"] == "ndog" and fvg.transcripts()["n"] == 1, "client wrappers: context + transcripts")
+_panels = [{"symbol": "MNQ", "timeframe": "5m", "last_price": 100.0,
+            "zones": [{"type": "blue", "shade": "dark", "top": 115.0, "bottom": 112.0, "relation": "above", "distance": 12},
+                      {"type": "purple", "shade": "light", "top": 95.0, "bottom": 93.0, "relation": "below", "distance": 5},
+                      {"type": "ndog", "top": 101.5, "bottom": 100.5, "relation": "above"}],   # duplicate of the computed NDOG
+            "htf_chips": [{"tf": "4H", "top": 124.0, "bottom": 122.0, "ce": 123.0, "relation": "above"}],  # duplicate too
+            "reversal_zones": [{"color": "red", "top": 140.0, "bottom": 138.0, "price_inside_or_tapped": False}],
+            "white_lines": [{"label": "DB", "price": 99.0, "body_closed_through": False}],
+            "dsd": {"high": 150.0, "low": 60.0}}]
+_obs = watch.obstacles_from(_obs_ctx, _panels, 100.0)
+_kinds = sorted(o["kind"] for o in _obs)
+ok(_kinds == ["dsd_high", "dsd_low", "fvg_4h", "ndog", "reversal_zone", "zone_blue", "zone_purple"],
+   f"obstacles merge data + chart and drop chart duplicates of computed gaps ({_kinds})")
+ok(next(o for o in _obs if o["kind"] == "zone_blue")["strong"] and not next(o for o in _obs if o["kind"] == "zone_purple")["strong"],
+   "a dark zone is strong, a light one is not")
+_w = watch.check_trade("MNQ1!", "bull", 100.0, 90.0, 130.0, _obs, "2-stage 1m DB ready", trade_key="t1")
+_byk = {w["kind"]: w for w in _w}
+ok("target_blocked" in _byk and _byk["target_blocked"]["severity"] == "high" and "dark blue zone" in _byk["target_blocked"]["text"]
+   and "1.2R" in _byk["target_blocked"]["text"] and "112" in _byk["target_blocked"]["text"],
+   "a dark blue zone 1.2R ahead of a long blocks the target before the 2R partial (high)")
+ok("zone_against" in _byk and "4H FVG" in _byk["zone_against"]["text"] and "2.2R" in _byk["zone_against"]["text"],
+   "a bearish 4H gap between the partial and 3R is a zone-against warning")
+ok(not any("reversal" in w["text"] or "DSD" in w["text"] or "purple" in w["text"] for w in _w),
+   "zones past the target or behind the entry do not warn")
+ok(watch.check_trade("MNQ1!", "bear", 100.0, 110.0, 70.0, _obs, "short", trade_key="t2")[0]["text"].startswith("MNQ1! short")
+   and "purple zone" in watch.check_trade("MNQ1!", "bear", 100.0, 110.0, 70.0, _obs, "short", trade_key="t2")[0]["text"],
+   "a short is checked downward (the purple zone below blocks it)")
+_lw = watch.level_warnings("MNQ1!", 100.95, _obs)
+_lk = sorted(w["kind"] for w in _lw)
+ok("new_gap" in _lk and "level_near" in _lk and any("midpoint 101" in w["text"] for w in _lw),
+   f"a new opening gap warns once and price at its midpoint warns level_near ({_lk})")
+_cur = [dict(_panels[0], white_lines=[{"label": "DB", "price": 99.0, "body_closed_through": True}],
+             reversal_zones=[{"color": "red", "top": 140.0, "bottom": 138.0, "price_inside_or_tapped": True}])]
+_dw = watch.diff_warnings("MNQ1!", _panels, _cur)
+ok(sorted(w["kind"] for w in _dw) == ["line_closed", "reversal_zone_tapped"], "chart diff: line closed through + reversal zone tapped")
+ok(watch.diff_warnings("MNQ1!", _cur, _cur) == [], "no diff, no warning")
+_sent = []
+_real_send = telegram_bot.send
+telegram_bot.send = lambda chat, text: _sent.append(text)
+config.TELEGRAM_CHAT_ID, config.WATCH_NOTIFY = "123", True
+_fresh = watch.emit(_w + _lw)
+# the new_gap key already fired (unsent) during the earlier agent ticks: the watch layer runs in tick()
+ok(len(_fresh) == len(_w + _lw) - 1 and len(_sent) == 1 and "Watch:" in _sent[0] and "!! MNQ1! long" in _sent[0]
+   and any(r["kind"] == "new_gap" for r in store.warnings(1)),
+   "emit stores the warnings and pushes ONE Telegram message with the high ones marked; a gap warns once")
+ok(watch.emit(_w + _lw) == [] and len(_sent) == 1, "the same keys inside the cooldown are not repeated")
+ok(all(r["sent"] for r in store.warnings(1) if r["kind"] != "new_gap") and main.warnings(1)[0]["at_et"].endswith("ET"),
+   "warnings tool lists them, sent, in ET")
+telegram_bot.send = _real_send
+config.TELEGRAM_CHAT_ID = ""
+_rd = chartstate.refresh(force=True)
+ok(_rd and store.latest_chart_state() and main.chart_state("MNQ1!")["charts"] and main.chart_state()["age_s"] < 60,
+   "chart state: the vision read of the newest set is stored and served without a new vision call")
+_lv = main.levels("MNQ1!")
+ok(_lv["last_price"] == 100.0 and _lv["levels"][0]["kind"] == "ndog" and _lv["levels"][0]["position"] == "above"
+   and _lv["levels"][0]["distance"] == 0.5, "levels merges computed + chart, nearest first, with position/distance")
+ok(isinstance(watch.run(fvg), list), "the watch run goes end to end against the fake engine")
+ok(chartstate.in_window(datetime(2026, 10, 22, 14, 0, tzinfo=timezone.utc)) and not chartstate.in_window(datetime(2026, 10, 24, 14, 0, tzinfo=timezone.utc)),
+   "chart state windows: NY morning yes, Saturday no")
+_lib.sync_transcripts(fvg)     # (already ran once inside tick(): the sync is part of the library phase)
+_tx_doc = _lib._db().execute("SELECT * FROM library_docs WHERE source LIKE 'fvg-mcp:transcript:%'").fetchall()
+ok(len(_tx_doc) == 1 and _tx_doc[0]["kind"] == "live_session" and "2026-10-21" in _tx_doc[0]["title"]
+   and any("purple zone" in (h.get("text") or h.get("body") or h.get("snippet") or "") for h in main.knowledge_search("purple zone held retracement")),
+   "fvg-mcp transcripts sync into the reference library and are searchable")
+ok(_lib.sync_transcripts(fvg) == 0 and store.kv_get("library_tx_since") == "2026-10-21T20:00:00+00:00", "transcripts sync is incremental")
+_tn = [t["name"] for t in telegram_bot.tool_defs()]
+ok(all(x in _tn for x in ("chart_state", "levels", "warnings")) and "ndog" in telegram_bot.SYSTEM and "DARKER" in telegram_bot.SYSTEM,
+   "Jake Trade Help has chart_state / levels / warnings and the zone vocabulary")
+ok("shade" in prompts.VISION_PROMPT and "htf_chips" in prompts.VISION_PROMPT and "dsd" in prompts.VISION_PROMPT,
+   "the vision prompt asks for zone shade, HTF chips and DSD")
 
 print("all tests passed")
 server.should_exit = True

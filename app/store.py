@@ -8,7 +8,7 @@ import json
 import sqlite3
 import threading
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from . import config
 
@@ -147,6 +147,30 @@ CREATE TABLE IF NOT EXISTS forward_trades (    -- app/forward.py: the frozen pap
     r REAL, outcome TEXT, scoring TEXT, net_usd REAL, decided_at TEXT
 );
 CREATE INDEX IF NOT EXISTS forward_slot ON forward_trades(name, slot_session, slot_day, decision);
+CREATE TABLE IF NOT EXISTS chart_state (   -- app/chartstate.py: the vision read of each screenshot set, on a clock
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  at          TEXT,                  -- UTC ISO (when read)
+  captured_at TEXT,                  -- UTC ISO (the newest screenshot of the set)
+  files       TEXT,                  -- the screenshot set read
+  kind        TEXT,
+  readability TEXT,
+  read        TEXT                   -- JSON from the vision model
+);
+CREATE TABLE IF NOT EXISTS warnings (      -- app/watch.py: zone / level / chart warnings pushed to Telegram
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  at          TEXT,
+  symbol      TEXT,
+  kind        TEXT,                  -- new_gap | level_near | target_blocked | zone_against | line_closed | reversal_zone_tapped
+  key         TEXT,                  -- dedupe key (symbol + kind + level/trade)
+  source      TEXT,                  -- data | chart
+  severity    TEXT,                  -- high | medium | low
+  direction   TEXT,
+  level       REAL,
+  entry_id    INTEGER,
+  text        TEXT,
+  detail      TEXT,                  -- JSON
+  sent        INTEGER DEFAULT 0
+);
 CREATE TABLE IF NOT EXISTS live_lines (        -- the Zoom session as it happens (POST /zoom/live)
     session TEXT, n INTEGER, t REAL, et TEXT, text TEXT,
     PRIMARY KEY (session, n)
@@ -483,6 +507,68 @@ def latest_screenshot_set(settle_s: float = 6.0):
             last = prev
     return db().execute("SELECT * FROM screenshots WHERE batch=? ORDER BY part",
                         (last["batch"],)).fetchall()
+
+
+# ---- chart state + warnings (2026-10-22) ---------------------------------------------------
+
+def add_chart_state(captured_at, files, kind, read: dict | None):
+    with _lock:
+        db().execute("INSERT INTO chart_state(at,captured_at,files,kind,readability,read) VALUES(?,?,?,?,?,?)",
+                     (now_utc(), captured_at, files, kind, (read or {}).get("readability"),
+                      json.dumps(read) if read is not None else None))
+        db().commit()
+        # keep the table small: 14 days
+        cut = (datetime.now(timezone.utc) - timedelta(days=14)).isoformat()
+        db().execute("DELETE FROM chart_state WHERE at < ?", (cut,))
+        db().commit()
+
+
+def chart_states(limit=2, before_id=None):
+    """Newest first, readable rows only (read is not null)."""
+    q = "SELECT * FROM chart_state WHERE read IS NOT NULL"
+    args = []
+    if before_id is not None:
+        q += " AND id < ?"; args.append(before_id)
+    q += " ORDER BY id DESC LIMIT ?"; args.append(limit)
+    return db().execute(q, tuple(args)).fetchall()
+
+
+def latest_chart_state():
+    rows = chart_states(1)
+    return rows[0] if rows else None
+
+
+def add_warning(symbol, kind, key, source, severity, text, direction=None, level=None,
+                entry_id=None, detail=None, sent=False) -> int:
+    with _lock:
+        cur = db().execute(
+            "INSERT INTO warnings(at,symbol,kind,key,source,severity,direction,level,entry_id,text,detail,sent) "
+            "VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
+            (now_utc(), symbol, kind, key, source, severity, direction, level, entry_id, text,
+             json.dumps(detail, default=str) if detail is not None else None, 1 if sent else 0))
+        db().commit()
+        return cur.lastrowid
+
+
+def mark_warning_sent(wid: int):
+    with _lock:
+        db().execute("UPDATE warnings SET sent=1 WHERE id=?", (wid,))
+        db().commit()
+
+
+def warning_recent(key: str, cooldown_s: float) -> bool:
+    """True when the same warning key fired inside the cooldown."""
+    cut = (datetime.now(timezone.utc) - timedelta(seconds=cooldown_s)).isoformat()
+    return db().execute("SELECT 1 FROM warnings WHERE key=? AND at >= ? LIMIT 1", (key, cut)).fetchone() is not None
+
+
+def warnings(hours: float = 12, symbol: str | None = None, limit: int = 100):
+    cut = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat()
+    q, args = "SELECT * FROM warnings WHERE at >= ?", [cut]
+    if symbol:
+        q += " AND symbol = ?"; args.append(symbol)
+    q += " ORDER BY id DESC LIMIT ?"; args.append(max(1, min(int(limit), 500)))
+    return db().execute(q, tuple(args)).fetchall()
 
 
 # ---- spend -----------------------------------------------------------------------------------

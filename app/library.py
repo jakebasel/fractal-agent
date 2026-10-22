@@ -174,6 +174,51 @@ def sync_if_due(every_s: int = 300) -> int:
         return 0
 
 
+_last_tx = {"t": 0.0}
+
+
+def sync_transcripts(fvg) -> int:
+    """fvg-mcp's /transcripts page (Postgres table, the SOURCE OF TRUTH for the rules) into the
+    library, via its read-only `transcripts` tool (2026-10-22). Incremental on added_at."""
+    since = store.kv_get("library_tx_since") or None
+    try:
+        listing = fvg.transcripts(since=since, limit=50)
+    except Exception as e:
+        log.warning("fvg-mcp transcripts: %s", e)
+        return 0
+    rows = sorted((listing or {}).get("transcripts") or [], key=lambda r: (r.get("added_at") or "", r.get("id") or 0))
+    n = 0
+    for r in rows:
+        try:
+            full = fvg.transcripts(id=r["id"])
+        except Exception as e:
+            log.warning("fvg-mcp transcript %s: %s", r.get("id"), e)
+            break
+        text = (full or {}).get("content") or ""
+        if len(text.strip()) < 200:
+            store.kv_set("library_tx_since", r.get("added_at") or since)
+            continue
+        kind = "course" if str(r.get("kind") or "").lower().startswith("course") else "live_session"
+        title = f"{r.get('name')} ({r.get('date_label')})" if r.get("date_label") else str(r.get("name"))
+        n += add_document(kind, f"fvg-mcp:transcript:{r['id']}", title, r.get("date_label") or r.get("added_at") or "", text)[1]
+        store.kv_set("library_tx_since", r.get("added_at") or since)
+    if n:
+        log.info("library: %d transcript(s) from fvg-mcp", n)
+    return n
+
+
+def sync_transcripts_if_due(fvg, every_s: int | None = None) -> int:
+    every_s = every_s if every_s is not None else config.TRANSCRIPTS_SYNC_S
+    if every_s <= 0 or time.time() - _last_tx["t"] < every_s:
+        return 0
+    _last_tx["t"] = time.time()
+    try:
+        return sync_transcripts(fvg)
+    except Exception as e:
+        log.warning("transcripts sync failed: %s", e)
+        return 0
+
+
 # ---- live sessions ---------------------------------------------------------------------------
 
 DIGEST_SYSTEM = """You digest one live trading-session transcript for a Fractal Effects

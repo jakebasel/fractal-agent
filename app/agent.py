@@ -630,6 +630,18 @@ def tick(fvg: FVG):
         scanner.score_pending(fvg)
     except Exception as e:
         log.warning("scan scoring failed: %s", e)
+    ph.start("chart_state")
+    try:   # the stored chart read on a clock (2026-10-22): what the bot and the watch layer use
+        from . import chartstate
+        chartstate.refresh()
+    except Exception as e:
+        log.warning("chart state failed: %s", e)
+    ph.start("watch")
+    try:   # zone / level / chart warnings -> Telegram (code only)
+        from . import watch
+        watch.run_if_due(fvg)
+    except Exception as e:
+        log.warning("watch failed: %s", e)
     ph.start("reeval")
     try:
         reevaluate_skips(fvg)
@@ -662,6 +674,7 @@ def tick(fvg: FVG):
     try:   # course files + new lessons / Hermes reviews into the reference library
         from . import library
         library.sync_if_due()
+        library.sync_transcripts_if_due(fvg)   # fvg-mcp's /transcripts table (2026-10-22)
     except Exception as e:
         log.warning("library sync failed: %s", e)
     ph.start("csv")

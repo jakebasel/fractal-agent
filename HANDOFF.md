@@ -328,6 +328,55 @@ one setup is done, that should be the only setup we take off a given signal." Mo
   an FVG in the DB leg, or the leg midpoint when the leg has no FVG (fvg-mcp verdict `midpoint`,
   `_db_leg_midpoint_bar`; the retracement-complete bar that gates DB entries uses it too).
 
+## 2026-10-22 — chart state on a clock, computed levels, the watch layer (warnings)
+
+Jake: give the FVG tool the screenshots and their interpretation, warn about a new day opening
+gap or blue zones above us, warn when a trade's take-profit runs into a zone it may not get
+through (blue / purple), and let Jake Trade Help answer from all of it. Watch the MIDPOINTS of
+the NDOG, the NWOG and the 4H FVGs. Four pieces:
+
+1. **fvg-mcp `context(symbol)`** (read-only, cached 60 s, `test_context.py`): computed from the
+   session-anchored candles for EVERY tracked symbol -- ndog / nwog (prior session close to next
+   open; a weekend makes it the week gap) with `ce` midpoints, open 4H and daily FVGs with CE,
+   prior day high/low/close, today's session open/high/low, each with `position` (above / below /
+   at) and distance vs the last price, nearest first. Filled gaps are dropped. What it cannot
+   have: Market Translator's blue / purple zones, DSD and reversal zones (Pine-only, chart-only).
+   Also **`transcripts(since, kind, limit, id)`**: the /transcripts Postgres table, which this
+   agent now syncs into the reference library every `TRANSCRIPTS_SYNC_S` (1800) as
+   `fvg-mcp:transcript:<id>` (`library.sync_transcripts`).
+2. **Chart state** (`app/chartstate.py`, table `chart_state`): every `CHART_STATE_MINUTES` (2)
+   inside `CHART_STATE_WINDOWS` (ET, the four strategy sessions) the newest Hub screenshot set is
+   read once by the vision model and the JSON stored (14 days kept). `VISION_PROMPT` now asks for
+   zone `shade` (dark = stronger) and `distance`, the FVG indicator's `htf_chips` (red D / orange
+   4H / green 15m with CE), `dsd` high/low, and carries the colour legend. ~450 reads/day at
+   2 min, budget-guarded like the scanner (`store.over_budget()`).
+3. **Watch layer** (`app/watch.py`, table `warnings`, code only, every `WATCH_SECONDS` = 60):
+   merges the computed levels + the stored chart zones into one obstacle list per symbol
+   (chart duplicates of a computed gap are dropped) and checks the engine's armed setups, the
+   agent's open paper TAKEs and the newest `WATCH_BOARD_ENTRIES` engine entries board-wide:
+   - `target_blocked` (high if the zone is strong): an obstacle inside `WATCH_MIN_R_CLEAR` (2R,
+     the partial) of the entry -- "realistic target is the zone edge";
+   - `zone_against` (medium): a STRONG zone (dark blue / dark purple, DSD, an HTF gap against
+     the trade, a reversal zone) between the partial and the 3R target -- "price may not get
+     through";
+   - `new_gap` (once per gap, 7-day key), `level_near` (price within `WATCH_NEAR_PCT` = 0.10 %
+     of a gap midpoint / zone edge), `line_closed` and `reversal_zone_tapped` (chart diffs).
+   Deduped by key inside `WATCH_COOLDOWN_MIN` (45); pushed to the Telegram chat as one
+   "Watch:" message per run (`WATCH_NOTIFY`, high ones prefixed `!!`). Every warning says
+   `[computed]` or `[chart read]`. Treat the first days as a shadow run: chart-sourced warnings
+   are only as good as the vision read.
+4. **Tools** (MCP + Telegram): `chart_state(symbol)` = the stored read (no vision call),
+   `levels(symbol)` = computed + chart obstacles merged nearest first with position / distance /
+   strong, `warnings(hours, symbol)`. The Telegram system prompt carries the zone vocabulary and
+   tells the bot to check `levels` + `chart_state` before rating a current setup, with
+   `chart_now` only when the stored read is stale (> ~3 min) or lacks what is asked.
+
+Coverage: chart-only zones exist for the charted symbols only (NAS100 / US500 / US30, two Hub
+layouts); every other symbol gets data-only warnings. Adding a symbol to the chart side = one
+more layout on the Hub capture. CBOE / ICE symbols have no relay feed, so no computed levels.
+Tests: `tests/test_agent.py` (watch rules, emit/dedupe, chart state, levels, transcripts sync),
+fvg-mcp `test_context.py`.
+
 ## VPS screenshot capturer (tv-capture/)
 
 Coolify app `tv-capture` (same project, base directory `/tv-capture`, volume `/data`, domain

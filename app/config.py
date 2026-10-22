@@ -129,6 +129,22 @@ SCAN_MINUTES = int(_env("SCAN_MINUTES", "5"))          # 0 = off
 SCAN_WINDOWS = _env("SCAN_WINDOWS", "02:00-04:00,09:25-11:00,13:00-15:00,20:00-22:00")   # ET, per day
 SCAN_SHOTS_KEEP_DAYS = int(_env("SCAN_SHOTS_KEEP_DAYS", "14"))   # archived scan screenshots
 
+# --- chart state + watch layer (2026-10-22) ------------------------------------------------------
+# app/chartstate.py reads the newest Hub screenshot set with the vision model every
+# CHART_STATE_MINUTES inside CHART_STATE_WINDOWS (ET) and stores the structured read, so the
+# Telegram bot and the watch layer use a stored read instead of a fresh vision call. 0 = off.
+CHART_STATE_MINUTES = float(_env("CHART_STATE_MINUTES", "2"))
+CHART_STATE_WINDOWS = _env("CHART_STATE_WINDOWS", "20:00-24:00,02:00-08:00,09:25-12:00,13:30-16:00")
+# app/watch.py: zone / level / chart warnings, code only (no LLM), pushed to Telegram.
+WATCH_SECONDS = int(_env("WATCH_SECONDS", "60"))              # how often the rules run; 0 = off
+WATCH_NOTIFY = _env("WATCH_NOTIFY", "1") == "1"                # message the Telegram chat
+WATCH_MIN_R_CLEAR = float(_env("WATCH_MIN_R_CLEAR", "2.0"))     # a trade needs this much R before the first obstacle (2R = the partial)
+WATCH_NEAR_PCT = float(_env("WATCH_NEAR_PCT", "0.10"))          # "price is near a level" = within this % of price
+WATCH_COOLDOWN_MIN = float(_env("WATCH_COOLDOWN_MIN", "45"))    # the same warning key is not repeated inside this
+WATCH_BOARD_ENTRIES = int(_env("WATCH_BOARD_ENTRIES", "30"))    # newest engine entries board-wide checked against computed levels
+WATCH_ENTRY_MAX_AGE_MIN = float(_env("WATCH_ENTRY_MAX_AGE_MIN", "120"))
+TRANSCRIPTS_SYNC_S = int(_env("TRANSCRIPTS_SYNC_S", "1800"))    # fvg-mcp /transcripts -> reference library
+
 # --- learning loop ------------------------------------------------------------------------------
 MAX_TESTING_HYPOTHESES = int(_env("MAX_TESTING_HYPOTHESES", "16"))
 SHADOW_PER_TICK = int(_env("SHADOW_PER_TICK", "3"))        # shadow re-decisions per loop
