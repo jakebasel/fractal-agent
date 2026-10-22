@@ -456,7 +456,7 @@ async def zoom_live(request: Request):
     except ValueError:
         return JSONResponse({"ok": False, "error": "bad json"}, status_code=400)
     sid = str(body.get("session") or "").strip()[:80]
-    if not re.fullmatch(r"[\w.-]+", sid or "-"):
+    if not sid or not re.fullmatch(r"[\w.-]+", sid):
         return JSONResponse({"ok": False, "error": "session id required"}, status_code=400)
     lines = [x for x in (body.get("lines") or [])[:2000] if isinstance(x, dict) and "n" in x]
     n = store.live_append(sid, str(body.get("title") or sid)[:200], lines, bool(body.get("ended")))

@@ -863,6 +863,8 @@ ok("forward_test" in [t["name"] for t in telegram_bot.tool_defs()] and main.forw
 _tok = config.AGENT_TOKEN
 _lc = TestClient(main.app)
 ok(_lc.post("/zoom/live", json={"session": "x", "lines": []}).status_code == 401, "/zoom/live needs the agent token")
+ok(_lc.post("/zoom/live", json={"session": "", "lines": []}, headers={"X-Agent-Token": config.AGENT_TOKEN}).status_code == 400
+   and store.kv_get("live_session") is None, "/zoom/live rejects an empty session id and stores nothing")
 _t0 = time.time()
 _body = {"session": "2026-10-22_0930_ET", "title": "NY live",
          "lines": [{"n": 1, "t": _t0 - 1200, "et": "09:40:00", "text": "we're watching NAS for the sell"},
