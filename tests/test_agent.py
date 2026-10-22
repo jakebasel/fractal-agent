@@ -788,6 +788,10 @@ class _FtFVG:
         assert name == "trade_history"
         return {"cols": _FT_COLS, "rows": [r for r in _FT_ROWS if r[1] == kw.get("symbol")]}
 NEWS["events"] = []
+# earlier fixtures date entries "now", which falls inside the forward test's window once the
+# calendar passes its start date: start this block from an empty book
+store.db().execute("DELETE FROM forward_trades")
+store.db().commit()
 forward.sync(_FtFVG())
 _ft = {r["entry_id"]: dict(r) for r in store.db().execute("SELECT * FROM forward_trades").fetchall()}
 ok(9010 not in _ft, "forward test ignores entries before its start date")
@@ -819,6 +823,14 @@ ok(not forward.maybe_report(datetime(2026, 10, 24, 10, 0, tzinfo=config.ET)), "o
 telegram_bot.send = _orig_send
 ok("forward_test" in [t["name"] for t in telegram_bot.tool_defs()] and main.forward_test()["name"] == forward.NAME,
    "Telegram and MCP can read the forward test")
+
+# 2026-10-22: one entry per signal -- a later entry off the same signal is not core
+from app import symbols as _sym  # noqa: E402
+_g = {"scoring": "on_time", "r": 1.0}
+ok(len(_sym._good([dict(_g), dict(_g, later_entry=1), dict(_g, later_entry=0)])) == 2
+   and "later_entry" in store.CORE_COLS and "One entry per signal" in open("rules/amendments.md").read()
+   and "## 2026-10-08 — Re-entries must re-tap" not in open("rules/amendments.md").read(),
+   "core book counts only the first entry off a signal")
 
 print("all tests passed")
 server.should_exit = True

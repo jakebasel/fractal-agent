@@ -19,24 +19,26 @@ log = logging.getLogger("symbols")
 SYNC_EVERY_S = int(config._env("SYMBOLS_SYNC_S", "600"))
 BACKFILL_DAYS = int(config._env("SYMBOLS_BACKFILL_DAYS", "30"))
 GOOD_SCORING = ("on_time", "rescored", "fact")
+SYNC_KEY = "core_trades_synced_at_v2"
 
 
 def sync(fvg, days: float | None = None) -> int:
     """Pull fvg-mcp's trade_history and upsert it. Returns the number of rows received."""
-    first = store.kv_get("core_trades_synced_at") is None
+    # the _v2 key (2026-10-22) forces one full backfill so older rows get later_entry
+    first = store.kv_get(SYNC_KEY) is None
     days = days or (BACKFILL_DAYS if first else 2)
     res = fvg.call("trade_history", days=days)
     if isinstance(res, list):
         res = res[0] if res else {}
     cols, rows = res.get("cols") or [], res.get("rows") or []
     n = store.upsert_core_trades(cols, rows)
-    store.kv_set("core_trades_synced_at", store.now_utc())
+    store.kv_set(SYNC_KEY, store.now_utc())
     log.info("core trades synced: %d rows (%s days)", n, days)
     return n
 
 
 def sync_if_due(fvg) -> int:
-    last = store.kv_get("core_trades_synced_at")
+    last = store.kv_get(SYNC_KEY)
     if last:
         age = (datetime.now(timezone.utc) - datetime.fromisoformat(last)).total_seconds()
         if age < SYNC_EVERY_S:
@@ -65,7 +67,8 @@ _FEATURES = {
 
 def _good(rows) -> list:
     return [r for r in rows if r["scoring"] in GOOD_SCORING and r["r"] is not None
-            and not r.get("overridden") and not r.get("stale_signal") and r.get("retap_ok") != 0]
+            and not r.get("overridden") and not r.get("stale_signal") and r.get("retap_ok") != 0
+            and not r.get("later_entry")]
 
 
 def breakdown(symbol: str | None = None, days: float = 14, min_n: int = 5) -> dict:
@@ -112,7 +115,8 @@ def report(days: float = 7, day_columns: int = 7) -> dict:
     rows = store.core_trades(since_ms)
     # the same book as fvg-mcp's Analysis tab (Jake 2026-10-08): a trade overridden by a
     # newer same-timeframe signal, entered off a signal older than 6 h, or a later leg that
-    # never re-tapped its zone is not core-strategy and is not counted here either.
+    # never re-tapped its zone, or any entry after the first off its signal (2026-10-22) is not
+    # core-strategy and is not counted here either.
     good = _good(rows)
     today = datetime.now(config.ET).strftime("%Y-%m-%d")
     day_keys = [(datetime.now(config.ET) - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(day_columns)][::-1]
@@ -137,7 +141,7 @@ def report(days: float = 7, day_columns: int = 7) -> dict:
             "excluded": sum(1 for r in rows if r["symbol"] == sym and r not in rs),
         })
     out.sort(key=lambda x: x["window"].get("total_r", 0), reverse=True)
-    synced = store.kv_get("core_trades_synced_at")
+    synced = store.kv_get(SYNC_KEY)
     return {"window": f"last {days:g} days (since {store.to_et((now - timedelta(days=days)).isoformat())})",
             "days": day_keys, "symbols": out,
             "all": store.summarize([r["r"] for r in sorted(good, key=lambda x: x["entry_bar"])]),

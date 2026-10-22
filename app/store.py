@@ -150,7 +150,8 @@ CREATE INDEX IF NOT EXISTS forward_slot ON forward_trades(name, slot_session, sl
 
 # columns added after v1; ALTERed into an existing database at start-up
 MIGRATIONS = {
-    "core_trades": {"overridden": "INTEGER", "stale_signal": "INTEGER", "retap_ok": "INTEGER"},
+    "core_trades": {"overridden": "INTEGER", "stale_signal": "INTEGER", "retap_ok": "INTEGER",
+                    "later_entry": "INTEGER"},
     "decisions": {"play": "TEXT", "rules_version": "TEXT", "jev": "TEXT", "jev_p_take": "REAL",
                   "path": "TEXT", "news": "TEXT", "vision_score": "REAL", "vision_note": "TEXT",
                   "kill_events": "TEXT", "managed_r": "REAL", "managed_outcome": "TEXT",
@@ -692,7 +693,9 @@ CORE_COLS = ("symbol", "cascade", "dir", "sig", "mt_tf", "entry_bar", "entry", "
              "r", "outcome", "exit", "close_bar", "scoring", "session", "in_window", "nd",
              "retrace", "mt_seq", "exec",
              # 2026-10-08: the core-book flags fvg-mcp's Analysis applies (Jake: "sync it")
-             "overridden", "stale_signal", "retap_ok")
+             "overridden", "stale_signal", "retap_ok",
+             # 2026-10-22: one entry per signal -- a later entry off the same signal is not core
+             "later_entry")
 
 
 def upsert_core_trades(cols: list, rows: list) -> int:

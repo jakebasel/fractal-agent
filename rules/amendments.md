@@ -55,12 +55,18 @@ than 6 hours at the entry bar was taken off a dead signal and is not a strategy 
 fvg-mcp enforces it live (`strategy.signal_max_age_h = 6`) and the Analysis book excludes
 such entries as "stale signal"; the agent must never take one.
 
-## 2026-10-08 — Re-entries must re-tap the original zone (Jake)
-There is no cap on the number of entries off one signal, but a later leg is only valid if
-price came back and re-tapped the ORIGINAL 5m/1m zone after the previous trade closed. The
-only time the original zone can be skipped is when it was invalidated first; then the next
-presented zone is the one to tap. fvg-mcp enforces it live and the Analysis book excludes
-legs that did not re-tap ("no re-tap"); the agent must never take one.
+## 2026-10-22 — One entry per signal; move complete (Jake)
+Replaces the 2026-10-08 re-entry rule ("re-entries must re-tap the original zone"). Jake: "we
+should only accept the first entry off of a given setup for a given signal ... After one setup
+is done, that should be the only setup we take off a given signal."
+- **One entry per signal.** The first setup off a Market Translator signal is the trade; there is
+  no second leg, re-tap or not. fvg-mcp stops hunting after the first entry
+  (`max_entries_per_signal = 1`) and its books exclude any later entry ("later entry").
+- **Move complete** = a 30s bar CLOSES beyond the DB high (bull) / DB low (bear) for a DB signal,
+  or beyond the start of the M leg for an M signal. If that happens before the entry, the setup
+  is void (fvg-mcp status `move_complete`) and the signal is spent.
+- **An open trade is not exited by this.** It still runs to its 3R target.
+The agent must never take an entry fvg-mcp marks as a later entry or move-complete void.
 
 ## 2026-10-08 — What counts as a tap (course wording; fvg-mcp setting noted)
 The course never gives a depth: the instructor paints the box and waits for the market to
@@ -72,8 +78,8 @@ drop the midpoint requirement to match the course exactly.
 
 ## 2026-10-08 — The core book (Jake: "sync the Live Dashboard with the Analysis tab")
 One book, everywhere: a trade counts only if its arming signal was not superseded before the
-entry (signal priority above), the signal was under 6 hours old at the entry, and any later
-leg re-tapped its zone. The fvg-mcp Live Dashboard History (default "core rules only"), the
+entry (signal priority above), the signal was under 6 hours old at the entry, and it was the
+first entry off its signal (2026-10-22; was "any later leg re-tapped its zone"). The fvg-mcp Live Dashboard History (default "core rules only"), the
 Analysis tab and this agent's Symbols tab all apply the same three exclusions, plus the
 standing ones (ND and Gold Strategy are never aggregated with real signals).
 
