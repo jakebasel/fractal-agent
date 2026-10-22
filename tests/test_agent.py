@@ -973,7 +973,7 @@ _quiet = watch.emit([dict(_w[0], key="MNQ1!|quiet|test")])
 ok(len(_quiet) == 1 and len(_sent) == 1 and not store.db().execute("SELECT sent FROM warnings WHERE key=?", ("MNQ1!|quiet|test",)).fetchone()["sent"],
    "TELEGRAM_PUSH off: warnings are stored for the tools, nothing is pushed")
 config.TELEGRAM_PUSH = True
-ok(all(r["sent"] for r in store.warnings(1) if r["kind"] != "new_gap") and main.warnings(1)[0]["at_et"].endswith("ET"),
+ok(all(r["sent"] for r in store.warnings(1) if r["kind"] != "new_gap" and "quiet" not in r["key"]) and main.warnings(1)[0]["at_et"].endswith("ET"),
    "warnings tool lists them, sent, in ET")
 telegram_bot.send = _real_send
 config.TELEGRAM_CHAT_ID = ""
