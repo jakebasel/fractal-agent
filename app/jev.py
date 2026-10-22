@@ -101,7 +101,7 @@ def build_playbook() -> dict:
     if am.strip():
         q["amend_ok"] = {"type": "noul", "instructions": (
             "The setup complies with every approved amendment below (answer no if any amendment "
-            "forbids it):\n" + am[-3000:])}
+            "forbids it):\n" + am[-9000:])}
         readable.append(("amendments", "A", "complies with every approved amendment"))
     q["play"] = {"type": "choice", "instructions": "Which kind of play is this setup?",
                  "criteria": dict(prompts.PLAY_KINDS)}

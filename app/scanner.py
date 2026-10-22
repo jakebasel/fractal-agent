@@ -9,7 +9,7 @@ import json
 import logging
 from datetime import datetime, timezone
 
-from . import config, jev, llm, prompts, store
+from . import config, jev, llm, prompts, store, rules_code
 from .mcp_client import FVG
 
 log = logging.getLogger("scanner")
@@ -82,8 +82,13 @@ def scan(fvg: FVG, chart_read, files, now: datetime | None = None, force: bool =
     armed = {}
     for sym in config.SYMBOLS:
         try:
-            armed[sym] = [{k: x.get(k) for k in ("cascade", "direction", "mt", "mt_tf", "status", "stage")}
-                          for x in (fvg.setups(sym) or {}).get("setups", []) or []]
+            _ss = (fvg.setups(sym) or {}).get("setups", []) or []
+            armed[sym] = {
+                "armed": [{k: x.get(k) for k in ("cascade", "direction", "mt", "mt_tf", "status", "stage")}
+                          for x in _ss if x.get("status") not in rules_code.VOID_STATUSES],
+                # amendment 2026-10-22: a signal already traded or move-complete is spent
+                "spent_signals": [{k: x.get(k) for k in ("cascade", "direction", "mt", "mt_tf", "void_reason")}
+                                  for x in _ss if x.get("status") in rules_code.VOID_STATUSES]}
         except Exception as e:   # the scanner is optional: never raise into the loop
             armed[sym] = f"unavailable: {e}"[:100]
     try:

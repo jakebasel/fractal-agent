@@ -57,6 +57,11 @@ Tools:
   the DB direction printed AFTER the retracement -> tap -> lower steps -> close. Retracement done
   but no new gap = not ready; the gap price retraced into is not the entry gap. When the
   retracement ran into a reversal zone, also weigh the Reversal Set Up (§5) the other way.
+  ONE ENTRY PER SIGNAL (amendment 2026-10-22): only the first entry off a Market Translator
+  signal is a trade; after it (win or stop-out) the signal is spent. A setup is void once a 30s
+  bar closes beyond the DB high/low (DB) or the start of the M leg (M) before the entry; an open
+  trade still runs to 3R. Never recommend a setup with status move_complete / superseded /
+  skip_2db / skip_5m_db, or an entry with later_entry=true.
 
 Coverage: the paper agent itself only decides {agent_symbols} (the Fusion Markets CFDs
 on Jake's chart layout), but fvg-mcp tracks ~150 futures and CFD symbols. Never say only those are tracked. For "what is setting up now / best trade" questions:

@@ -3,8 +3,6 @@
 Rule changes Jake has approved. These override everything else.
 The agent proposes changes in its lessons; nothing lands here without Jake's OK.
 
-(none yet)
-
 ## 2026-10-07 — Session times are preferences, not hard rules (Jake)
 The whole session is tradeable. "First two hours of London", "Asia done by 10 PM", "NY after
 11:00" were the instructor's time preference (he values his time; odds fall later), not

@@ -308,6 +308,22 @@ Not done, needs a decision from Jake:
   The capture keeps layouts open: after editing a layout, restart it
   (`launchctl kickstart -k gui/$(id -u)/com.jake.tv-capture` on the Hub).
 
+## 2026-10-22 — one entry per signal (replaces the 10/08 re-entry rule)
+Jake: "we should only accept the first entry off of a given setup for a given signal ... After
+one setup is done, that should be the only setup we take off a given signal." Move complete = a
+30s close beyond the DB high/low (DB) or the start of the M leg (M); an open trade still runs to 3R.
+- fvg-mcp: `max_entries_per_signal = 1` (0 restores multi-leg) and `move_complete_void = 1`;
+  status `move_complete` = void before entry, `signal_spent` when the signal already traded (a
+  chain rebuilt after a stop-out). `trade_history` / `entries` carry `later_entry`; every fvg-mcp
+  book excludes it.
+- This repo: `rules_code.hard_rules` skips `later_entry` and void setup statuses (`VOID_STATUSES`)
+  for review, re-evaluation and the pending panel; the scanner gets `spent_signals`; the agent's
+  books (`store.settled`) drop later / overridden / stale entries via `core_trades`; the Symbols
+  book and `tools/backtest.py` exclude them; the forward test skips them (a take flagged after the
+  fact becomes a skip and its session slot is re-decided). `core_trades` re-backfilled 30 days once
+  (sync key `core_trades_synced_at_v2`). Prompts (decision, lesson, shadow, scanner, Jev, Telegram)
+  carry the rule; rulebook / live_rules §18, §20 and §5 M-continuation qualify on move complete.
+
 ## VPS screenshot capturer (tv-capture/)
 
 Coolify app `tv-capture` (same project, base directory `/tv-capture`, volume `/data`, domain
@@ -436,7 +452,8 @@ learning loop, Jev shadow scoring, news filter, spend tracking. Still open:
   history, and the Analysis ranking, Symbol tiles and stats exclude those rows (listed greyed).
   Signal expiry: Jake 10/08 (later) = 6 h max (code default 6.0 and the live Settings value set to
   6 via /api/settings); research rows carry `stale_signal` / `signal_age_h` and the Analysis books
-  exclude entries whose arming signal was older than 6 h at the entry bar. No cap on entries per
+  exclude entries whose arming signal was older than 6 h at the entry bar. [SUPERSEDED 2026-10-22
+  by one entry per signal; see the 2026-10-22 section] No cap on entries per
   arm. Re-entry rule (Jake 10/08, LIVE since commit 9267b01): a 2nd+ leg off the same signal must
   RE-TAP the original 5m (3-stage) / 1m (2-stage) zone after the previous leg CLOSED (relay-bar
   re-entry, `_first_retap`, `_build_chain(anchor=...)`); if that zone was invalidated, the first

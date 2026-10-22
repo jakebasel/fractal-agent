@@ -115,8 +115,8 @@ def report(days: float = 7, day_columns: int = 7) -> dict:
     rows = store.core_trades(since_ms)
     # the same book as fvg-mcp's Analysis tab (Jake 2026-10-08): a trade overridden by a
     # newer same-timeframe signal, entered off a signal older than 6 h, or a later leg that
-    # never re-tapped its zone, or any entry after the first off its signal (2026-10-22) is not
-    # core-strategy and is not counted here either.
+    # any entry after the first off its signal (2026-10-22; retap_ok is the retired 10/08 rule)
+    # is not core-strategy and is not counted here either.
     good = _good(rows)
     today = datetime.now(config.ET).strftime("%Y-%m-%d")
     day_keys = [(datetime.now(config.ET) - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(day_columns)][::-1]

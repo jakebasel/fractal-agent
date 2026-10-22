@@ -114,14 +114,34 @@ def _is_2db(entry: dict, detail: dict) -> bool:
     return "2DB" in cfg or "2DB" in text or "(2DB)" in text
 
 
+# fvg-mcp setup statuses that can never become a trade (one entry per signal + move complete,
+# amendment 2026-10-22; signal priority 10/08; 2DB / 5m-DB voids)
+VOID_STATUSES = {"move_complete": "move complete / signal already traded",
+                 "superseded": "superseded by a newer signal", "skip_2db": "2DB",
+                 "skip_5m_db": "a 5m DB takes priority"}
+
+
+def void_reason(status, why=None) -> str | None:
+    """'§1.1 void: ...' for an fvg-mcp setup status that can never be traded, else None."""
+    if status in VOID_STATUSES:
+        return f"§1.1 void: {why or VOID_STATUSES[status]}"
+    return None
+
+
 def hard_rules(entry: dict, detail: dict, now: datetime) -> tuple[list[str], dict]:
     """ALL hard rules that fire, most important first (the overarching reason is reported, not
     whichever check happened to run first), plus the news check result (stored on the row).
 
-    Priority (Jake, 2026-10-07): a 2DB is never traded, ND is never traded, news bracket,
+    Priority (Jake, 2026-10-07): a later entry off a signal already traded / a void setup is
+    never traded (2026-10-22), a 2DB is never traded, ND is never traded, news bracket,
     retracement, two losses, then the weekend / the engine's session-window flag. Time within
     a session is a downgrade handled by the model, never a skip."""
     fired = []
+    if entry.get("later_entry") or detail.get("later_entry"):
+        fired.append("§1.0 one entry per signal: this signal already produced its trade (amendment 2026-10-22)")
+    vr = void_reason(detail.get("setup_status"), detail.get("void_reason"))
+    if vr:
+        fired.append(vr)
     if _is_2db(entry, detail):
         fired.append("§2.4 2DB: we don't trade 2DBs")
     if detail.get("trend_fallback"):

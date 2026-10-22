@@ -50,7 +50,8 @@ def _summarise_setups(s: dict) -> list:
         out.append({k: x.get(k) for k in (
             "cascade", "direction", "mt", "mt_tf", "mt_cfg", "status", "stage", "armed",
             "ready", "retrace", "no_retrace", "two_m", "tf5_db", "conflict", "session",
-            "in_window", "high_prob")})
+            "in_window", "high_prob")}
+                   | {"void": rules_code.void_reason(x.get("status"), x.get("void_reason"))})
     return out
 
 
@@ -134,6 +135,8 @@ def build_context(fvg: FVG, entry: dict, detail: dict, chart_read, shot_age) -> 
                        for st in detail.get("stages", [])],
             "stop_options": stops, "session": detail.get("session"),
             "in_window": detail.get("in_window"),
+            # amendment 2026-10-22: only the first entry off a signal is ever a trade
+            "later_entry_off_a_traded_signal": bool(entry.get("later_entry")),
         },
         "this_symbol_setups": _summarise_setups(fvg.setups(sym)),
         "this_symbol_mt_recent": _mt_events(fvg, sym),
@@ -510,8 +513,9 @@ def reevaluate_skips(fvg: FVG, limit: int = 3) -> int:
 
 def snapshot_setups(fvg: FVG):
     """What the engine is working on right now (armed / forming / ready), per symbol, with the
-    code hard rule that would fire if it completed, plus the engine's feed health. Stored for
-    the dashboard's pending-setups panel."""
+    code hard rule that would fire if it completed, plus the engine's feed health. Void setups
+    (move complete / signal already traded, superseded, 2DB, 5m DB) are listed after the live
+    ones with would_skip saying why. Stored for the dashboard's pending-setups panel."""
     now = datetime.now(timezone.utc)
     out = {"at": now.isoformat(), "symbols": {}}
     for sym in config.SYMBOLS:
@@ -521,10 +525,12 @@ def snapshot_setups(fvg: FVG):
             out["symbols"][sym] = {"error": str(e)[:200]}
             continue
         rows = []
-        for x in (s.get("setups") or [])[:12]:
+        _all = sorted(s.get("setups") or [], key=lambda x: x.get("status") in rules_code.VOID_STATUSES)
+        for x in _all[:12]:
             fake_entry = {"at": now.isoformat(), "symbol": sym, "mt_text": x.get("mt"), "cascade": x.get("cascade")}
             fake_detail = {"mt_cfg": x.get("mt_cfg"), "retrace": x.get("retrace"), "session": x.get("session"),
-                           "in_window": x.get("in_window"), "trend_fallback": x.get("trend_fallback")}
+                           "in_window": x.get("in_window"), "trend_fallback": x.get("trend_fallback"),
+                           "setup_status": x.get("status"), "void_reason": x.get("void_reason")}
             try:
                 fired, _ = rules_code.hard_rules(fake_entry, fake_detail, now)
             except Exception:

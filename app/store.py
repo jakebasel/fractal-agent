@@ -667,8 +667,20 @@ def summarize(vals) -> dict:
             "total_r": round(sum(vals), 2), "max_dd_r": round(dd, 2)}
 
 
+def core_excluded_ids() -> set:
+    """fvg-mcp trade ids outside the core book (the amendments' "one book, everywhere"): a later
+    entry off a signal already traded (2026-10-22), an overridden or a stale signal (2026-10-08)."""
+    try:
+        return {r["id"] for r in db().execute(
+            "SELECT id FROM core_trades WHERE later_entry = 1 OR overridden = 1 OR stale_signal = 1")}
+    except Exception:
+        return set()
+
+
 def settled(since_iso=None):
-    rows = [r for r in decisions(limit=100000, since_iso=since_iso) if r["r"] is not None]
+    out = core_excluded_ids()
+    rows = [r for r in decisions(limit=100000, since_iso=since_iso) if r["r"] is not None
+            and r["entry_id"] not in out]
     rows.sort(key=lambda x: x["entry_id"])
     return rows
 

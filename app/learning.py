@@ -40,7 +40,8 @@ SEEDS = [
      "never upgrade a SKIP); IF price crossed that earlier trade's stop level against this direction before "
      "this entry THEN SKIP.", "instructor-conflict",
      "Instructor 10/07 Asia: 'You guys know how I feel about jumping back in with a second play on the same "
-     "asset.' Amendment 10/08 says no cap on re-entries."),
+     "asset.' Off the SAME signal this is settled (amendment 2026-10-22: one entry per signal); "
+     "this hypothesis is about a second play off a DIFFERENT signal."),
     ("DB keeps the retracement requirement", "IF a DB printed while an earlier M/2M setup on the same "
      "index and timeframe was pending THEN the DB arms the setup, but the entry still requires a real "
      "retracement back into the original zone; with retrace none/shallow or no tap of that zone, SKIP.",
@@ -67,10 +68,15 @@ def _since(days) -> str:
 
 def seed():
     """Add any seed hypothesis that is not there yet (by title); runs cheaply every tick."""
-    have = {h["title"] for h in store.hypotheses()}
+    have = {h["title"]: h for h in store.hypotheses()}
     for title, rule, source, note in SEEDS:
         if title not in have:
             store.add_hypothesis(title, rule, None, source, "testing", note=note)
+        elif note and "Amendment 10/08 says no cap" in (have[title]["note"] or ""):
+            # 2026-10-22: the note cited the retired re-entry amendment
+            with store._lock:
+                store.db().execute("UPDATE hypotheses SET note = ? WHERE id = ?", (note, have[title]["id"]))
+                store.db().commit()
     store.kv_set("seeded_hypotheses", True)
 
 

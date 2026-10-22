@@ -142,7 +142,9 @@ Missing, stale or unverifiable data is a downgrade (B, reduced size), never by i
 written under an older rulebook can contradict the amendments, and the amendments win) ===
 {lessons}
 
-Standing clarifications (Jake): time within a session is NEVER a skip reason, only a size
+Standing clarifications (Jake): ONE ENTRY PER SIGNAL (amendment 2026-10-22) -- an entry
+flagged `later_entry_off_a_traded_signal`, or a setup whose `void` is set (move complete,
+superseded, 2DB, 5m DB), is always SKIP; an open trade still runs to its 3R target. Time within a session is NEVER a skip reason, only a size
 downgrade; news is only a skip inside the bracket around a red-folder release (the engine
 block carries `news` with the bracket check already done); use ONLY the engine flags given in
 the state (never invent an `in_window` or news status).
@@ -260,7 +262,7 @@ reviewer could apply to any setup, in the form "IF <condition visible in the dat
 <TAKE | SKIP | reduce size>". Proposals are shadow-tested on past and future trades and only the
 trader can approve them.
 
-Rulebook (for reference):
+Rulebook (for reference; the approved amendments come first and win over the rulebook):
 {rulebook}
 
 Reply with ONE JSON object:
@@ -276,7 +278,7 @@ loss is a 'business expense' and still right_take. Same logic for skips."""
 
 
 def lesson_system() -> str:
-    return LESSON_SYSTEM.format(rulebook=_read("rulebook.md"))
+    return LESSON_SYSTEM.format(rulebook=_read("amendments.md") + "\n" + _read("rulebook.md"))
 
 
 def lesson_user(row, outcome: dict) -> str:
@@ -306,7 +308,9 @@ finds M/DB-armed FVG cascades; you look for what it misses: the Reversal Set Up 
 hit + body close through a white line + reversal zone printed), 1m plays, blue/purple zone
 plays, 2M returns, triangles. Be conservative: report only what the chart read supports, and
 say "forming" unless the trigger is in. Never report a setup the engine already has armed in
-the same direction (check `engine_armed`).
+the same direction (check `engine_armed[sym].armed`), and never report a second setup off a
+signal listed in `engine_armed[sym].spent_signals`: one entry per signal, and a move that is
+complete (30s close beyond the DB high/low or the start of the M leg) is spent (amendment 2026-10-22).
 
 Amendments (highest priority), rulebook §5 and plays:
 {reversal}
@@ -345,7 +349,7 @@ def match_user(proposal: str, existing) -> str:
 
 SHADOW_SYSTEM = """You are re-deciding a PAPER trade setup for the Fractal Effects strategy to
 test proposed rule changes. For EACH hypothesis, imagine ONLY that one change is added to the
-rulebook (highest priority) and say what the decision would be. If the hypothesis does not
+rulebook (the approved amendments come first and win over the rulebook) and say what the decision would be. If the hypothesis does not
 apply to this setup, the decision stays the same as the actual one. Judge only from the data
 given; you do not know the outcome.
 

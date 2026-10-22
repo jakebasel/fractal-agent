@@ -80,6 +80,8 @@ def rows_of(d):
             continue
         if x["cascade"] == "Gold Strategy" or x["nd"]:
             continue   # ND (trend-fallback) was retired by fvg-mcp on 2026-08-11; not part of the strategy
+        if x.get("later_entry") or x.get("overridden") or x.get("stale_signal"):
+            continue   # the core book (amendments 2026-10-08 / 2026-10-22): first entry off a fresh signal only
         et = datetime.fromtimestamp(x["entry_bar"] / 1000, tz=timezone.utc).astimezone(config.ET)
         x.update(et=et, date=et.strftime("%Y-%m-%d"), dow=et.strftime("%a"), hour=et.hour + et.minute / 60)
         x["rules"] = code_hard_rules(x)

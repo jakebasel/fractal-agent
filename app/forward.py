@@ -9,9 +9,14 @@ The setup, frozen (change it and the test restarts, so the name changes with it)
   - no entry with 3+ gaps invalidated on the way in
   - nothing from a high-impact USD release until 2 hours after it (CPI/PPI included; the
     study's bracket left CPI/PPI to a separate rule it did not choose)
+  - only the first entry off a signal (engine rule from 2026-10-22, amendment "One entry per
+    signal"): not a change to this setup, so the name stays; the two later entries the engine
+    still made on 10/21 before it went live are skipped here too
   - 0.75% risk on a $100,000 account, even lots up to 100 micros, $1.60 a micro all-in plus
     1 tick of slippage
-Each entry is decided once, when first seen, and the decision is never revisited; its result
+Each entry is decided once, when first seen, and the decision is never revisited (one
+exception: a take fvg-mcp later flags as a later entry off its signal becomes a skip, and the
+entries after it in that session are decided again); its result
 fills in when fvg-mcp scores it. Pass mark: an average of 2%+ a week, no month's drawdown
 deeper than 5%.
 """
@@ -75,6 +80,8 @@ def decide(e: dict, takes_in_slot: int) -> tuple[str, str]:
     ses, _ = slot(t)
     if e.get("nd"):
         return "skip", "no Market Translator signal (ND)"
+    if e.get("later_entry"):
+        return "skip", "later entry off a signal already traded (one entry per signal)"
     if ses not in SESSIONS:
         return "skip", f"{ses} session"
     if not e.get("in_window"):
@@ -130,6 +137,15 @@ def sync(fvg) -> int:
                            ses, day, e.get("dir"), e.get("sig"), e.get("mt_tf"), dec, why, e.get("entry"), e.get("stop"),
                            lots, store.now_utc()))
                 new += 1
+            elif e.get("later_entry") and have["decision"] == "take":
+                # decided before fvg-mcp flagged it (10/21, before the 10/22 rule went live)
+                c.execute("UPDATE forward_trades SET decision='skip', reason=?, lots=0 WHERE entry_id=?",
+                          ("later entry off a signal already traded (one entry per signal)", e["id"]))
+                # the take freed its session slot: re-decide the slot's later entries (they come
+                # later in this time-ordered pass and are decided again with the slot recounted)
+                c.execute("DELETE FROM forward_trades WHERE name=? AND slot_session=(SELECT slot_session FROM "
+                          "forward_trades WHERE entry_id=?) AND slot_day=(SELECT slot_day FROM forward_trades "
+                          "WHERE entry_id=?) AND entry_bar > ?", (NAME, e["id"], e["id"], e["entry_bar"]))
             if e.get("r") is not None and e.get("scoring") in SCORED:
                 c.execute("UPDATE forward_trades SET r=?, outcome=?, scoring=? WHERE entry_id=?",
                           (e["r"], e.get("outcome"), e.get("scoring"), e["id"]))

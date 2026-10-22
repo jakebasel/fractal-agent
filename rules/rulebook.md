@@ -28,8 +28,10 @@ Market Translator (MT)
   a second M (retracement coming; if in a trade, secure profits and roll the stop).
 - A Market Translator signal expires 6 hours after it prints (amendments, Jake 2026-10-08);
   the newest signal on a timeframe replaces the previous one, only two same-session Ms coexist.
-- Re-entries off one signal: no cap, but each later leg must re-tap the ORIGINAL zone unless
-  that zone was invalidated first, then the next presented zone (amendments, Jake 2026-10-08).
+- ONE ENTRY PER SIGNAL (amendments, Jake 2026-10-22; replaces the 10/08 re-entry rule): only the
+  first entry off a signal is a trade; after it, win or stop-out, that signal is spent. MOVE
+  COMPLETE: a 30s close beyond the DB high/low (DB) or the start of the M leg (M) before the entry
+  voids the setup. An open trade is never exited for it; it still runs to 3R.
 - A tap = any touch of the zone (wick to the edge counts; the course never names a depth).
 - 2DB = DBs both ways = SKIP, always (amendments, Jake 2026-10-07). "No other logic for a new
   set up should form after this point, until next session" on that index/timeframe. A 1m 2DB
@@ -209,7 +211,8 @@ acts as the 5m step, so look for a 1m FVG off it, then a 30s FVG, then the close
 series. Always REDUCED size. Same 1:3, same management; target blue/purple zones, DSD,
 liquidity, or the high left by the original M.
 On an M: a reversal zone after a close through the M line can be used to CONTINUE the M setup
-if price ran without you; you don't need to wait for the original first FVG.
+if price ran without you; you don't need to wait for the original first FVG -- only while the
+move is not complete and the signal has not already been traded (amendment 2026-10-22).
 Leftover reversal zones from the previous session show whether that session's obligation
 was met (e.g. an Asia zone tapped at the NY open, then the drop).
 

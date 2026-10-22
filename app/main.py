@@ -83,9 +83,10 @@ def paper_stats(days: float = 7) -> dict:
 
 @mcp.tool()
 def symbol_stats(days: float = 7) -> dict:
-    """The core strategy per symbol over the last `days`: every fvg-mcp cascade entry at full
-    size (no AI filter), with n, win%, avg R, total R, max drawdown, today, and total R per ET day
-    for the last 7 days. Sorted by total R. Use it to see which instruments pay."""
+    """The core strategy per symbol over the last `days`: fvg-mcp's core-book entries at full
+    size (no AI filter; only the first entry off each signal, no overridden or stale signals),
+    with n, win%, avg R, total R, max drawdown, today, and total R per ET day for the last 7 days.
+    Sorted by total R. Use it to see which instruments pay."""
     return symbols.report(days)
 
 
@@ -241,8 +242,9 @@ def knowledge_search(query: str, k: int = 6, kind: str | None = None, since: str
 @mcp.tool()
 def forward_test() -> dict:
     """The paper forward test of the micro setup (MNQ/MES/MYM; Asia, NY, NY PM; max 2 trades a
-    session; session windows, no shallow/none-retracement DBs, no 3+ invalidated gaps, 2h after
-    red-folder news; 0.75% risk): weekly %, month-to-date %, monthly drawdown, pass mark, skips."""
+    session; only the first entry off a signal; session windows, no shallow/none-retracement DBs,
+    no 3+ invalidated gaps, 2h after red-folder news; 0.75% risk): weekly %, month-to-date %,
+    monthly drawdown, pass mark, skips."""
     from . import forward
     return forward.report()
 
@@ -327,7 +329,8 @@ def review_queue(reviewer: str = "hermes", limit: int = 10) -> list[dict]:
 @mcp.tool()
 def pending_setups() -> dict:
     """What the engine is working on right now (armed / forming / ready setups per symbol, with
-    the code rule that would skip each) and the engine feed health."""
+    the code rule that would skip each; void setups -- move complete / signal already traded,
+    superseded, 2DB, 5m DB -- are listed last with why) and the engine feed health."""
     return store.kv_get("setups_snapshot") or {}
 
 

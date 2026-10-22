@@ -783,6 +783,10 @@ _FT_ROWS = [  # Thu 10/22 ET; MNQ stop 10 pts -> 0.75% of $100k = $750 -> 37 -> 
     [9009, "MNQ1!", "bull", "M", "1m", _ft_ms(2026, 10, 22, 0, 30), 100.0, 90.0, 1.0, "2R, BE", "on_time", "asia", False, False, None, 0],
     [9010, "MNQ1!", "bull", "M", "1m", _ft_ms(2026, 10, 20, 9, 40), 100.0, 90.0, 2.5, "2R + runner", "on_time", "newyork", True, False, None, 0],
 ]
+_FT_COLS.append("later_entry")
+for _r in _FT_ROWS:
+    _r.append(False)
+_FT_ROWS.append([9011, "MYM1!", "bull", "M", "1m", _ft_ms(2026, 10, 22, 21, 0), 100.0, 80.0, 2.5, "2R + runner", "on_time", "asia", True, False, None, 0, True])
 class _FtFVG:
     def call(self, name, **kw):
         assert name == "trade_history"
@@ -807,7 +811,8 @@ ok(forward.slot(datetime.fromtimestamp(_ft_ms(2026, 10, 22, 0, 30) / 1000, timez
 _net1 = 2.5 * 36 * 10 * 2.0 - 36 * (1.60 + 0.25 * 2.0)
 ok(abs(_ft[9001]["net_usd"] - _net1) < 0.01 and _ft[9008]["net_usd"] is None, "forward test nets fees, leaves open trades open")
 forward.sync(_FtFVG())
-ok(store.db().execute("SELECT COUNT(*) n FROM forward_trades").fetchone()["n"] == 9, "forward test decides each entry once")
+ok(_ft[9011]["decision"] == "skip" and "one entry per signal" in _ft[9011]["reason"], "forward test skips a later entry off a signal")
+ok(store.db().execute("SELECT COUNT(*) n FROM forward_trades").fetchone()["n"] == 10, "forward test decides each entry once")
 _rep = forward.report()
 ok(_rep["taken"] == 3 and _rep["scored"] == 2 and _rep["open"] == 1
    and abs(_rep["total_pct"] - round(100 * (_net1 + (-1.0 * 74 * 2 * 5.0 - 74 * (1.60 + 0.25 * 5.0))) / 100000, 2)) < 0.011
@@ -823,6 +828,33 @@ ok(not forward.maybe_report(datetime(2026, 10, 24, 10, 0, tzinfo=config.ET)), "o
 telegram_bot.send = _orig_send
 ok("forward_test" in [t["name"] for t in telegram_bot.tool_defs()] and main.forward_test()["name"] == forward.NAME,
    "Telegram and MCP can read the forward test")
+
+# 2026-10-22: one entry per signal in the decision path, the pending panel and the forward test
+from app import rules_code as _rc  # noqa: E402
+_f, _ = _rc.hard_rules({"at": "2026-10-22T14:00:00+00:00", "symbol": "US30", "later_entry": True}, {}, datetime.now(timezone.utc))
+ok(_f and _f[0].startswith("§1.0 one entry per signal"), "hard rules skip a later entry off a signal (review + re-evaluation)")
+_f, _ = _rc.hard_rules({"at": "2026-10-22T14:00:00+00:00", "symbol": "US30"},
+                       {"setup_status": "move_complete", "void_reason": "move complete: closed beyond the DB high"},
+                       datetime.now(timezone.utc))
+ok(_f and "void" in _f[0] and "DB high" in _f[0], "a move-complete setup reads as void on the pending panel")
+ok("ONE ENTRY PER SIGNAL" in prompts.decision_system() and "amendments" in prompts.lesson_system().lower()[:2000]
+   and "One entry per signal" in prompts.lesson_system(), "decision + lesson prompts carry the one-entry rule")
+ok("ONE ENTRY PER SIGNAL" in open("app/telegram_bot.py").read() and "no cap" not in open("rules/rulebook.md").read(),
+   "Telegram and the rulebook carry the one-entry rule, not the old no-cap rule")
+# forward test: a take flagged later_entry after the fact becomes a skip and frees its slot
+store.db().execute("DELETE FROM forward_trades"); store.db().commit()
+_FT_ROWS2 = [[9101, "MNQ1!", "bull", "M", "1m", _ft_ms(2026, 10, 23, 9, 40), 100.0, 90.0, 2.5, "2R + runner", "on_time", "newyork", True, False, None, 0, False],
+             [9102, "MES1!", "bull", "M", "1m", _ft_ms(2026, 10, 23, 9, 50), 100.0, 98.0, 2.5, "2R + runner", "on_time", "newyork", True, False, None, 0, False],
+             [9103, "MYM1!", "bull", "M", "1m", _ft_ms(2026, 10, 23, 10, 0), 100.0, 80.0, 2.5, "2R + runner", "on_time", "newyork", True, False, None, 0, False]]
+class _FtFVG2:
+    def call(self, name, **kw):
+        return {"cols": _FT_COLS, "rows": [r for r in _FT_ROWS2 if r[1] == kw.get("symbol")]}
+forward.sync(_FtFVG2())
+_d = lambda i: store.db().execute("SELECT decision FROM forward_trades WHERE entry_id=?", (i,)).fetchone()["decision"]
+ok(_d(9103) == "skip", "third NY entry skipped while the slot is full")
+_FT_ROWS2[1][-1] = True            # fvg-mcp now flags 9102 as a later entry
+forward.sync(_FtFVG2())
+ok(_d(9102) == "skip" and _d(9103) == "take", "a flagged take becomes a skip and the freed slot is re-decided")
 
 # 2026-10-22: one entry per signal -- a later entry off the same signal is not core
 from app import symbols as _sym  # noqa: E402
