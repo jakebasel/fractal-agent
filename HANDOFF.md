@@ -350,10 +350,12 @@ the NDOG, the NWOG and the 4H FVGs. Four pieces:
    zone `shade` (dark = stronger) and `distance`, the FVG indicator's `htf_chips` (red D / orange
    4H / green 15m with CE), `dsd` high/low, and carries the colour legend. ~450 reads/day at
    2 min, budget-guarded like the scanner (`store.over_budget()`).
-3. **Watch layer** (`app/watch.py`, table `warnings`, code only, every `WATCH_SECONDS` = 60):
+3. **Watch layer** (`app/watch.py`, table `warnings`, code only, every `WATCH_SECONDS` = 120; each symbol's
+   context is kept `WATCH_CONTEXT_TTL_S` = 300 s -- a cold fvg-mcp `context` call costs its server ~2.5 s of CPU,
+   and the first deploy at 60 s / 30 board symbols pinned fvg-mcp at a full core):
    merges the computed levels + the stored chart zones into one obstacle list per symbol
    (chart duplicates of a computed gap are dropped) and checks the engine's armed setups, the
-   agent's open paper TAKEs and the newest `WATCH_BOARD_ENTRIES` engine entries board-wide:
+   agent's open paper TAKEs and the newest `WATCH_BOARD_ENTRIES` (10) engine entries board-wide:
    - `target_blocked` (high if the zone is strong): an obstacle inside `WATCH_MIN_R_CLEAR` (2R,
      the partial) of the entry -- "realistic target is the zone edge";
    - `zone_against` (medium): a STRONG zone (dark blue / dark purple, DSD, an HTF gap against

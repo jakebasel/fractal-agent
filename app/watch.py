@@ -253,7 +253,7 @@ def diff_warnings(symbol: str, prev: list, cur: list) -> list:
 
 def _ctx(fvg, symbol):
     hit = _ctx_cache.get(symbol)
-    if hit and time.time() - hit[0] < 60:
+    if hit and time.time() - hit[0] < config.WATCH_CONTEXT_TTL_S:
         return hit[1]
     try:
         ctx = fvg.context(symbol) or {}

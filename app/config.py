@@ -136,12 +136,15 @@ SCAN_SHOTS_KEEP_DAYS = int(_env("SCAN_SHOTS_KEEP_DAYS", "14"))   # archived scan
 CHART_STATE_MINUTES = float(_env("CHART_STATE_MINUTES", "2"))
 CHART_STATE_WINDOWS = _env("CHART_STATE_WINDOWS", "20:00-24:00,02:00-08:00,09:25-12:00,13:30-16:00")
 # app/watch.py: zone / level / chart warnings, code only (no LLM), pushed to Telegram.
-WATCH_SECONDS = int(_env("WATCH_SECONDS", "60"))              # how often the rules run; 0 = off
+WATCH_SECONDS = int(_env("WATCH_SECONDS", "120"))             # how often the rules run; 0 = off
 WATCH_NOTIFY = _env("WATCH_NOTIFY", "1") == "1"                # message the Telegram chat
 WATCH_MIN_R_CLEAR = float(_env("WATCH_MIN_R_CLEAR", "2.0"))     # a trade needs this much R before the first obstacle (2R = the partial)
 WATCH_NEAR_PCT = float(_env("WATCH_NEAR_PCT", "0.10"))          # "price is near a level" = within this % of price
 WATCH_COOLDOWN_MIN = float(_env("WATCH_COOLDOWN_MIN", "45"))    # the same warning key is not repeated inside this
-WATCH_BOARD_ENTRIES = int(_env("WATCH_BOARD_ENTRIES", "30"))    # newest engine entries board-wide checked against computed levels
+WATCH_BOARD_ENTRIES = int(_env("WATCH_BOARD_ENTRIES", "10"))    # newest engine entries board-wide checked against computed levels
+# fvg-mcp `context` costs its server ~2.5 s of CPU per cold symbol (measured 2026-10-22, it pinned a core at
+# 33 symbols/min); levels move on 4H/daily candles, so the agent keeps each symbol's context this long
+WATCH_CONTEXT_TTL_S = int(_env("WATCH_CONTEXT_TTL_S", "300"))
 WATCH_ENTRY_MAX_AGE_MIN = float(_env("WATCH_ENTRY_MAX_AGE_MIN", "120"))
 TRANSCRIPTS_SYNC_S = int(_env("TRANSCRIPTS_SYNC_S", "1800"))    # fvg-mcp /transcripts -> reference library
 
