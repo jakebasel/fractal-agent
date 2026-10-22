@@ -7,6 +7,7 @@ import io
 import json
 import sqlite3
 import threading
+import time
 from datetime import datetime, timezone
 
 from . import config
@@ -146,6 +147,10 @@ CREATE TABLE IF NOT EXISTS forward_trades (    -- app/forward.py: the frozen pap
     r REAL, outcome TEXT, scoring TEXT, net_usd REAL, decided_at TEXT
 );
 CREATE INDEX IF NOT EXISTS forward_slot ON forward_trades(name, slot_session, slot_day, decision);
+CREATE TABLE IF NOT EXISTS live_lines (        -- the Zoom session as it happens (POST /zoom/live)
+    session TEXT, n INTEGER, t REAL, et TEXT, text TEXT,
+    PRIMARY KEY (session, n)
+);
 """
 
 # columns added after v1; ALTERed into an existing database at start-up
@@ -208,6 +213,45 @@ def db() -> sqlite3.Connection:
             conn.commit()
         _local.conn = conn
     return conn
+
+
+# ---- live Zoom transcript (2026-10-22) -----------------------------------------------------
+LIVE_KEEP_DAYS = 7
+
+
+def live_append(session: str, title: str, lines: list, ended: bool = False) -> int:
+    """Store lines the Hub's Zoom tool streamed ([{n, t, et, text}], n = line number in the
+    session, so a resend never duplicates). The latest session's meta lives in kv 'live_session'."""
+    now = time.time()
+    with _lock:
+        c = db()
+        c.executemany("INSERT OR IGNORE INTO live_lines(session, n, t, et, text) VALUES (?,?,?,?,?)",
+                      [(session, int(x["n"]), float(x.get("t") or now), str(x.get("et") or "")[:12],
+                        str(x.get("text") or "")[:2000]) for x in lines if x.get("text")])
+        meta = kv_get("live_session") or {}
+        if meta.get("session") != session:
+            meta = {"session": session, "title": title or session, "started": now}
+        meta.update(last_post=now, ended=now if ended else None)
+        if lines:
+            meta["last_line"] = max(float(x.get("t") or now) for x in lines)
+        c.execute("INSERT OR REPLACE INTO kv(k, v) VALUES (?, ?)", ("live_session", json.dumps(meta)))
+        c.execute("DELETE FROM live_lines WHERE t < ?", (now - LIVE_KEEP_DAYS * 86400,))
+        c.commit()
+    return len(lines)
+
+
+def live_lines(session: str, since_t: float | None = None) -> list:
+    q, args = "SELECT n, t, et, text FROM live_lines WHERE session = ?", [session]
+    if since_t is not None:
+        q += " AND t >= ?"
+        args.append(since_t)
+    return [dict(r) for r in db().execute(q + " ORDER BY n", args)]
+
+
+def live_sessions() -> list:
+    return [dict(r) for r in db().execute(
+        "SELECT session, MIN(t) AS start, MAX(t) AS last, COUNT(*) AS n FROM live_lines "
+        "GROUP BY session ORDER BY MIN(t) DESC")]
 
 
 def reset_for_tests():

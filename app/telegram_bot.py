@@ -50,6 +50,11 @@ Tools:
   session transcript and digest, and the agents' own lessons and Hermes reviews. Each hit says
   when it was said; quote it with the date. Use it to quote the instructor when a call depends on
   his teaching. session_digests: what each recent live session covered, his calls and teachings.
+- live_transcript: the Zoom class AS IT HAPPENS (streamed from the Hub within ~10 s). Any question
+  about what the instructor is saying or just said -- "what did he say about NAS", "is he in",
+  "what was his stop", "why did he skip it" -- call it first (minutes=5-15, or search="nas stop"),
+  answer from those lines and quote the ET times. Separate what he did live from what he explained
+  or recapped. If status is not "live", say when the last line came in.
 - chart_now: look at the LIVE 5m and 1m charts (screenshots every 15 s) for what only the chart
   shows -- white lines, reversal zones/gaps, FVG positions, Spotlight. Before recommending or
   rating any CURRENT setup, check it with chart_now; never call a setup valid from engine data
@@ -138,6 +143,8 @@ _SPECS = [
     ("forward_test", {}, []),
     ("chart_now", {"question": {"type": "string"}}, ["question"]),
     ("instructor_calls", {}, []),
+    ("live_transcript", {"minutes": {"type": "number"}, "search": {"type": "string"},
+                         "session": {"type": "string"}}, []),
     ("chart_question", {"entry_id": {"type": "integer"}, "question": {"type": "string"},
                         "at": {"type": "string", "enum": ["decision", "exit"]}}, ["entry_id", "question"]),
     ("api_spend", {"days": {"type": "number"}}, []),

@@ -833,6 +833,28 @@ telegram_bot.send = _orig_send
 ok("forward_test" in [t["name"] for t in telegram_bot.tool_defs()] and main.forward_test()["name"] == forward.NAME,
    "Telegram and MCP can read the forward test")
 
+# 2026-10-22: the live Zoom transcript, streamed by the Hub, readable by Jake Trade Help
+_tok = config.AGENT_TOKEN
+_lc = TestClient(main.app)
+ok(_lc.post("/zoom/live", json={"session": "x", "lines": []}).status_code == 401, "/zoom/live needs the agent token")
+_t0 = time.time()
+_body = {"session": "2026-10-22_0930_ET", "title": "NY live",
+         "lines": [{"n": 1, "t": _t0 - 1200, "et": "09:40:00", "text": "we're watching NAS for the sell"},
+                   {"n": 2, "t": _t0 - 60, "et": "10:00:00", "text": "I'm in NAS short, stop above the high"},
+                   {"n": 3, "t": _t0 - 30, "et": "10:00:30", "text": "target is the blue zone"}]}
+_r = _lc.post("/zoom/live", json=_body, headers={"X-Agent-Token": _tok})
+ok(_r.status_code == 200 and _r.json()["stored"] == 3, f"/zoom/live stores streamed lines ({_r.text[:80]})")
+_lc.post("/zoom/live", json=_body, headers={"X-Agent-Token": _tok})            # a resend
+_lt = main.live_transcript(minutes=5)
+ok(_lt["status"] == "live" and _lt["lines"] == ["10:00:00 I'm in NAS short, stop above the high",
+                                                "10:00:30 target is the blue zone"]
+   and _lt["lines_in_session"] == 3, f"live_transcript: last minutes, no duplicates ({_lt})")
+ok(len(main.live_transcript(search="nas")["lines"]) == 2, "live_transcript search covers the whole session")
+_lc.post("/zoom/live", json={"session": "2026-10-22_0930_ET", "lines": [], "ended": True}, headers={"X-Agent-Token": _tok})
+ok(main.live_transcript()["status"] == "ended", "end marker -> status ended")
+ok("live_transcript" in [t["name"] for t in telegram_bot.tool_defs()] and "live_transcript" in telegram_bot.SYSTEM,
+   "Jake Trade Help has the live transcript tool and is told to use it")
+
 # 2026-10-22: one entry per signal in the decision path, the pending panel and the forward test
 from app import rules_code as _rc  # noqa: E402
 _f, _ = _rc.hard_rules({"at": "2026-10-22T14:00:00+00:00", "symbol": "US30", "later_entry": True}, {}, datetime.now(timezone.utc))

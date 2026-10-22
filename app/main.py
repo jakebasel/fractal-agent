@@ -334,6 +334,75 @@ def pending_setups() -> dict:
     return store.kv_get("setups_snapshot") or {}
 
 
+LIVE_STALE_S = 180          # no new line for this long while not ended: the stream has stopped
+LIVE_MAX_CHARS = 24000      # keep the newest lines inside the bot's tool-result budget
+
+
+@mcp.tool()
+def live_transcript(minutes: float = 15, search: str | None = None, session: str | None = None) -> dict:
+    """The Zoom live session AS IT HAPPENS: the transcriber on the Hub streams every line here
+    within ~10 s. Default: the last `minutes` of the current (or most recent) session, times ET.
+    search: only lines containing any of these words (whole session). session: an older session
+    id from `sessions` (YYYY-MM-DD_HHMM_ET). Use it for questions about what the instructor is
+    saying or just said ("what did he say about NAS", "did he take it", "what's his stop").
+    Speech-to-text slips: NAS/Naz = Nasdaq, US 30 = Dow, "fairy value gap"/FBG = fair value gap.
+    Finished sessions are also in knowledge_search(kind="live_session")."""
+    sessions = store.live_sessions()
+    meta = store.kv_get("live_session") or {}
+    sid = session or meta.get("session") or (sessions[0]["session"] if sessions else None)
+    if not sid:
+        return {"status": "none", "note": "No live session has streamed yet. The Zoom tool on the Hub "
+                                          "sends lines here while it is listening (/listen or a Zoom link)."}
+    now = time.time()
+    since = None if (search or session) else now - max(0.5, float(minutes or 15)) * 60
+    rows = store.live_lines(sid, since)
+    if search:
+        words = [w.lower() for w in re.findall(r"\w+", search) if len(w) > 1]
+        rows = [r for r in rows if any(w in r["text"].lower() for w in words)]
+    out, size = [], 0
+    for r in reversed(rows):
+        line = f"{r['et']} {r['text']}"
+        if size + len(line) > LIVE_MAX_CHARS:
+            break
+        out.append(line)
+        size += len(line) + 1
+    out.reverse()
+    info = next((x for x in sessions if x["session"] == sid), {})
+    last = info.get("last")
+    if sid == meta.get("session") and meta.get("ended"):
+        status = "ended"
+    elif last and now - last <= LIVE_STALE_S:
+        status = "live"
+    else:
+        status = "stale" if sid == meta.get("session") else "ended"
+    return {"session": sid, "status": status,
+            "started_et": store.to_et(datetime.fromtimestamp(info["start"], timezone.utc).isoformat()) if info.get("start") else None,
+            "last_line_et": store.to_et(datetime.fromtimestamp(last, timezone.utc).isoformat()) if last else None,
+            "last_line_age_min": round((now - last) / 60, 1) if last else None,
+            "lines_in_session": info.get("n", 0), "lines_shown": len(out),
+            "truncated": len(out) < len(rows), "lines": out,
+            "sessions": [x["session"] for x in sessions[:10]],
+            "note": ("status live = lines arrived in the last 3 min; stale = the stream stopped without an "
+                     "end marker (Hub off, or the call went quiet). Quote times in ET.")}
+
+
+async def zoom_live(request: Request):
+    """The Hub's Zoom tool streams the session here while it listens (agent token).
+    JSON {session, title, lines: [{n, t, et, text}], ended}."""
+    if not _authed(request):
+        return PlainTextResponse("unauthorized", status_code=401)
+    try:
+        body = json.loads((await request.body()).decode("utf-8", "ignore") or "{}")
+    except ValueError:
+        return JSONResponse({"ok": False, "error": "bad json"}, status_code=400)
+    sid = str(body.get("session") or "").strip()[:80]
+    if not re.fullmatch(r"[\w.-]+", sid or "-"):
+        return JSONResponse({"ok": False, "error": "session id required"}, status_code=400)
+    lines = [x for x in (body.get("lines") or [])[:2000] if isinstance(x, dict) and "n" in x]
+    n = store.live_append(sid, str(body.get("title") or sid)[:200], lines, bool(body.get("ended")))
+    return JSONResponse({"ok": True, "stored": n})
+
+
 @mcp.tool()
 def instructor_calls() -> list[dict]:
     """The instructor's own calls from the live-session transcripts (June/July 2025, Oct 2026 on): every
@@ -815,6 +884,7 @@ _app.router.routes.extend([
     Route("/telegram", telegram_bot.webhook, methods=["POST"]),
     Route("/zoom/inbox", telegram_bot.zoom_inbox),
     Route("/library/ingest", library_ingest, methods=["POST"]),
+    Route("/zoom/live", zoom_live, methods=["POST"]),
     Route("/library/search", library_search),
 ])
 app = _McpGate(_app)
