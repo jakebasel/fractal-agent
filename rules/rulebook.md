@@ -96,12 +96,9 @@ The models, step by step (the golden rule: if ANY step doesn't happen, there is 
 ## 2. Hard rules (any one = SKIP)
 
 1. No Market Translator signal armed it (trend-fallback / "ND"). Never trade ND.
-2. CPI or PPI release day (ET date): no US-related assets (NQ/ES/YM/RTY and their micros,
-   NAS100/US500/US30/US2000) for the whole day, every session (amendments 2026-10-16). Any other
-   red-folder (high-impact) USD release: SKIP from the release until 2 hours after it
-   (amendments 2026-10-07; nothing before the release), or while a live speech is in progress;
-   the rest of that day trades normally. Non-US assets are not affected by US releases outside
-   the bracket.
+2. Any red-folder (high-impact) USD release, CPI and PPI included: SKIP from the release until
+   2 hours after it (amendments 2026-10-07 and 2026-10-22; nothing before the release), or while
+   a live speech is in progress; the rest of that day trades normally.
 3. The weekend. Time within a session is never a skip (amendments 2026-10-07): late in the
    session (NY after ~10:30-11:00, London after the first couple of hours, Asia after ~10 PM)
    and the engine's `in_window: false` flag are downgrades, see §3.

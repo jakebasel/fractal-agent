@@ -4,11 +4,11 @@ study never saw. Mechanical: fvg-mcp's engine entries and its own trade scoring,
 
 The setup, frozen (change it and the test restarts, so the name changes with it):
   - MNQ1!, MES1!, MYM1!; Asia, NY and NY PM only; at most 2 trades per session across the three
-  - inside the engine's session windows (Asia 8 PM-12 AM, NY 8-12, NY PM 1:30-4 ET)
+  - inside the engine's session windows (Asia 8 PM-12 AM, NY 9:30-12, NY PM 1:30-4 ET)
   - no DB with a none / shallow retracement
   - no entry with 3+ gaps invalidated on the way in
-  - nothing from a high-impact USD release until 2 hours after it (CPI/PPI included; the
-    study's bracket left CPI/PPI to a separate rule it did not choose)
+  - nothing from a high-impact USD release until 2 hours after it (CPI/PPI included; since
+    2026-10-22 that is also the agent's CPI/PPI rule)
   - only the first entry off a signal (engine rule from 2026-10-22, amendment "One entry per
     signal"): not a change to this setup, so the name stays; the two later entries the engine
     still made on 10/21 before it went live are skipped here too

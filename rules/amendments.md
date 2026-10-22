@@ -21,14 +21,24 @@ normally; London is unaffected by a US release at 8:30 or 14:00 ET. The "CPI/PPI
 (a hypothesis tests it). A live speech is still untradeable while it runs (judgment call for
 the model when the chart read or news list shows one).
 
-## 2026-10-16 — CPI/PPI release days: no US-related assets all day (Jake)
-Follows the instructor (live sessions 2026-10-15: "Do not be trading any US-related assets on PPI
-day, CPI day. It's just not smart."). On any ET day with a CPI or PPI release (core or headline),
-US-related assets (NQ, ES, YM, RTY and their micros; NAS100, US500, US30, US2000) are SKIP for
-the whole day, every session, before and after the release. Supersedes the 2-hour bracket of
-2026-10-07 for CPI/PPI only; other red-folder USD releases keep the bracket. Non-US assets
-(gold, FX, oil, Japan 225, Europe) trade normally outside the bracket. The rest of a CPI/PPI
-WEEK is not affected.
+## 2026-10-22 — CPI/PPI: the 2-hour bracket only (Jake)
+"cpi/ppi only skip 2 hours after release." Replaces the 2026-10-16 amendment (no US-related
+assets all CPI/PPI day). CPI and PPI are treated like every other red-folder USD release: SKIP
+from the release until 2 hours after it (the 2026-10-07 bracket); before the release and after
+the bracket the day trades normally.
+
+## 2026-10-22 — NY session window 9:30 AM-12 PM ET (Jake)
+fvg-mcp's NY window (its `in_window` flag) is 9:30 AM to 12 PM ET. Per the 2026-10-07 amendment
+the window is a downgrade for this agent, not a skip.
+
+## 2026-10-22 — What counts as a DB retracement (Jake)
+"for db retracement we either need to hit fvg in db leg or if none exists the midpoint of the db
+leg." A DB's retracement is complete when price taps an FVG inside the DB leg, or -- only when
+the leg holds no FVG -- when price retraces to the midpoint of the DB leg (leg start to the DB
+high/low). A sweep of the DB low/high or a tap of a deeper pre-DB FVG also qualifies (deeper
+than required). No qualifying retracement = runaway = SKIP; a "shallow" tap of the entry gap
+alone no longer counts. fvg-mcp tags it `retrace` = leg-fvg / midpoint / medium / deep, and only
+starts the DB's entry hunt after it (amendment 2026-10-20).
 
 ## 2026-10-07 — 2DB is never traded (Jake)
 A 2DB (two Double Breaks) is a SKIP, always. It is the overarching reason: when a 2DB also

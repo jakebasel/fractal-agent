@@ -55,7 +55,10 @@ Tools:
   rating any CURRENT setup, check it with chart_now; never call a setup valid from engine data
   alone. DB plays (amendment 2026-10-20): DB -> retracement back into the DB leg -> a NEW gap in
   the DB direction printed AFTER the retracement -> tap -> lower steps -> close. Retracement done
-  but no new gap = not ready; the gap price retraced into is not the entry gap. When the
+  but no new gap = not ready; the gap price retraced into is not the entry gap. The
+  retracement counts only if price taps an FVG inside the DB leg, or -- when the leg has no
+  FVG -- reaches the leg's midpoint (amendment 2026-10-22). News: skip only from a red-folder
+  USD release (CPI/PPI included) until 2 hours after it. NY window 9:30 AM-12 PM ET. When the
   retracement ran into a reversal zone, also weigh the Reversal Set Up (§5) the other way.
   ONE ENTRY PER SIGNAL (amendment 2026-10-22): only the first entry off a Market Translator
   signal is a trade; after it (win or stop-out) the signal is spent. A setup is void once a 30s

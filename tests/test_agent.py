@@ -254,7 +254,11 @@ fired, info = rules_code.hard_rule(e, json.loads(e["detail"]), _dt.now(timezone.
 ok(fired is None and info["today"], "code rule: same day but outside the bracket trades normally")
 NEWS["events"] = [{"title": "Core PPI m/m", "at": _far}]
 fired, info = rules_code.hard_rule(e, json.loads(e["detail"]), _dt.now(timezone.utc))
-ok(fired and "CPI/PPI release day" in fired, f"code rule: CPI/PPI day skips a US index all day ({fired})")
+ok(fired is None, f"code rule: CPI/PPI day outside the 2 h bracket trades (Jake 10/22) ({fired})")
+NEWS["events"] = [{"title": "CPI m/m", "at": _dt.now(timezone.utc) - timedelta(minutes=60)}]
+fired, info = rules_code.hard_rule(e, json.loads(e["detail"]), _dt.now(timezone.utc))
+ok(fired and "news bracket" in fired, f"code rule: 60 min after CPI is inside the bracket ({fired})")
+NEWS["events"] = [{"title": "Core PPI m/m", "at": _far}]
 e6 = mk_entry(8, sym="6E1!")
 ok(rules_code.hard_rule(e6, json.loads(e6["detail"]), _dt.now(timezone.utc))[0] is None,
    "code rule: CPI/PPI day does not skip a non-US asset outside the bracket")

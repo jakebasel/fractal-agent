@@ -323,6 +323,10 @@ one setup is done, that should be the only setup we take off a given signal." Mo
   fact becomes a skip and its session slot is re-decided). `core_trades` re-backfilled 30 days once
   (sync key `core_trades_synced_at_v2`). Prompts (decision, lesson, shadow, scanner, Jev, Telegram)
   carry the rule; rulebook / live_rules §18, §20 and §5 M-continuation qualify on move complete.
+- Same day, also Jake: CPI/PPI = the 2 h bracket only (the 10/16 all-day amendment is replaced);
+  NY window 9:30-12 ET (fvg-mcp default now matches the live setting); DB retracement = tap of
+  an FVG in the DB leg, or the leg midpoint when the leg has no FVG (fvg-mcp verdict `midpoint`,
+  `_db_leg_midpoint_bar`; the retracement-complete bar that gates DB entries uses it too).
 
 ## VPS screenshot capturer (tv-capture/)
 

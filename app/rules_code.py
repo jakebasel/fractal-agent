@@ -43,7 +43,6 @@ def news_events() -> list | None:
 
 US_ROOTS = ("NQ", "MNQ", "ES", "MES", "YM", "MYM", "RTY", "M2K", "NAS100", "US100", "US500", "SPX500",
             "US30", "US2000")
-_CPI_PPI = re.compile(r"\b(CPI|PPI)\b", re.I)
 
 
 def is_us_index(symbol: str | None) -> bool:
@@ -52,10 +51,10 @@ def is_us_index(symbol: str | None) -> bool:
 
 
 def news_rule(when: datetime, symbol: str | None = None) -> tuple[str | None, dict]:
-    """(rule that fired or None, what was checked) for rule §2.2 as amended: on a CPI or PPI
-    release day (ET) US-related assets are skipped all day (Jake 2026-10-16, following the
-    instructor); otherwise only red-folder (high-impact) USD releases, from NEWS_BEFORE_MIN
-    before the release (0: nothing before) to NEWS_AFTER_MIN after it (120)."""
+    """(rule that fired or None, what was checked) for rule §2.2 as amended: red-folder
+    (high-impact) USD releases, CPI and PPI included, from NEWS_BEFORE_MIN before the release
+    (0: nothing before) to NEWS_AFTER_MIN after it (120). The 10/16 all-day CPI/PPI skip was
+    retired by Jake 2026-10-22: "cpi/ppi only skip 2 hours after release"."""
     if not config.NEWS_FILTER:
         return None, {"checked": False}
     evs = news_events()
@@ -66,11 +65,6 @@ def news_rule(when: datetime, symbol: str | None = None) -> tuple[str | None, di
     info = {"checked": True,
             "today": [f'{e["at"].astimezone(config.ET):%H:%M} {e["title"]}' for e in today],
             "bracket_min": [config.NEWS_BEFORE_MIN, config.NEWS_AFTER_MIN]}
-    cpi_ppi = [e for e in today if _CPI_PPI.search(e["title"] or "")]
-    if cpi_ppi and is_us_index(symbol):
-        e = cpi_ppi[0]
-        return (f"§2.2 CPI/PPI release day: no US-related assets ({e['title']} at "
-                f"{e['at'].astimezone(config.ET):%H:%M} ET)"), info
     for e in today:
         delta_min = (when - e["at"]).total_seconds() / 60
         if -config.NEWS_BEFORE_MIN <= delta_min <= config.NEWS_AFTER_MIN:
