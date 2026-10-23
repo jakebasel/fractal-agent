@@ -227,6 +227,28 @@ def chart_state(symbol: str | None = None) -> dict:
 
 
 @mcp.tool()
+def spotlight(symbol: str | None = None, hours: float = 48) -> dict:
+    """The Spotlight indicator's confirmations ("New Break": the first 5m body close outside
+    the session's dealing range) straight from its TradingView alerts on MYM1!, MES1! and
+    MNQ1! (since 2026-10-23) -- exact, no vision read. Each: direction (bull / bear), the 5m
+    bar (ET), which box it broke (Asia / London / NY) and minutes after that box closed
+    (in_setup_window = within the course's one hour), the candle OHLC and the EMAs 20 / 50 /
+    238 at the bar. `latest` = the newest confirmation per symbol: a confirmation one way
+    blocks that index's opposite trades (live rules §13). Ask this before chart_state for
+    any Spotlight question; the chart read still carries the box levels, true / false day
+    and the opening FVG. stored_as=text marks a row fvg-mcp kept as raw text (parsed here)."""
+    from . import spotlight as sp
+    from .mcp_client import FVG
+    try:
+        rows = FVG().spotlight_events(symbol=symbol)
+    except Exception as e:
+        return {"error": str(e)[:200], "confirmations": [], "latest": {}}
+    confs = sp.confirmations(rows, hours=hours, symbol=symbol)
+    return {"hours": hours, "symbols": ["MYM1!", "MES1!", "MNQ1!"], "confirmations": confs,
+            "latest": sp.latest_by_symbol(confs)}
+
+
+@mcp.tool()
 def levels(symbol: str) -> dict:
     """Everything around the price on one symbol, merged and nearest first: the computed levels
     from fvg-mcp (ndog / nwog with midpoints, open 4H and daily FVGs with CE, prior day H/L/C;

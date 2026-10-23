@@ -138,6 +138,15 @@ class FVG:
         return self.call("recent_events", symbol=symbol, source="market_translator",
                          limit=limit) or []
 
+    def spotlight_events(self, symbol=None, limit=60) -> list:
+        """Raw fvg-mcp rows posted by the Spotlight chart alerts (source='spotlight'), newest
+        first; app.spotlight parses them."""
+        kw = {"source": "spotlight", "limit": limit}
+        if symbol:
+            kw["symbol"] = symbol
+        res = self.call("recent_events", **kw)
+        return res if isinstance(res, list) else []
+
     def context(self, symbol) -> dict:
         """Computed levels for a symbol (fvg-mcp `context`, 2026-10-22): ndog/nwog with midpoints,
         open 4H/daily FVGs with CE, prior session H/L/C, each with its position vs price."""

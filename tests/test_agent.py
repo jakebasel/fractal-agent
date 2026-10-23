@@ -43,8 +43,31 @@ def setups(symbol: str) -> dict:
 @fake.tool()
 def recent_events(symbol: str | None = None, source: str | None = None,
                   limit: int = 25) -> list[dict]:
-    return [{"received_at": datetime.now(timezone.utc).isoformat(), "tf": "5m",
-             "text": "Upper Double Break", "price": 31400}]
+    now = datetime.now(timezone.utc).isoformat()
+    if source == "spotlight":
+        # the MYM alert's first fire (2026-10-22 8:35 PM ET): `time` unquoted, so fvg-mcp kept
+        # the whole message as text; the MES row is what the fixed message stores (fields)
+        blob = ('{"source":"spotlight","event":"confirm","cond":"New Break","symbol":"MYM1!",'
+                '"exchange":"CBOT_MINI","tf":"5","time":2026-10-23T00:30:00Z,"open":53056,'
+                '"close":53050,"high":53064,"low":53041,"up":"0","dn":"1","ema20":"53096.14",'
+                '"ema50":"53080.62","ema238":"52948.31","text":"Spotlight New Break MYM1! 5"}')
+        mes = {"source": "spotlight", "event": "confirm", "cond": "New Break", "symbol": "MES1!",
+               "exchange": "CME_MINI", "tf": "5", "time": "2026-10-22T14:35:00Z", "open": 6800.25,
+               "close": 6812.5, "high": 6813, "low": 6799, "up": "1", "dn": "NaN",
+               "ema20": "6790.1", "ema50": "6780.4", "ema238": "6750.9", "text": "Spotlight New Break MES1! 5"}
+        rows = [
+            {"id": 4, "received_at": now, "source": "spotlight", "event": "confirm", "symbol": "MES1!",
+             "tf": "5", "text": mes["text"], "bar_time": "1792766100000", "raw": json.dumps(mes)},
+            {"id": 3, "received_at": now, "source": "spotlight", "event": None, "symbol": "MYM1!",
+             "tf": None, "text": blob, "raw": json.dumps({"raw_text": blob, "source": "spotlight", "symbol": "MYM1!"})},
+            {"id": 2, "received_at": now, "source": "spotlight", "event": "test", "symbol": "MYM1!",
+             "tf": "5", "text": "Spotlight TEST ping", "raw": json.dumps({"source": "spotlight", "event": "test"})},
+            {"id": 1, "received_at": now, "source": "spotlight", "event": None, "symbol": "MYM1!",
+             "text": "MES1! Crossing 7,684.00",
+             "raw": json.dumps({"raw_text": "MES1! Crossing 7,684.00", "source": "spotlight", "symbol": "MYM1!"})},
+        ]
+        return [r for r in rows if not symbol or r["symbol"] == symbol.upper()]
+    return [{"received_at": now, "tf": "5m", "text": "Upper Double Break", "price": 31400}]
 
 
 @fake.tool()
@@ -997,6 +1020,30 @@ ok(all(x in _tn for x in ("chart_state", "levels", "warnings")) and "ndog" in te
    "Jake Trade Help has chart_state / levels / warnings and the zone vocabulary")
 ok("shade" in prompts.VISION_PROMPT and "htf_chips" in prompts.VISION_PROMPT and "dsd" in prompts.VISION_PROMPT,
    "the vision prompt asks for zone shade, HTF chips and DSD")
+
+# ---- Spotlight confirmations from the chart alerts (2026-10-23) -------------------------
+from app import spotlight as _sp  # noqa: E402
+_spot = main.spotlight(hours=24 * 365 * 5)
+ok([c["symbol"] for c in _spot["confirmations"]] == ["MYM1!", "MES1!"],
+   "spotlight: the text-blob row is repaired and parsed; test pings and borrowed-URL price alerts are dropped")
+_mym = _spot["latest"]["MYM1!"]
+ok(_mym["direction"] == "bear" and _mym["bar_et"] == "2026-10-22 20:30 ET" and _mym["session"] == "Asia"
+   and _mym["min_after_box"] == 5 and _mym["in_setup_window"] is True and _mym["stored_as"] == "text"
+   and _mym["ema20"] == 53096.14 and _mym["close"] == 53050,
+   "spotlight: MYM bear New Break on the 8:30 PM bar, 5 min after the Asia box, EMAs and OHLC carried")
+_mes = _spot["latest"]["MES1!"]
+ok(_mes["direction"] == "bull" and _mes["session"] == "NY" and _mes["min_after_box"] == 10
+   and _mes["stored_as"] == "fields" and _mes["ema238"] == 6750.9,
+   "spotlight: a fields row (quoted time) parses the same; NY box, dn=NaN is not a bear")
+ok(main.spotlight(symbol="mym1!")["confirmations"][0]["symbol"] == "MYM1!"
+   and main.spotlight(hours=0.001)["confirmations"] == [], "spotlight: symbol and hours filters")
+_sess = _sp.session_of(datetime(2026, 10, 23, 7, 58, tzinfo=timezone.utc))      # 3:58 AM ET
+ok(_sess == ("London", 3, False) and _sp.session_of(datetime(2026, 10, 23, 13, 40, tzinfo=timezone.utc)) == ("NY", None, True),
+   "spotlight: London attribution and inside-box detection")
+_tn = [t["name"] for t in telegram_bot.tool_defs()]
+ok("spotlight" in _tn and "spotlight(symbol, hours)" in telegram_bot.SYSTEM
+   and json.loads(telegram_bot.run_tool("spotlight", {"symbol": "MES1!"}))["latest"]["MES1!"]["direction"] == "bull",
+   "Jake Trade Help has the spotlight tool and knows when to call it")
 
 print("all tests passed")
 server.should_exit = True

@@ -64,6 +64,13 @@ Tools:
   a strong zone before the 3R target, a line closed through, a reversal zone tapped). Nothing is
   pushed to Jake automatically (his call, 10/22): when he asks "anything to watch", "any warnings",
   or about a setup, read warnings(hours) and report what matters, newest first.
+- spotlight(symbol, hours): the Spotlight indicator's New Break confirmations straight from
+  its chart alerts (MYM1!, MES1!, MNQ1! for now; exact, no vision): direction, the 5m bar in
+  ET, which session box it broke and minutes after the box (the course wants the setup within
+  the hour), EMAs 20/50/238. A confirmation one way blocks that index's opposite trades (§13)
+  and still needs the retracement before an entry. Call it for "any Spotlight signals", on
+  any index question, and before rating a setup on those symbols; use chart_state for the
+  box levels, true/false day and the opening FVG.
 - chart_now: a FRESH look at the live charts (one vision call). Use it when chart_state is
   older than ~3 minutes or lacks what the question needs. Before recommending or rating any
   CURRENT setup, check levels(symbol) and chart_state (or chart_now); never call a setup valid
@@ -160,6 +167,7 @@ _SPECS = [
     ("chart_now", {"question": {"type": "string"}}, ["question"]),
     ("chart_state", {"symbol": {"type": "string"}}, []),
     ("levels", {"symbol": {"type": "string"}}, ["symbol"]),
+    ("spotlight", {"symbol": {"type": "string"}, "hours": {"type": "number"}}, []),
     ("warnings", {"hours": {"type": "number"}, "symbol": {"type": "string"}}, []),
     ("instructor_calls", {}, []),
     ("live_transcript", {"minutes": {"type": "number"}, "search": {"type": "string"},

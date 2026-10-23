@@ -375,6 +375,20 @@ the NDOG, the NWOG and the 4H FVGs. Four pieces:
    strong, `warnings(hours, symbol)`. The Telegram system prompt carries the zone vocabulary and
    tells the bot to check `levels` + `chart_state` before rating a current setup, with
    `chart_now` only when the stored read is stale (> ~3 min) or lacks what is asked.
+5. **Spotlight confirmations from the chart alerts** (2026-10-23, `app/spotlight.py`,
+   tool `spotlight(symbol, hours)`): Jake's TradingView "Spotlight -> New Break" alerts on
+   MYM1! / MES1! / MNQ1! (5m, once per bar close) post JSON to fvg-mcp's webhook with
+   `&source=spotlight`: direction (`up` / `dn` = the indicator's New Break Up / Dn shape plots),
+   the 5m bar time, OHLC and EMAs 20/50/238 (plots 5/6/7). fvg-mcp stores them as
+   `source='spotlight'` events; this agent reads them through `recent_events(source="spotlight")`
+   (read-only, no fvg-mcp change) and parses them: session box (Asia 7:30-8:25 PM, London
+   3:00-3:55 AM, NY 9:30-10:25 AM ET), minutes after the box, `in_setup_window` (<= 60 min),
+   `latest` per symbol. The MYM alert's first fire sent `time` unquoted, so fvg-mcp kept the
+   message as text; the parser repairs that (`stored_as: text`). Rows that are not a
+   confirmation (test pings, a price alert that borrowed the webhook URL) are dropped. The
+   box levels, true/false day and the opening FVG still come from the chart read; the plan
+   is to compute the box from the tape in fvg-mcp (branch `spotlight`) and build the Spotlight
+   entry engine there, so Spotlight trades reach the analysis tab.
 
 Coverage: chart-only zones exist for the charted symbols only (NAS100 / US500 / US30, two Hub
 layouts); every other symbol gets data-only warnings. Adding a symbol to the chart side = one
