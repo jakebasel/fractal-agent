@@ -600,6 +600,19 @@ async def library_search(request: Request):
                                                   q.get("since"))})
 
 
+async def library_sessions(request: Request):
+    """Live sessions with their digests (agent token) -- fvg-mcp's Live sessions page reads this.
+    ?source= returns that session's full transcript instead."""
+    if not _authed(request):
+        return PlainTextResponse("unauthorized", status_code=401)
+    from . import library
+    q = request.query_params
+    if q.get("source"):
+        doc = library.live_session_text(q["source"])
+        return JSONResponse(doc or {"error": "no such session"}, status_code=200 if doc else 404)
+    return JSONResponse({"sessions": library.live_sessions(float(q.get("days") or 400), int(q.get("limit") or 500))})
+
+
 async def health(request: Request):
     return JSONResponse({"ok": True, **agent.status()})
 
@@ -968,6 +981,7 @@ _app.router.routes.extend([
     Route("/library/ingest", library_ingest, methods=["POST"]),
     Route("/zoom/live", zoom_live, methods=["POST"]),
     Route("/library/search", library_search),
+    Route("/library/sessions", library_sessions),
 ])
 app = _McpGate(_app)
 

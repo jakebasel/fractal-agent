@@ -882,6 +882,22 @@ telegram_bot.send = _orig_send
 ok("forward_test" in [t["name"] for t in telegram_bot.tool_defs()] and main.forward_test()["name"] == forward.NAME,
    "Telegram and MCP can read the forward test")
 
+# 2026-10-29: fvg-mcp's Live sessions page reads the sessions + digests over /library/sessions
+from app import library as _libm  # noqa: E402
+_did, _ = _libm.add_document("live_session", "zta:2026-10-28_2028_ET.txt", "Live session 2026-10-28 8:28 PM ET",
+                             "2026-10-29T00:28:00+00:00", "he took NAS short at the blue zone " * 40)
+_libm._db().execute("UPDATE library_docs SET digest=? WHERE id=?",
+                    (json.dumps({"title": "Asia NAS short", "summary": "NAS short off the blue zone."}), _did))
+_libm._db().commit()
+_sc = TestClient(main.app)
+ok(_sc.get("/library/sessions").status_code == 401, "/library/sessions needs the agent token")
+_ls = _sc.get("/library/sessions", headers={"X-Agent-Token": config.AGENT_TOKEN}).json()["sessions"]
+ok(any(x["source"] == "zta:2026-10-28_2028_ET.txt" and x["summary"] == "NAS short off the blue zone."
+       and x["title"] == "Asia NAS short" for x in _ls), f"/library/sessions lists sessions with summaries ({_ls[:1]})")
+_tx = _sc.get("/library/sessions", params={"source": "zta:2026-10-28_2028_ET.txt"},
+              headers={"X-Agent-Token": config.AGENT_TOKEN}).json()
+ok("blue zone" in _tx.get("text", ""), "/library/sessions?source= returns the transcript")
+
 # 2026-10-22: the live Zoom transcript, streamed by the Hub, readable by Jake Trade Help
 _tok = config.AGENT_TOKEN
 _lc = TestClient(main.app)
@@ -1035,14 +1051,14 @@ _mes = _spot["latest"]["MES1!"]
 ok(_mes["direction"] == "bull" and _mes["session"] == "NY" and _mes["min_after_box"] == 10
    and _mes["stored_as"] == "fields" and _mes["ema238"] == 6750.9,
    "spotlight: a fields row (quoted time) parses the same; NY box, dn=NaN is not a bear")
-ok(main.spotlight(symbol="mym1!")["confirmations"][0]["symbol"] == "MYM1!"
+ok(main.spotlight(symbol="mym1!", hours=24 * 365 * 5)["confirmations"][0]["symbol"] == "MYM1!"   # fixture is dated 10/22
    and main.spotlight(hours=0.001)["confirmations"] == [], "spotlight: symbol and hours filters")
 _sess = _sp.session_of(datetime(2026, 10, 23, 7, 58, tzinfo=timezone.utc))      # 3:58 AM ET
 ok(_sess == ("London", 3, False) and _sp.session_of(datetime(2026, 10, 23, 13, 40, tzinfo=timezone.utc)) == ("NY", None, True),
    "spotlight: London attribution and inside-box detection")
 _tn = [t["name"] for t in telegram_bot.tool_defs()]
 ok("spotlight" in _tn and "spotlight(symbol, hours)" in telegram_bot.SYSTEM
-   and json.loads(telegram_bot.run_tool("spotlight", {"symbol": "MES1!"}))["latest"]["MES1!"]["direction"] == "bull",
+   and json.loads(telegram_bot.run_tool("spotlight", {"symbol": "MES1!", "hours": 24 * 365 * 5}))["latest"]["MES1!"]["direction"] == "bull",
    "Jake Trade Help has the spotlight tool and knows when to call it")
 
 print("all tests passed")

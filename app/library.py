@@ -304,6 +304,33 @@ def ingest_session(source: str, title: str, at: str, text: str, run_digest: bool
     return out
 
 
+def live_sessions(days: float = 400, limit: int = 500) -> list[dict]:
+    """Every live session in the library, newest first, with its digest when there is one
+    (for fvg-mcp's Live sessions page, 2026-10-29). No transcript text: see live_session_text."""
+    from datetime import datetime, timedelta, timezone
+    since = (datetime.now(timezone.utc) - timedelta(days=float(days))).strftime("%Y-%m-%d")
+    rows = _db().execute(
+        "SELECT id, title, at, source, digest, LENGTH(text) AS chars FROM library_docs "
+        "WHERE kind='live_session' AND at >= ? ORDER BY at DESC LIMIT ?", (since, int(limit))).fetchall()
+    out = []
+    for r in rows:
+        try:
+            d = json.loads(r["digest"]) if r["digest"] else {}
+        except ValueError:
+            d = {}
+        out.append({"id": r["id"], "source": r["source"], "title": d.get("title") or r["title"],
+                    "session_title": r["title"], "at": r["at"], "words": round((r["chars"] or 0) / 6),
+                    "summary": d.get("summary"), "topics": d.get("topics") or [],
+                    "trade_calls": d.get("trade_calls") or [], "teachings": d.get("teachings") or []})
+    return out
+
+
+def live_session_text(source: str) -> dict | None:
+    r = _db().execute("SELECT title, at, source, text FROM library_docs WHERE kind='live_session' AND source=?",
+                      (source,)).fetchone()
+    return dict(r) if r else None
+
+
 def session_digests(days: float = 30, limit: int = 20) -> list[dict]:
     from datetime import datetime, timedelta, timezone
     since = (datetime.now(timezone.utc) - timedelta(days=float(days))).strftime("%Y-%m-%d")
