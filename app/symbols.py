@@ -19,7 +19,7 @@ log = logging.getLogger("symbols")
 SYNC_EVERY_S = int(config._env("SYMBOLS_SYNC_S", "600"))
 BACKFILL_DAYS = int(config._env("SYMBOLS_BACKFILL_DAYS", "30"))
 GOOD_SCORING = ("on_time", "rescored", "fact")
-SYNC_KEY = "core_trades_synced_at_v2"
+SYNC_KEY = "core_trades_synced_at_v3"   # v3 (11/01): one full re-sync so the prune below runs over 30 days
 
 
 def sync(fvg, days: float | None = None) -> int:
@@ -32,6 +32,13 @@ def sync(fvg, days: float | None = None) -> int:
         res = res[0] if res else {}
     cols, rows = res.get("cols") or [], res.get("rows") or []
     n = store.upsert_core_trades(cols, rows)
+    # mirror deletions too -- only off a real, non-empty answer, so a failed call never wipes the book
+    if rows and "id" in cols:
+        _i = cols.index("id")
+        since_ms = int((datetime.now(timezone.utc).timestamp() - days * 86400) * 1000)
+        pruned = store.prune_core_trades(since_ms, [r[_i] for r in rows])
+        if pruned:
+            log.info("core trades pruned: %d row(s) fvg-mcp no longer has", pruned)
     store.kv_set(SYNC_KEY, store.now_utc())
     log.info("core trades synced: %d rows (%s days)", n, days)
     return n

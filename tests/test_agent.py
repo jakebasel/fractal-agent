@@ -649,6 +649,13 @@ ok("GC1!" not in by and rep["all"]["n"] == 5, "Gold Strategy rows are not part o
 ok(by["MNQ1!"]["by_tf"]["5m"]["n"] == 1 and by["MNQ1!"]["by_session"]["newyork"]["n"] == 1, "by-timeframe and by-session splits")
 ok(abs(sum(by["6A1!"]["by_day"].values()) - 4.5) < 1e-9 and len(rep["days"]) == 7, "per-day totals add up over the 7 day columns")
 ok(symbols.sync_if_due(FVG()) == 0, "sync is rate-limited between ticks")
+# a trade fvg-mcp deleted (Jake 11/01: entry 3145587 "Remove") leaves the mirror on the next sync
+_ids = [r["id"] for r in store.core_trades(0)]
+_victim = max(_ids)
+_bar = next(r["entry_bar"] for r in store.core_trades(0) if r["id"] == _victim)
+ok(store.prune_core_trades(_bar, [i for i in _ids if i != _victim]) == 1
+   and _victim not in [r["id"] for r in store.core_trades(0)], "a trade fvg-mcp no longer has is pruned")
+symbols.sync(FVG())                                   # restore the fixture's rows for the checks below
 ok(main.symbol_stats(7)["all"]["n"] == 5, "symbol_stats MCP tool")
 sc = TestClient(main.app)
 ok(sc.get("/api/symbols").status_code == 401, "/api/symbols is closed without login")

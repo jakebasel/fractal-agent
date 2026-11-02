@@ -859,6 +859,22 @@ def upsert_core_trades(cols: list, rows: list) -> int:
     return len(recs)
 
 
+def prune_core_trades(since_ms: int, keep_ids) -> int:
+    """Delete mirrored trades fvg-mcp no longer has: every core_trades row entered at/after
+    since_ms whose id is not in keep_ids (the ids the same trade_history window returned).
+    fvg-mcp deletes rows on Jake's say-so (11/01: entry 3145587, "Remove") and its zombie
+    sweep; an upsert-only mirror kept them in the Symbols book forever."""
+    keep = {int(i) for i in keep_ids}
+    with _lock:
+        ids = [r[0] for r in db().execute(
+            "SELECT id FROM core_trades WHERE entry_bar >= ?", (since_ms,)).fetchall()]
+        gone = [i for i in ids if int(i) not in keep]
+        if gone:
+            db().executemany("DELETE FROM core_trades WHERE id = ?", [(i,) for i in gone])
+            db().commit()
+    return len(gone)
+
+
 def core_trades(since_ms: int, symbol: str | None = None) -> list[dict]:
     q = "SELECT * FROM core_trades WHERE entry_bar >= ?"
     args = [since_ms]
