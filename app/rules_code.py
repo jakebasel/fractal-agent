@@ -65,7 +65,9 @@ def news_rule(when: datetime, symbol: str | None = None) -> tuple[str | None, di
     info = {"checked": True,
             "today": [f'{e["at"].astimezone(config.ET):%H:%M} {e["title"]}' for e in today],
             "bracket_min": [config.NEWS_BEFORE_MIN, config.NEWS_AFTER_MIN]}
-    for e in today:
+    # every release, not just today's: a bracket that started before midnight ET still runs
+    # after it (found 11/02 00:12 ET -- the bracket test failed for releases late the day before)
+    for e in evs:
         delta_min = (when - e["at"]).total_seconds() / 60
         if -config.NEWS_BEFORE_MIN <= delta_min <= config.NEWS_AFTER_MIN:
             side = f"{abs(int(delta_min))} min {'before' if delta_min < 0 else 'after'}"
