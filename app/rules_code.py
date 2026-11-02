@@ -112,7 +112,8 @@ def _is_2db(entry: dict, detail: dict) -> bool:
 # amendment 2026-10-22; signal priority 10/08; 2DB / 5m-DB voids)
 VOID_STATUSES = {"move_complete": "move complete / signal already traded",
                  "superseded": "superseded by a newer signal", "skip_2db": "2DB",
-                 "skip_5m_db": "a 5m DB takes priority"}
+                 "skip_5m_db": "a 5m DB takes priority",
+                 "skip_5m_play": "the 5m play is starting (same 5m signal + a 5m FVG formed)"}
 
 
 def void_reason(status, why=None) -> str | None:

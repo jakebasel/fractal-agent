@@ -117,3 +117,15 @@ were C, half of them on a retracement field the engine only fills for DB signals
 Retracement on an M / 2M: the engine's quality grade is DB-only, so a null there is NOT missing
 evidence. The M's retracement is the pullback into the first presented FVG, which the stages
 show. A DB entry only exists after the retracement completed and a new same-direction gap printed.
+
+## 2026-11-01 — The 5m play takes over from an unentered 1m play (Jake)
+Jake: "if we're looking at a 1-minute play and it has not entered, but we already had the same
+signal on the 5-minute chart and we get a fair value gap on the 5-minute chart, we need to avoid
+the 1-minute play. That means the 5-minute play is about to start."
+Same signal = the latest live 5m Market Translator signal is the same kind (DB or M) in the same
+direction as the 1m play's signal. The 5m gap is the 5m play's first gap: in that direction, its
+first candle at or after the 5m signal candle, counted once its candle has closed. From then the
+1m play is void (fvg-mcp status `skip_5m_play`); trade the 5m play. A 1m play that already
+entered before that gap formed keeps its entry. An opposite or different 5m signal does not void
+the 1m play. Extends the 2026-10-16 "5m DB takes priority" void (1m DB plays) to every 1m play
+once the 5m play has started.
