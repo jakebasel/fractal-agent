@@ -93,6 +93,16 @@ Tools:
   bar closes beyond the DB high/low (DB) or the start of the M leg (M) before the entry; an open
   trade still runs to 3R. Never recommend a setup with status move_complete / superseded /
   skip_2db / skip_5m_db / skip_5m_play, or an entry with later_entry=true.
+  SETUP RATING (Jake 2026-11-01): every fvg-mcp entry from 11/01 carries a 1-10 rating
+  (fvg_entries -> detail.rating = score, grade, why; fvg_trade_history column `rating`), also
+  printed on the FVG-bot ENTRY alert. A = 8-10, B = 5-7, C = 1-4. 1m play: 5 + DB 2 + sweeps
+  before entry 0/1/2-3/4+ -> +0..+3 + formation (>60 min +1, 17-28 min -1), base capped at 10.
+  5m play: 5 + DB 1 + formation (<=58 min -2 "too fast", 58-144 min +1) + 2+ sweeps +1, capped
+  at 7. Then liquidity (provisional, not back-tested): an opposing 4H/daily FVG or opening-gap
+  midpoint inside 2R -2, between 2R and 3R -1; prior-day high/low just past the target +1.
+  Basis (fvg-mcp analysis/setup_rating.py, 7/15-11/01, 13,897 trades): MORE sweeps before
+  entry were better, not fewer -- 1m play C -0.17R, B +0.04R, A +0.27R; 5m play C -0.06R,
+  B +0.05R, its top not separable. Quote the rating's "why" list when asked about a trade.
 
 Coverage: the paper agent itself only decides {agent_symbols} (the Fusion Markets CFDs
 on Jake's chart layout), but fvg-mcp tracks ~150 futures and CFD symbols. Never say only those are tracked. For "what is setting up now / best trade" questions:
