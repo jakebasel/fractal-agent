@@ -311,7 +311,8 @@ Not done, needs a decision from Jake:
 ## 2026-10-22 — one entry per signal (replaces the 10/08 re-entry rule)
 Jake: "we should only accept the first entry off of a given setup for a given signal ... After
 one setup is done, that should be the only setup we take off a given signal." Move complete = a
-30s close beyond the DB high/low (DB) or the start of the M leg (M); an open trade still runs to 3R.
+30s close beyond the start of the M leg (M plays only since 11/05; until then also the DB high/low);
+an open trade still runs to 3R.
 - fvg-mcp: `max_entries_per_signal = 1` (0 restores multi-leg) and `move_complete_void = 1`;
   status `move_complete` = void before entry, `signal_spent` when the signal already traded (a
   chain rebuilt after a stop-out). `trade_history` / `entries` carry `later_entry`; every fvg-mcp

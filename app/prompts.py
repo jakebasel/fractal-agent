@@ -320,8 +320,8 @@ hit + body close through a white line + reversal zone printed), 1m plays, blue/p
 plays, 2M returns, triangles. Be conservative: report only what the chart read supports, and
 say "forming" unless the trigger is in. Never report a setup the engine already has armed in
 the same direction (check `engine_armed[sym].armed`), and never report a second setup off a
-signal listed in `engine_armed[sym].spent_signals`: one entry per signal, and a move that is
-complete (30s close beyond the DB high/low or the start of the M leg) is spent (amendment 2026-10-22).
+signal listed in `engine_armed[sym].spent_signals`: one entry per signal, and an M whose move is
+complete (30s close beyond the start of the M leg) is spent (amendments 2026-10-22, 2026-11-05).
 
 Amendments (highest priority), rulebook §5 and plays:
 {reversal}

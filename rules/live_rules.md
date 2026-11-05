@@ -185,7 +185,7 @@ Pulled from the 12 live-session transcripts. Live sessions are newer than the co
 - Process: no more than an hour per session and 15 minutes marking up; set a TradingView alert at the zone/FVG midpoint and walk away.
 
 ## 20. 2026-10-15 live session (Asia evening, PPI day runaway setups)
-- Runaway (only while the move is not complete: a 30s close beyond the DB high/low or the start of the M leg spends the signal, amendment 2026-10-22): price hits the target without tapping your entry, then comes back. Check where it rejected (midpoint, or room to go deeper), then require a NEW 1m FVG off the return and a 30s FVG off that; never jump straight into the old 30s. "It's already hit the target, and this is an area where it could reverse."
+- Runaway (on an M, only while the move is not complete: a 30s close beyond the start of the M leg spends the signal, amendments 2026-10-22, 2026-11-05): price hits the target without tapping your entry, then comes back. Check where it rejected (midpoint, or room to go deeper), then require a NEW 1m FVG off the return and a 30s FVG off that; never jump straight into the old 30s. "It's already hit the target, and this is an area where it could reverse."
 - CPI/PPI affects US-related assets only (e.g. not Japan 225).
 - US oil: he avoids it ("ever since the Iran war, it's just too chaotic"); if reading oil, Brent (UKOIL) is the divergence pair.
 - An M on every timeframe down to the 30s with no DB is a clean read (said once; weak booster).

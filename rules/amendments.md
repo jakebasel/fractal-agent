@@ -136,3 +136,9 @@ signal's timeframe, and hitting it completes the retracement: "it doesn't need t
 leg. it basically needs to hit at least the first presented fair value gap." Nothing inside the
 signal candle counts, since the signal only exists once that candle closes. The midpoint of the
 leg still applies only when the leg has no FVG. The engine's `retrace` field already follows this.
+
+## 2026-11-05 — Move complete applies to M plays only (Jake)
+Changes the 2026-10-22 amendment. A 30s close beyond the DB high/low before the entry no longer
+voids a DB; a 30s close beyond the start of the M leg still voids an M. NAS100's 9:40 1m DB retraced
+at 9:43 and made a new low at 9:44, and the 9:54 short was the trade. A DB's other voids stand: one
+entry per signal, 5m DB priority, superseded, 2DB.

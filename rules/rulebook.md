@@ -30,8 +30,8 @@ Market Translator (MT)
   the newest signal on a timeframe replaces the previous one, only two same-session Ms coexist.
 - ONE ENTRY PER SIGNAL (amendments, Jake 2026-10-22; replaces the 10/08 re-entry rule): only the
   first entry off a signal is a trade; after it, win or stop-out, that signal is spent. MOVE
-  COMPLETE: a 30s close beyond the DB high/low (DB) or the start of the M leg (M) before the entry
-  voids the setup. An open trade is never exited for it; it still runs to 3R.
+  COMPLETE (M only, amendment 2026-11-05): a 30s close beyond the start of the M leg before the
+  entry voids the setup. A DB is not voided by taking out its high/low. An open trade is never exited for it; it still runs to 3R.
 - A tap = any touch of the zone (wick to the edge counts; the course never names a depth).
 - 2DB = DBs both ways = SKIP, always (amendments, Jake 2026-10-07). "No other logic for a new
   set up should form after this point, until next session" on that index/timeframe. A 1m 2DB

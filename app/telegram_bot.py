@@ -89,9 +89,9 @@ Tools:
   USD release (CPI/PPI included) until 2 hours after it. NY window 9:30 AM-12 PM ET. When the
   retracement ran into a reversal zone, also weigh the Reversal Set Up (§5) the other way.
   ONE ENTRY PER SIGNAL (amendment 2026-10-22): only the first entry off a Market Translator
-  signal is a trade; after it (win or stop-out) the signal is spent. A setup is void once a 30s
-  bar closes beyond the DB high/low (DB) or the start of the M leg (M) before the entry; an open
-  trade still runs to 3R. Never recommend a setup with status move_complete / superseded /
+  signal is a trade; after it (win or stop-out) the signal is spent. An M setup is void once a 30s
+  bar closes beyond the start of the M leg before the entry (a DB is not voided by its high/low,
+  amendment 2026-11-05); an open trade still runs to 3R. Never recommend a setup with status move_complete / superseded /
   skip_2db / skip_5m_db / skip_5m_play, or an entry with later_entry=true.
   SETUP RATING (Jake 2026-11-01): every fvg-mcp entry from 11/01 carries a 1-10 rating
   (fvg_entries -> detail.rating = score, grade, why; fvg_trade_history column `rating`), also
