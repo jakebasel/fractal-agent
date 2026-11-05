@@ -129,3 +129,10 @@ first candle at or after the 5m signal candle, counted once its candle has close
 entered before that gap formed keeps its entry. An opposite or different 5m signal does not void
 the 1m play. Extends the 2026-10-16 "5m DB takes priority" void (1m DB plays) to every 1m play
 once the 5m play has started.
+
+## 2026-11-05 — What completes a DB retracement (Jake)
+Adds to §6. The first FVG the DB's push prints after the signal counts as a leg FVG, on the
+signal's timeframe, and hitting it completes the retracement: "it doesn't need to sweep the full
+leg. it basically needs to hit at least the first presented fair value gap." Nothing inside the
+signal candle counts, since the signal only exists once that candle closes. The midpoint of the
+leg still applies only when the leg has no FVG. The engine's `retrace` field already follows this.
