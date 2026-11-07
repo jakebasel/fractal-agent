@@ -546,3 +546,9 @@ learning loop, Jev shadow scoring, news filter, spend tracking. Still open:
 - Jake's preferences: plain language, short answers, bottom line first; do the work rather than
   give instructions; only hand him what needs his credentials.
 - Claim to verify, not assume: "12% per week". The log decides.
+
+## 2026-11-07 — Wingman (separate iMessage app in `wingman/`)
+
+Not trading. A personal iMessage bot (dating-text suggestions) that lives in this repo for the
+deploy pattern only: own Dockerfile (`wingman/Dockerfile`), own Coolify app, own `/data/wingman.db`,
+imports nothing from `app/`. Setup and env in `wingman/README.md`; tests `tests/test_wingman.py`.
